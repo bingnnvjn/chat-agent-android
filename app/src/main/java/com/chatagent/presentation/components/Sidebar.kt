@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Settings
@@ -28,7 +29,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.chatagent.data.model.Conversation
@@ -37,10 +37,11 @@ import com.chatagent.data.model.Conversation
 fun Sidebar(
     conversations: List<Conversation>,
     currentConversationId: String?,
-    onNewChat: () -> Unit,
-    onSelectConversation: (String) -> Unit,
+    onConversationClick: (String) -> Unit,
+    onNewConversation: () -> Unit,
     onDeleteConversation: (String) -> Unit,
-    onSettings: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onClose: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -50,27 +51,28 @@ fun Sidebar(
             .background(MaterialTheme.colorScheme.surface)
             .padding(12.dp)
     ) {
-        // 新建对话按钮
+        // 关闭 + 新建
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .clickable { onNewChat() }
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "新建",
-                tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = "新建对话",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            IconButton(onClick = onClose) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "关闭",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            IconButton(onClick = onNewConversation) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "新建",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -91,7 +93,7 @@ fun Sidebar(
                             if (isSelected) MaterialTheme.colorScheme.surfaceVariant
                             else MaterialTheme.colorScheme.surface
                         )
-                        .clickable { onSelectConversation(conversation.id) }
+                        .clickable { onConversationClick(conversation.id) }
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -126,7 +128,7 @@ fun Sidebar(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
-                .clickable { onSettings() }
+                .clickable { onSettingsClick() }
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {

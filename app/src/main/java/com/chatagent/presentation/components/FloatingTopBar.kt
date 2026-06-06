@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -28,9 +29,10 @@ import com.chatagent.data.model.ApiProvider
 
 @Composable
 fun FloatingTopBar(
+    title: String = "Chat Agent",
     currentProvider: ApiProvider,
-    currentModel: String,
     onMenuClick: () -> Unit,
+    onNewChatClick: () -> Unit,
     onModelSelect: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -54,7 +56,7 @@ fun FloatingTopBar(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // 模型选择器（居中）
+        // 标题 / 模型选择器
         Row(
             modifier = Modifier
                 .clickable { showModelMenu = true }
@@ -62,7 +64,7 @@ fun FloatingTopBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = currentModel.ifEmpty { currentProvider.displayName },
+                text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -83,11 +85,7 @@ fun FloatingTopBar(
             currentProvider.models.forEach { model ->
                 DropdownMenuItem(
                     text = {
-                        Text(
-                            text = model,
-                            color = if (model == currentModel) MaterialTheme.colorScheme.onSurface
-                            else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Text(text = model)
                     },
                     onClick = {
                         onModelSelect(model)
@@ -99,7 +97,13 @@ fun FloatingTopBar(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // 占位，保持对称
-        Spacer(modifier = Modifier.width(48.dp))
+        // 新建对话按钮
+        IconButton(onClick = onNewChatClick) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "新建",
+                tint = MaterialTheme.colorScheme.onSurface
+            )
+        }
     }
 }
