@@ -28,9 +28,9 @@ import com.chatagent.presentation.viewmodel.ChatViewModel
 fun MainScreen(
     viewModel: ChatViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val conversations by viewModel.conversations.collectAsState()
-    val currentConversation by viewModel.currentConversation.collectAsState()
+    val uiState by viewModel.uiState.collectAsState(ChatUiState())
+    val conversations by viewModel.conversations.collectAsState(emptyList())
+    val currentConversation by viewModel.currentConversation.collectAsState(null)
     var showSidebar by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
 
