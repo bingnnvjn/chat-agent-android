@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.chatagent.presentation.components.ChatInput
 import com.chatagent.presentation.components.MessageBubble
 import com.chatagent.presentation.components.WelcomeScreen
@@ -65,9 +66,8 @@ fun ChatScreen(
         if (currentConversation == null || currentConversation!!.messages.isEmpty()) {
             WelcomeScreen(
                 onSuggestionClick = { suggestion ->
-                    inputText = suggestion
-                    viewModel.sendMessage(suggestion)
                     inputText = ""
+                    viewModel.sendMessage(suggestion)
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -75,8 +75,8 @@ fun ChatScreen(
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 state = listState,
-                contentPadding = PaddingValues(vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                contentPadding = PaddingValues(vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(currentConversation!!.messages) { message ->
                     MessageBubble(message = message)
@@ -94,13 +94,15 @@ fun ChatScreen(
 
         // 提示文字
         Text(
-            text = "AI 可能会犯错，请核实重要信息。",
-            style = MaterialTheme.typography.bodySmall,
+            text = "ChatGPT 可能会犯错。请核实重要信息。",
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontSize = 12.sp
+            ),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp)
+                .padding(horizontal = 16.dp, vertical = 2.dp)
         )
 
         // 输入框
@@ -117,7 +119,7 @@ fun ChatScreen(
             onVoice = { /* TODO */ }
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
     }
 }
 
@@ -130,7 +132,7 @@ fun TypingIndicator(modifier: Modifier = Modifier) {
             .clip(MaterialTheme.shapes.medium)
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         repeat(3) { index ->
             val alpha by infiniteTransition.animateFloat(
@@ -145,7 +147,7 @@ fun TypingIndicator(modifier: Modifier = Modifier) {
 
             Box(
                 modifier = Modifier
-                    .size(8.dp)
+                    .size(7.dp)
                     .graphicsLayer { this.alpha = alpha }
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.onSurfaceVariant)

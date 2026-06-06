@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -25,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.chatagent.data.model.ApiProvider
 
 @Composable
@@ -42,7 +44,7 @@ fun FloatingTopBar(
         modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 8.dp, vertical = 8.dp),
+            .padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // 菜单按钮
@@ -50,13 +52,14 @@ fun FloatingTopBar(
             Icon(
                 imageVector = Icons.Default.Menu,
                 contentDescription = "菜单",
-                tint = MaterialTheme.colorScheme.onSurface
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(24.dp)
             )
         }
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // 标题 / 模型选择器
+        // 模型选择器（居中）
         Row(
             modifier = Modifier
                 .clickable { showModelMenu = true }
@@ -64,15 +67,19 @@ fun FloatingTopBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
+                text = title.ifEmpty { currentProvider.displayName },
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 17.sp
+                ),
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = "▼",
-                style = MaterialTheme.typography.bodySmall,
+                text = "›",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontSize = 20.sp
+                ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -85,7 +92,10 @@ fun FloatingTopBar(
             currentProvider.models.forEach { model ->
                 DropdownMenuItem(
                     text = {
-                        Text(text = model)
+                        Text(
+                            text = model,
+                            fontSize = 15.sp
+                        )
                     },
                     onClick = {
                         onModelSelect(model)
@@ -97,12 +107,13 @@ fun FloatingTopBar(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // 新建对话按钮
+        // 新对话按钮
         IconButton(onClick = onNewChatClick) {
             Icon(
                 imageVector = Icons.Default.Add,
-                contentDescription = "新建",
-                tint = MaterialTheme.colorScheme.onSurface
+                contentDescription = "新对话",
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(24.dp)
             )
         }
     }

@@ -2,22 +2,23 @@ package com.chatagent.presentation.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// ChatGPT Green Accent
+// ChatGPT iOS Dark Theme
 val Accent = Color(0xFF10A37F)
 val AccentDark = Color(0xFF0E8C6D)
 val AccentLight = Color(0xFF34D399)
 
-// Dark Theme (ChatGPT Dark)
-val DarkBackground = Color(0xFF212121)
-val DarkSurface = Color(0xFF2F2F2F)
-val DarkSurfaceVariant = Color(0xFF383838)
+// Dark Theme (ChatGPT iOS)
+val DarkBackground = Color(0xFF1A1A1A)
+val DarkSurface = Color(0xFF212121)
+val DarkSurfaceVariant = Color(0xFF2A2A2A)
 val DarkOnBackground = Color(0xFFECECEC)
 val DarkOnSurface = Color(0xFFD1D5DB)
 val DarkOnSurfaceVariant = Color(0xFF9CA3AF)
-val DarkSidebar = Color(0xFF171717)
-val DarkUserMessage = Color(0xFF303030)
-val DarkInputBg = Color(0xFF2F2F2F)
-val DarkInputBorder = Color(0xFF424242)
+val DarkSidebar = Color(0xFF121212)
+val DarkUserMessage = Color(0xFF2A2A2A)
+val DarkInputBg = Color(0xFF2A2A2A)
+val DarkInputBorder = Color(0xFF3A3A3A)
+val DarkTopBar = Color(0xFF1A1A1A)
 
 // Light Theme
 val LightBackground = Color(0xFFFFFFFF)

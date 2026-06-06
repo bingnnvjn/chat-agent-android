@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.chatagent.presentation.ui.theme.Accent
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -31,10 +31,10 @@ fun WelcomeScreen(
     modifier: Modifier = Modifier
 ) {
     val suggestions = listOf(
+        "帮我规划旅行",
         "解释量子计算",
-        "帮我写一首诗",
-        "如何学习编程？",
-        "推荐一些好书"
+        "写一首现代诗",
+        "推荐学习资源"
     )
 
     Column(
@@ -47,19 +47,19 @@ fun WelcomeScreen(
             text = "有什么可以帮你的？",
             style = MaterialTheme.typography.headlineLarge.copy(
                 fontWeight = FontWeight.Bold,
-                fontSize = 28.sp
+                fontSize = 26.sp
             ),
             color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(36.dp))
 
-        // 建议标签
+        // 建议标签（ChatGPT 风格：小药丸形状）
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(horizontal = 32.dp)
+            modifier = Modifier.padding(horizontal = 24.dp)
         ) {
             suggestions.forEach { suggestion ->
                 Box(
@@ -72,7 +72,9 @@ fun WelcomeScreen(
                     Text(
                         text = suggestion,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 14.sp
+                        )
                     )
                 }
             }

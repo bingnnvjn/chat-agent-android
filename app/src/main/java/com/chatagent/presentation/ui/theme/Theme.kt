@@ -14,30 +14,28 @@ import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
     primary = Accent,
-    onPrimary = White,
-    primaryContainer = AccentDark,
-    secondary = AccentLight,
+    secondary = AccentDark,
+    tertiary = AccentLight,
     background = DarkBackground,
     surface = DarkSurface,
     surfaceVariant = DarkSurfaceVariant,
     onBackground = DarkOnBackground,
     onSurface = DarkOnSurface,
     onSurfaceVariant = DarkOnSurfaceVariant,
-    error = Error
+    outline = DarkInputBorder
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = Accent,
-    onPrimary = White,
-    primaryContainer = AccentLight,
     secondary = AccentDark,
+    tertiary = AccentLight,
     background = LightBackground,
     surface = LightSurface,
     surfaceVariant = LightSurfaceVariant,
     onBackground = LightOnBackground,
     onSurface = LightOnSurface,
     onSurfaceVariant = LightOnSurfaceVariant,
-    error = Error
+    outline = LightInputBorder
 )
 
 @Composable
@@ -51,8 +49,8 @@ fun ChatAgentTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = Color.Transparent.toArgb()
-            window.navigationBarColor = Color.Transparent.toArgb()
+            window.statusBarColor = colorScheme.surface.toArgb()
+            window.navigationBarColor = colorScheme.surface.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
             WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = !darkTheme
         }
