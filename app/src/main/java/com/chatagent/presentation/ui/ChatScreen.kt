@@ -11,8 +11,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +22,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -31,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.chatagent.presentation.components.ChatInput
 import com.chatagent.presentation.components.MessageBubble
@@ -63,6 +67,7 @@ fun ChatScreen(
                 onSuggestionClick = { suggestion ->
                     inputText = suggestion
                     viewModel.sendMessage(suggestion)
+                    inputText = ""
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -70,7 +75,7 @@ fun ChatScreen(
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 state = listState,
-                contentPadding = PaddingValues(16.dp),
+                contentPadding = PaddingValues(vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(currentConversation!!.messages) { message ->
@@ -80,13 +85,25 @@ fun ChatScreen(
                 if (isStreaming) {
                     item {
                         TypingIndicator(
-                            modifier = Modifier.padding(start = 16.dp)
+                            modifier = Modifier.padding(start = 56.dp)
                         )
                     }
                 }
             }
         }
 
+        // 提示文字
+        Text(
+            text = "AI 可能会犯错，请核实重要信息。",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp)
+        )
+
+        // 输入框
         ChatInput(
             value = inputText,
             onValueChange = { inputText = it },
@@ -96,9 +113,11 @@ fun ChatScreen(
                     inputText = ""
                 }
             },
-            onAttach = { /* TODO: 实现文件选择器 */ },
-            onVoice = { /* TODO: 实现语音识别 */ }
+            onAttach = { /* TODO */ },
+            onVoice = { /* TODO */ }
         )
+
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }
 

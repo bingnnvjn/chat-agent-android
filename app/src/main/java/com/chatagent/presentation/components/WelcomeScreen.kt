@@ -11,8 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,7 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.chatagent.presentation.ui.theme.Accent
+import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -31,69 +30,49 @@ fun WelcomeScreen(
     onSuggestionClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val suggestions = listOf(
+        "解释量子计算",
+        "帮我写一首诗",
+        "如何学习编程？",
+        "推荐一些好书"
+    )
+
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(24.dp),
+        modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Box(
-            modifier = Modifier
-                .size(64.dp)
-                .clip(CircleShape)
-                .background(Accent),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "C",
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.onPrimary,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Text(
-            text = "Chat Agent",
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
+        // 主标题
         Text(
             text = "有什么可以帮你的？",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            style = MaterialTheme.typography.headlineLarge.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 28.sp
+            ),
+            color = MaterialTheme.colorScheme.onBackground,
+            textAlign = TextAlign.Center
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
+        // 建议标签
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(horizontal = 32.dp)
         ) {
-            val suggestions = listOf(
-                "解释 JavaScript 闭包",
-                "写一首关于夏天的诗",
-                "推荐学习编程的方法",
-                "帮我写一个待办应用"
-            )
-
             suggestions.forEach { suggestion ->
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(20.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                         .clickable { onSuggestionClick(suggestion) }
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .padding(horizontal = 16.dp, vertical = 10.dp)
                 ) {
                     Text(
                         text = suggestion,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
             }
