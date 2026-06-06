@@ -152,13 +152,14 @@ class ChatRepository @Inject constructor(
                 }
 
                 // 添加 AI 回复
+                val currentConv = getConversation(conversationId) ?: return@withContext
                 val aiMessage = Message(
                     id = System.currentTimeMillis().toString(),
                     role = "assistant",
                     content = contentBuilder.toString()
                 )
-                updateConversation(getConversation(conversationId)!!.copy(
-                    messages = getConversation(conversationId)!!.messages + aiMessage,
+                updateConversation(currentConv.copy(
+                    messages = currentConv.messages + aiMessage,
                     updatedAt = System.currentTimeMillis()
                 ))
 
