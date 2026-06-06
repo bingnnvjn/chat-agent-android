@@ -1,4 +1,4 @@
-package com.chatagent
+package com.chatagent.presentation.ui
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.chatagent.presentation.ui.MainScreen
 import com.chatagent.presentation.ui.theme.ChatAgentTheme
 import dagger.hilt.android.AndroidEntryPoint
 
