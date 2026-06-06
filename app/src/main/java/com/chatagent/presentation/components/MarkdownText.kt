@@ -1,39 +1,30 @@
 package com.chatagent.presentation.components
 
-import android.widget.TextView
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.viewinterop.AndroidView
-import io.noties.markwon.Markwon
-import io.noties.markwon.ext.strikethrough.StrikethroughPlugin
-import io.noties.markwon.syntax.SyntaxHighlightPlugin
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 
 @Composable
 fun MarkdownText(
     markdown: String,
     modifier: Modifier = Modifier,
-    color: Int = 0xFF000000.toInt()
+    color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    style: TextStyle = MaterialTheme.typography.bodyLarge
 ) {
-    val context = LocalContext.current
-    val markwon = remember {
-        Markwon.builder(context)
-            .usePlugin(StrikethroughPlugin.create())
-            .usePlugin(SyntaxHighlightPlugin.create(context))
-            .build()
-    }
+    // 简化版本：直接显示文本，支持基本格式
+    val formattedText = markdown
+        .replace("**", "") // 移除加粗标记
+        .replace("*", "") // 移除斜体标记
+        .replace("`", "") // 移除代码标记
+        .replace("```", "") // 移除代码块标记
 
-    AndroidView(
+    Text(
+        text = formattedText,
         modifier = modifier,
-        factory = { ctx ->
-            TextView(ctx).apply {
-                setTextColor(color)
-                textSize = 16f
-            }
-        },
-        update = { textView ->
-            markwon.setMarkdown(textView, markdown)
-        }
+        color = color,
+        style = style
     )
 }

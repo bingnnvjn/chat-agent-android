@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.chatagent.presentation.components.FloatingTopBar
 import com.chatagent.presentation.components.Sidebar
+import com.chatagent.presentation.viewmodel.ChatUiState
 import com.chatagent.presentation.viewmodel.ChatViewModel
 
 @Composable
