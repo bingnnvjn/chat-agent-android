@@ -61,21 +61,28 @@ class ChatViewModel @Inject constructor(
     }
 
     fun sendMessage(content: String, image: String? = null) {
-        val conversation = _currentConversation.value ?: return
         if (content.isBlank() && image == null) return
+
+        // 自动创建对话
+        var conversation = _currentConversation.value
+        if (conversation == null) {
+            conversation = chatRepository.createConversation()
+            _currentConversation.value = conversation
+        }
+
+        val conv = conversation
 
         viewModelScope.launch {
             _isStreaming.value = true
             chatRepository.sendMessage(
-                conversationId = conversation.id,
+                conversationId = conv.id,
                 content = content,
                 image = image,
                 onToken = { token ->
-                    // 实时更新 UI
-                    _currentConversation.value = chatRepository.getConversation(conversation.id)
+                    _currentConversation.value = chatRepository.getConversation(conv.id)
                 },
                 onComplete = { fullContent ->
-                    _currentConversation.value = chatRepository.getConversation(conversation.id)
+                    _currentConversation.value = chatRepository.getConversation(conv.id)
                     _isStreaming.value = false
                 },
                 onError = { error ->
