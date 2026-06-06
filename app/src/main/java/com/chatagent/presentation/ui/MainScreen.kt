@@ -24,7 +24,7 @@ import com.chatagent.presentation.components.FloatingTopBar
 import com.chatagent.presentation.components.Sidebar
 import com.chatagent.presentation.viewmodel.ChatViewModel
 import com.kyant.backdrop.Backdrop
-import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.backdrops.rememberBackdrop
 
 @Composable
 fun MainScreen(
@@ -37,7 +37,7 @@ fun MainScreen(
     var showSettings by remember { mutableStateOf(false) }
 
     // 创建 Backdrop 对象用于 Liquid Glass 效果
-    val backdrop = rememberLayerBackdrop()
+    val backdrop = rememberBackdrop()
 
     Box(
         modifier = Modifier
