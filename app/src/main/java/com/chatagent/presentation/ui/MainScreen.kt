@@ -23,8 +23,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.chatagent.presentation.components.FloatingTopBar
 import com.chatagent.presentation.components.Sidebar
 import com.chatagent.presentation.viewmodel.ChatViewModel
-import com.kyant.backdrop.Backdrop
-import com.kyant.backdrop.backdrops.rememberBackdrop
 
 @Composable
 fun MainScreen(
@@ -36,9 +34,6 @@ fun MainScreen(
     var showSidebar by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
 
-    // 创建 Backdrop 对象用于 Liquid Glass 效果
-    val backdrop = rememberBackdrop()
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -47,25 +42,23 @@ fun MainScreen(
         // 主聊天界面
         ChatScreen(
             viewModel = viewModel,
-            backdrop = backdrop,
             modifier = Modifier.padding(top = 72.dp)
         )
 
-        // 悬浮顶栏（使用 Liquid Glass 效果）
+        // 悬浮顶栏
         FloatingTopBar(
             title = currentConversation?.title ?: "Chat Agent",
             currentProvider = uiState.currentProvider,
             onMenuClick = { showSidebar = true },
             onNewChatClick = { viewModel.createConversation() },
-            onModelSelect = { model -> viewModel.setModel(model) },
-            backdrop = backdrop
+            onModelSelect = { model -> viewModel.setModel(model) }
         )
 
         // 侧边栏
         AnimatedVisibility(
             visible = showSidebar,
-            enter = slideInHorizontally(initialOffsetX = { -it }),
-            exit = slideOutHorizontally(targetOffsetX = { -it })
+            enter = slideInHorizontally { -it },
+            exit = slideOutHorizontally { -it }
         ) {
             Box(
                 modifier = Modifier.fillMaxSize()
@@ -81,7 +74,7 @@ fun MainScreen(
                         ) { showSidebar = false }
                 )
 
-                // 侧边栏（使用 Liquid Glass 效果）
+                // 侧边栏
                 Sidebar(
                     conversations = conversations,
                     currentConversationId = currentConversation?.id,
@@ -98,8 +91,7 @@ fun MainScreen(
                         showSettings = true
                         showSidebar = false
                     },
-                    onClose = { showSidebar = false },
-                    backdrop = backdrop
+                    onClose = { showSidebar = false }
                 )
             }
         }
@@ -107,8 +99,8 @@ fun MainScreen(
         // 设置界面
         AnimatedVisibility(
             visible = showSettings,
-            enter = slideInHorizontally(initialOffsetX = { it }),
-            exit = slideOutHorizontally(targetOffsetX = { it })
+            enter = slideInHorizontally { it },
+            exit = slideOutHorizontally { it }
         ) {
             SettingsScreen(
                 viewModel = viewModel,

@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -37,12 +36,10 @@ import com.chatagent.presentation.components.ChatInput
 import com.chatagent.presentation.components.MessageBubble
 import com.chatagent.presentation.components.WelcomeScreen
 import com.chatagent.presentation.viewmodel.ChatViewModel
-import com.kyant.backdrop.Backdrop
 
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel,
-    backdrop: Backdrop? = null,
     modifier: Modifier = Modifier
 ) {
     val currentConversation by viewModel.currentConversation.collectAsState()
@@ -100,8 +97,7 @@ fun ChatScreen(
                 }
             },
             onAttach = { /* TODO: 实现文件选择器 */ },
-            onVoice = { /* TODO: 实现语音识别 */ },
-            backdrop = backdrop
+            onVoice = { /* TODO: 实现语音识别 */ }
         )
     }
 }

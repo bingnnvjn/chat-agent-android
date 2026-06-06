@@ -24,14 +24,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
 import com.chatagent.presentation.ui.theme.Accent
-import com.kyant.backdrop.Backdrop
-import com.kyant.backdrop.drawPlainBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.vibrancy
 
 @Composable
 fun ChatInput(
@@ -40,7 +35,6 @@ fun ChatInput(
     onSend: () -> Unit,
     onAttach: () -> Unit,
     onVoice: () -> Unit,
-    backdrop: Backdrop? = null,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -56,31 +50,13 @@ fun ChatInput(
                     shape = RoundedCornerShape(24.dp)
                 )
                 .clip(RoundedCornerShape(24.dp))
-                .then(
-                    if (backdrop != null) {
-                        Modifier.drawPlainBackdrop(
-                            backdrop = backdrop,
-                            shape = { RoundedCornerShape(24.dp) },
-                            effects = {
-                                vibrancy()
-                                blur(20f)
-                            },
-                            onDrawSurface = {
-                                drawRect(
-                                    color = Color.White.copy(alpha = 0.2f)
-                                )
-                            }
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f)
                         )
-                    } else {
-                        Modifier.background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
-                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f)
-                                )
-                            )
-                        )
-                    }
+                    )
                 )
                 .border(
                     width = 1.dp,

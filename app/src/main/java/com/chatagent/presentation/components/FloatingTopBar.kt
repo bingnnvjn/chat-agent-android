@@ -34,10 +34,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.chatagent.data.model.ApiProvider
-import com.kyant.backdrop.Backdrop
-import com.kyant.backdrop.drawPlainBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.vibrancy
 
 @Composable
 fun FloatingTopBar(
@@ -46,7 +42,6 @@ fun FloatingTopBar(
     onMenuClick: () -> Unit,
     onNewChatClick: () -> Unit,
     onModelSelect: (String) -> Unit,
-    backdrop: Backdrop? = null,
     modifier: Modifier = Modifier
 ) {
     var showModelDropdown by remember { mutableStateOf(false) }
@@ -64,31 +59,13 @@ fun FloatingTopBar(
                     shape = RoundedCornerShape(28.dp)
                 )
                 .clip(RoundedCornerShape(28.dp))
-                .then(
-                    if (backdrop != null) {
-                        Modifier.drawPlainBackdrop(
-                            backdrop = backdrop,
-                            shape = { RoundedCornerShape(28.dp) },
-                            effects = {
-                                vibrancy()
-                                blur(16f)
-                            },
-                            onDrawSurface = {
-                                drawRect(
-                                    color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.15f)
-                                )
-                            }
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
                         )
-                    } else {
-                        Modifier.background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
-                                )
-                            )
-                        )
-                    }
+                    )
                 )
                 .border(
                     width = 1.dp,

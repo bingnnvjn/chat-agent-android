@@ -29,15 +29,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.chatagent.data.model.Conversation
-import com.kyant.backdrop.Backdrop
-import com.kyant.backdrop.drawPlainBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.vibrancy
 
 @Composable
 fun Sidebar(
@@ -48,7 +43,6 @@ fun Sidebar(
     onDeleteConversation: (String) -> Unit,
     onSettingsClick: () -> Unit,
     onClose: () -> Unit,
-    backdrop: Backdrop? = null,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -60,25 +54,7 @@ fun Sidebar(
                 shape = RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp)
             )
             .clip(RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp))
-            .then(
-                if (backdrop != null) {
-                    Modifier.drawPlainBackdrop(
-                        backdrop = backdrop,
-                        shape = { RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp) },
-                        effects = {
-                            vibrancy()
-                            blur(24f)
-                        },
-                        onDrawSurface = {
-                            drawRect(
-                                color = Color.White.copy(alpha = 0.15f)
-                            )
-                        }
-                    )
-                } else {
-                    Modifier.background(MaterialTheme.colorScheme.surface)
-                }
-            )
+            .background(MaterialTheme.colorScheme.surface)
             .padding(16.dp)
     ) {
         Row(
