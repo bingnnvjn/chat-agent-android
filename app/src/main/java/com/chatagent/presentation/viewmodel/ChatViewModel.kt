@@ -31,6 +31,9 @@ class ChatViewModel @Inject constructor(
     private val _isStreaming = MutableStateFlow(false)
     val isStreaming: StateFlow<Boolean> = _isStreaming.asStateFlow()
 
+    private val _enableThinking = MutableStateFlow(false)
+    val enableThinking: StateFlow<Boolean> = _enableThinking.asStateFlow()
+
     init {
         viewModelScope.launch {
             settingsRepository.currentProvider.collect { provider ->
@@ -71,6 +74,7 @@ class ChatViewModel @Inject constructor(
         }
 
         val conv = conversation
+        val thinking = _enableThinking.value
 
         viewModelScope.launch {
             _isStreaming.value = true
@@ -78,6 +82,7 @@ class ChatViewModel @Inject constructor(
                 conversationId = conv.id,
                 content = content,
                 image = image,
+                enableThinking = thinking,
                 onToken = { token ->
                     _currentConversation.value = chatRepository.getConversation(conv.id)
                 },
@@ -95,6 +100,10 @@ class ChatViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
+    }
+
+    fun toggleThinking() {
+        _enableThinking.value = !_enableThinking.value
     }
 
     fun setProvider(provider: ApiProvider) {

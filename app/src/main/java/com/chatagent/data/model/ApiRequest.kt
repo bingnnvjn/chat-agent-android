@@ -8,7 +8,13 @@ data class ChatRequest(
     val messages: List<ApiMessage>,
     val stream: Boolean = true,
     val temperature: Double = 0.7,
-    val max_tokens: Int = 4096
+    val max_tokens: Int = 4096,
+    val chat_template_kwargs: ChatTemplateKwargs? = null
+)
+
+@Serializable
+data class ChatTemplateKwargs(
+    val enable_thinking: Boolean = false
 )
 
 @Serializable

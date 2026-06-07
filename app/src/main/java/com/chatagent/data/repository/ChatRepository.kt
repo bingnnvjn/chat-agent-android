@@ -6,6 +6,7 @@ import com.chatagent.data.local.ConversationStorage
 import com.chatagent.data.model.ApiMessage
 import com.chatagent.data.model.ApiProvider
 import com.chatagent.data.model.ChatRequest
+import com.chatagent.data.model.ChatTemplateKwargs
 import com.chatagent.data.model.Conversation
 import com.chatagent.data.model.Message
 import kotlinx.coroutines.CoroutineScope
@@ -72,6 +73,7 @@ class ChatRepository @Inject constructor(
         conversationId: String,
         content: String,
         image: String? = null,
+        enableThinking: Boolean = false,
         onToken: (String) -> Unit,
         onComplete: (String) -> Unit,
         onError: (String) -> Unit
@@ -122,7 +124,8 @@ class ChatRepository @Inject constructor(
                 messages = apiMessages,
                 stream = true,
                 temperature = 0.7,
-                max_tokens = 4096
+                max_tokens = 4096,
+                chat_template_kwargs = if (enableThinking) ChatTemplateKwargs(enable_thinking = true) else null
             )
 
             Log.d("ChatRepository", "Request body: $request")

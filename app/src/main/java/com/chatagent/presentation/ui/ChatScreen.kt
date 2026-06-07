@@ -53,6 +53,7 @@ fun ChatScreen(
     val currentConversation by viewModel.currentConversation.collectAsState()
     val isStreaming by viewModel.isStreaming.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
+    val enableThinking by viewModel.enableThinking.collectAsState()
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
@@ -134,6 +135,8 @@ fun ChatScreen(
             },
             onAttach = { /* TODO */ },
             onVoice = { /* TODO */ },
+            enableThinking = enableThinking,
+            onToggleThinking = { viewModel.toggleThinking() },
             modifier = Modifier.windowInsetsPadding(WindowInsets.ime)
         )
 

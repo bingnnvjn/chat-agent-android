@@ -2,6 +2,7 @@ package com.chatagent.presentation.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,8 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -26,7 +26,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.chatagent.presentation.ui.theme.Accent
@@ -39,6 +41,8 @@ fun ChatInput(
     onSend: () -> Unit,
     onAttach: () -> Unit,
     onVoice: () -> Unit,
+    enableThinking: Boolean = false,
+    onToggleThinking: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -69,7 +73,7 @@ fun ChatInput(
                     modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Add,
+                        imageVector = androidx.compose.material.icons.Icons.Default.Add,
                         contentDescription = "附件",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(22.dp)
@@ -140,7 +144,10 @@ fun ChatInput(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             BottomButton(icon = "🔍", label = "搜索")
-            BottomButton(icon = "💡", label = "推理")
+            ThinkingButton(
+                enabled = enableThinking,
+                onClick = onToggleThinking
+            )
             BottomButton(icon = "🎤", label = "语音")
         }
     }
@@ -165,6 +172,37 @@ private fun BottomButton(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 13.sp
+        )
+    }
+}
+
+@Composable
+private fun ThinkingButton(
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                if (enabled) Accent.copy(alpha = 0.15f)
+                else Color.Transparent
+            )
+            .clickable { onClick() }
+            .padding(horizontal = 12.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text = "💡",
+            fontSize = 14.sp
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = "思考",
+            style = MaterialTheme.typography.bodySmall,
+            color = if (enabled) Accent else MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 13.sp,
+            fontWeight = if (enabled) FontWeight.Bold else FontWeight.Normal
         )
     }
 }
