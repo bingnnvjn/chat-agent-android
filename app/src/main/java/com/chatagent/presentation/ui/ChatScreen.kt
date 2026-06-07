@@ -126,9 +126,8 @@ fun ChatScreen(
                 .padding(horizontal = 16.dp, vertical = 2.dp)
         )
 
-        // 输入框（仅底部适配键盘）
-        androidx.compose.foundation.layout.Box(modifier = Modifier.imePadding()) {
-            ChatInput(
+        // 输入框（底部留空，不避让键盘）
+        ChatInput(
             value = inputText,
             onValueChange = { inputText = it },
             onSend = {
@@ -141,7 +140,6 @@ fun ChatScreen(
             enableThinking = enableThinking,
             onToggleThinking = { viewModel.toggleThinking() }
         )
-        }
 
         Spacer(modifier = Modifier.height(8.dp))
     }
