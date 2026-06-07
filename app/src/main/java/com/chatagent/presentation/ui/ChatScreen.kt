@@ -136,7 +136,10 @@ fun ChatScreen(
                     viewModel.sendMessage(inputText)
                     inputText = ""
                 }
-            }
+            },
+            onAttach = { /* TODO: 接入文件/图片选择 */ },
+            enableThinking = enableThinking,
+            onToggleThinking = { viewModel.toggleThinking() }
         )
         }
 

@@ -58,7 +58,7 @@ fun MainScreen(
             viewModel = viewModel,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 56.dp)
+                .padding(top = 60.dp)
         )
 
         // 悬浮顶栏（适配状态栏）
