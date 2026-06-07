@@ -1,7 +1,9 @@
 package com.chatagent.presentation.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -42,11 +44,16 @@ fun ChatInput(
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 8.dp)
             .clip(RoundedCornerShape(20.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-            .padding(start = 4.dp, end = 6.dp, top = 6.dp, bottom = 6.dp)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                shape = RoundedCornerShape(20.dp)
+            )
+            .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.Bottom,
             modifier = Modifier.fillMaxWidth()
         ) {
             // 左侧加号（占位，后续接入图片/文件）
@@ -65,6 +72,8 @@ fun ChatInput(
                 )
             }
 
+            Spacer(modifier = Modifier.width(4.dp))
+
             // 输入框
             BasicTextField(
                 value = value,
@@ -76,7 +85,7 @@ fun ChatInput(
                 ),
                 cursorBrush = SolidColor(Accent),
                 decorationBox = { innerTextField ->
-                    Box(modifier = Modifier.padding(vertical = 10.dp)) {
+                    Box(modifier = Modifier.padding(vertical = 4.dp)) {
                         if (value.isEmpty()) {
                             Text(
                                 text = "输入消息...",
@@ -92,45 +101,46 @@ fun ChatInput(
 
             Spacer(modifier = Modifier.width(4.dp))
 
-            // 思考模式开关
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (enableThinking) Accent.copy(alpha = 0.2f)
-                        else Color.Transparent
-                    )
-                    .clickable { onToggleThinking() },
-                contentAlignment = Alignment.Center
+            // 右侧按钮组
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "💡",
-                    fontSize = 18.sp
-                )
-            }
+                // 思考模式开关
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (enableThinking) Accent.copy(alpha = 0.2f)
+                            else Color.Transparent
+                        )
+                        .clickable { onToggleThinking() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "💡", fontSize = 18.sp)
+                }
 
-            Spacer(modifier = Modifier.width(2.dp))
-
-            // 发送按钮（圆形）
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (value.isNotBlank()) Accent
-                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
+                // 发送按钮
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (value.isNotBlank()) Accent
+                            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
+                        )
+                        .clickable {
+                            if (value.isNotBlank()) onSend()
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "↑",
+                        color = White,
+                        fontSize = 20.sp
                     )
-                    .clickable {
-                        if (value.isNotBlank()) onSend()
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "↑",
-                    color = White,
-                    fontSize = 20.sp
-                )
+                }
             }
         }
     }
