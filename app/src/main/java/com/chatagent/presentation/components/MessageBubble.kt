@@ -106,9 +106,9 @@ fun MessageBubble(
                         Spacer(modifier = Modifier.height(8.dp))
                     }
 
-                    // 正式回复
-                    Text(
-                        text = message.content,
+                    // 正式回复 (支持 Markdown)
+                    MarkdownText(
+                        markdown = message.content,
                         color = MaterialTheme.colorScheme.onBackground,
                         style = MaterialTheme.typography.bodyLarge.copy(
                             lineHeight = 22.sp
