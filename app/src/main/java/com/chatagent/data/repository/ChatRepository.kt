@@ -217,8 +217,20 @@ class ChatRepository @Inject constructor(
                 if (BuildConfig.DEBUG) {
                     Log.e("ChatRepository", "Error: ${e.message}", e)
                 }
+                val detail = buildString {
+                    append("[错误] ${e.message}")
+                    if (e is java.net.ConnectException) append("\n→ 无法连接服务器，检查网络")
+                    if (e is java.net.SocketTimeoutException) append("\n→ 连接超时")
+                    if (e is java.io.IOException) {
+                        val msg = e.message ?: ""
+                        if (msg.contains("401") || msg.contains("unauthorized", true)) append("\n→ HTTP 401 认证失败，API Key 可能无效")
+                        if (msg.contains("403")) append("\n→ HTTP 403 权限不足")
+                        if (msg.contains("429")) append("\n→ HTTP 429 请求太频繁")
+                        if (msg.contains("500")) append("\n→ HTTP 500 服务器内部错误")
+                    }
+                }.toString()
                 withContext(Dispatchers.Main) {
-                    onError(e.message ?: "请求失败")
+                    onError(detail)
                 }
             }
         }

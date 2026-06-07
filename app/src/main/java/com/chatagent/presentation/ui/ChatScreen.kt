@@ -104,12 +104,13 @@ fun ChatScreen(
         if (uiState.errorMessage != null) {
             Text(
                 text = uiState.errorMessage!!,
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.error,
-                textAlign = TextAlign.Center,
+                textAlign = TextAlign.Start,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f))
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
             )
         }
 
