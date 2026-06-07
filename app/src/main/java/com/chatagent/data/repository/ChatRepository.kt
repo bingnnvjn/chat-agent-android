@@ -134,17 +134,16 @@ class ChatRepository @Inject constructor(
                     request = request
                 )
 
-                val responseString = responseBody.string()
-                Log.d("ChatRepository", "=== API Response ===")
-                Log.d("ChatRepository", "Response length: ${responseString.length}")
-                Log.d("ChatRepository", "Response preview: ${responseString.take(500)}")
-
+                // 流式读取响应
+                val reader = responseBody.byteStream().bufferedReader()
                 val contentBuilder = StringBuilder()
+                var lineCount = 0
 
-                // 尝试解析流式响应
-                if (responseString.contains("data: ")) {
-                    Log.d("ChatRepository", "Parsing as stream response...")
-                    responseString.lines().forEach { line ->
+                reader.useLines { lines ->
+                    lines.forEach { line ->
+                        lineCount++
+                        Log.d("ChatRepository", "Line $lineCount: $line")
+                        
                         if (line.startsWith("data: ")) {
                             val data = line.removePrefix("data: ").trim()
                             if (data == "[DONE]") {
@@ -157,36 +156,13 @@ class ChatRepository @Inject constructor(
                                 if (delta != null) {
                                     contentBuilder.append(delta)
                                     Log.d("ChatRepository", "Delta: $delta")
+                                    withContext(Dispatchers.Main) {
+                                        onToken(delta)
+                                    }
                                 }
                             } catch (e: Exception) {
-                                Log.e("ChatRepository", "Parse error: ${e.message}, data: $data")
+                                Log.e("ChatRepository", "Parse error: ${e.message}")
                             }
-                        }
-                    }
-                } else {
-                    // 尝试解析非流式响应
-                    Log.d("ChatRepository", "Parsing as non-stream response...")
-                    try {
-                        val response = json.decodeFromString<com.chatagent.data.model.ChatResponse>(responseString)
-                        val messageContent = response.choices?.firstOrNull()?.message?.content
-                        if (messageContent != null) {
-                            contentBuilder.append(messageContent)
-                            Log.d("ChatRepository", "Message content: $messageContent")
-                        }
-                    } catch (e: Exception) {
-                        Log.e("ChatRepository", "Non-stream parse error: ${e.message}")
-                        // 可能是错误响应
-                        try {
-                            val errorResponse = json.decodeFromString<Map<String, String>>(responseString)
-                            val errorMsg = errorResponse["error"] ?: errorResponse["message"]
-                            if (errorMsg != null) {
-                                withContext(Dispatchers.Main) {
-                                    onError("API 错误: $errorMsg")
-                                }
-                                return@withContext
-                            }
-                        } catch (e2: Exception) {
-                            Log.e("ChatRepository", "Error parse failed: ${e2.message}")
                         }
                     }
                 }
