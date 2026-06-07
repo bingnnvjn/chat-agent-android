@@ -66,7 +66,6 @@ fun ChatScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .imePadding() // 整个 Column 适配键盘
     ) {
         if (currentConversation == null || currentConversation!!.messages.isEmpty()) {
             WelcomeScreen(
@@ -127,8 +126,9 @@ fun ChatScreen(
                 .padding(horizontal = 16.dp, vertical = 2.dp)
         )
 
-        // 输入框
-        ChatInput(
+        // 输入框（仅底部适配键盘）
+        androidx.compose.foundation.layout.Box(modifier = Modifier.imePadding()) {
+            ChatInput(
             value = inputText,
             onValueChange = { inputText = it },
             onSend = {
@@ -138,6 +138,7 @@ fun ChatScreen(
                 }
             }
         )
+        }
 
         Spacer(modifier = Modifier.height(8.dp))
     }

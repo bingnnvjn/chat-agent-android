@@ -2,7 +2,9 @@ package com.chatagent.presentation.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,14 +12,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,10 +50,10 @@ fun FloatingTopBar(
             .padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 左侧圆形按钮：侧边栏
+        // 左侧圆形按钮：侧边栏（42dp）
         Box(
             modifier = Modifier
-                .size(36.dp)
+                .size(42.dp)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
                 .clickable { onMenuClick() },
@@ -64,7 +63,7 @@ fun FloatingTopBar(
                 imageVector = Icons.Default.Menu,
                 contentDescription = "菜单",
                 tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(22.dp)
             )
         }
 
@@ -96,28 +95,12 @@ fun FloatingTopBar(
             )
         }
 
-        // 模型选择菜单
-        DropdownMenu(
-            expanded = showModelMenu,
-            onDismissRequest = { showModelMenu = false }
-        ) {
-            currentProvider.models.forEach { model ->
-                DropdownMenuItem(
-                    text = { Text(model, fontSize = 14.sp) },
-                    onClick = {
-                        onModelSelect(model)
-                        showModelMenu = false
-                    }
-                )
-            }
-        }
-
         Spacer(modifier = Modifier.weight(1f))
 
-        // 右侧圆形按钮：新建对话
+        // 右侧圆形按钮：新建对话（42dp）
         Box(
             modifier = Modifier
-                .size(36.dp)
+                .size(42.dp)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
                 .clickable { onNewChatClick() },
@@ -127,8 +110,46 @@ fun FloatingTopBar(
                 imageVector = Icons.Default.Add,
                 contentDescription = "新对话",
                 tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(22.dp)
             )
         }
+    }
+
+    // 模型选择弹窗（居中圆角卡片）
+    if (showModelMenu) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showModelMenu = false },
+            shape = RoundedCornerShape(16.dp),
+            title = {
+                Text(
+                    text = "选择模型",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+            },
+            text = {
+                Column {
+                    currentProvider.models.forEach { model ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .clickable {
+                                    onModelSelect(model)
+                                    showModelMenu = false
+                                }
+                                .padding(vertical = 10.dp, horizontal = 4.dp)
+                        ) {
+                            Text(
+                                text = model,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontSize = 15.sp
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {}
+        )
     }
 }

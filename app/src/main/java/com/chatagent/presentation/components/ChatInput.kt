@@ -1,6 +1,7 @@
 package com.chatagent.presentation.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -71,7 +72,7 @@ fun ChatInput(
 
             Spacer(modifier = Modifier.width(6.dp))
 
-            // 发送按钮（圆形）
+            // 发送按钮（圆形，可点击）
             Box(
                 modifier = Modifier
                     .size(36.dp)
@@ -80,6 +81,9 @@ fun ChatInput(
                         if (value.isNotBlank()) Accent
                         else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
                     )
+                    .clickable {
+                        if (value.isNotBlank()) onSend()
+                    }
                     .padding(top = 1.dp),
                 contentAlignment = Alignment.Center
             ) {
