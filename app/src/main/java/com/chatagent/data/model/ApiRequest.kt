@@ -38,10 +38,13 @@ data class ApiMessage(
         /** 文本 + 图片消息 */
         fun textWithImage(role: String, text: String, imageUrl: String): ApiMessage {
             val parts = buildJsonArray {
-                add(buildJsonObject { put("type", "text"); put("text", text) })
                 add(buildJsonObject {
-                    put("type", "image_url")
-                    putJsonObject("image_url") { put("url", imageUrl) }
+                    put("type", JsonPrimitive("text"))
+                    put("text", JsonPrimitive(text))
+                })
+                add(buildJsonObject {
+                    put("type", JsonPrimitive("image_url"))
+                    putJsonObject("image_url") { put("url", JsonPrimitive(imageUrl)) }
                 })
             }
             return ApiMessage(role, parts)

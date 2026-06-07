@@ -73,7 +73,7 @@ fun ChatInput(
                     modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
-                        imageVector = Add,
+                        imageVector = Icons.Filled.Add,
                         contentDescription = "附件",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(22.dp)
