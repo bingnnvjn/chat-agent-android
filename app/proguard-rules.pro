@@ -14,6 +14,11 @@
 # Kotlinx Serialization
 -keepattributes *Annotation*, InnerClasses
 -dontnote kotlinx.serialization.AnnotationsKt
+-keepclassmembers class kotlinx.serialization.json.** { *** Companion; }
+-keepclasseswithmembers class kotlinx.serialization.json.** { kotlinx.serialization.KSerializer serializer(...); }
+-keep,includedescriptorclasses class com.chatagent.**$$serializer { *; }
+-keepclassmembers class com.chatagent.** { *** Companion; }
+-keepclasseswithmembers class com.chatagent.** { kotlinx.serialization.KSerializer serializer(...); }
 
 # Compose
 -dontwarn androidx.compose.**
@@ -22,3 +27,6 @@
 # Hilt
 -keep class dagger.hilt.** { *; }
 -keep class * extends dagger.hilt.android.internal.managers.ViewComponentManager$FragmentContextWrapper { *; }
+
+# DataStore
+-keep class androidx.datastore.** { *; }
