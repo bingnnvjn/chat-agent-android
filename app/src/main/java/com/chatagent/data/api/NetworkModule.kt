@@ -43,7 +43,7 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
-        val json = Json { ignoreUnknownKeys = true }
+        val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
         return Retrofit.Builder()
             .baseUrl("https://api.example.com/")
             .client(okHttpClient)

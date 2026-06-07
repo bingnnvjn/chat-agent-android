@@ -139,18 +139,18 @@ class ChatRepository @Inject constructor(
                 )
 
                 // 流式读取响应
-                val allText = rawResponse.string()
+                val reader = rawResponse.byteStream().bufferedReader()
                 val contentBuilder = StringBuilder()
                 val thinkingBuilder = StringBuilder()
-                var lineCount = 0
+                var allText = ""
                 var hadDelta = false
 
-                for (line in allText.lines()) {
-                    lineCount++
-                    if (BuildConfig.DEBUG) Log.d("ChatRepository", "Line $lineCount: $line")
+                reader.useLines { lines ->
+                    for (line in lines) {
+                        allText += line + "\n"
+                        if (BuildConfig.DEBUG) Log.d("ChatRepository", "Line: $line")
 
-                    // 流式: data: {json}
-                    if (line.startsWith("data: ")) {
+                        if (!line.startsWith("data: ")) continue
                         val data = line.removePrefix("data: ").trim()
                         if (data == "[DONE]") continue
                         try {
@@ -178,13 +178,13 @@ class ChatRepository @Inject constructor(
                             withContext(Dispatchers.Main) { onToken(m.content) }
                         }
                     } catch (_: Exception) {
-                        if (BuildConfig.DEBUG) Log.e("ChatRepository", "Non-stream parse failed")
+                        if (BuildConfig.DEBUG) Log.e("ChatRepository", "Non-stream fallback failed")
                     }
                 }
 
                 val aiContent = contentBuilder.toString().ifEmpty {
                     val preview = allText.take(300).replace("\n", " ")
-                    "（AI 无内容: ${allText.length}字节 $lineCount 行: $preview）"
+                    "（AI 无内容: ${allText.length}字节: $preview）"
                 }
                 val aiThinking = thinkingBuilder.toString().ifEmpty { null }
                 if (BuildConfig.DEBUG) {

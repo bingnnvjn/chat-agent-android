@@ -7,7 +7,7 @@ import kotlinx.serialization.json.JsonObject
 data class ChatRequest(
     val model: String,
     val messages: List<ApiMessage>,
-    val stream: Boolean = true,
+    val stream: Boolean,
     val temperature: Double = 0.7,
     val max_tokens: Int = 4096,
     val chat_template_kwargs: ChatTemplateKwargs? = null,
