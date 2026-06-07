@@ -9,6 +9,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -43,7 +44,7 @@ fun MainScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // 主聊天界面（顶部留出状态栏+顶栏空间）
+        // 主聊天界面（顶部留出状态栏+顶栏空间，底部适配键盘）
         ChatScreen(
             viewModel = viewModel,
             modifier = Modifier
@@ -61,14 +62,16 @@ fun MainScreen(
             modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars)
         )
 
-        // 侧边栏
+        // 侧边栏（适配状态栏）
         AnimatedVisibility(
             visible = showSidebar,
             enter = slideInHorizontally { -it },
             exit = slideOutHorizontally { -it }
         ) {
             Box(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .windowInsetsPadding(WindowInsets.statusBars)
             ) {
                 // 背景遮罩
                 Box(

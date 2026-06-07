@@ -127,6 +127,7 @@ class ChatRepository @Inject constructor(
 
                 val reader = responseBody.byteStream().bufferedReader()
                 val contentBuilder = StringBuilder()
+                var hasContent = false
 
                 reader.useLines { lines ->
                     lines.forEach { line ->
@@ -140,6 +141,7 @@ class ChatRepository @Inject constructor(
                                 val delta = response.choices?.firstOrNull()?.delta?.content
                                 if (delta != null) {
                                     contentBuilder.append(delta)
+                                    hasContent = true
                                     withContext(Dispatchers.Main) {
                                         onToken(delta)
                                     }
@@ -152,7 +154,7 @@ class ChatRepository @Inject constructor(
                 }
 
                 // 添加 AI 回复
-                val aiContent = contentBuilder.toString().ifEmpty { "（AI 未返回内容）" }
+                val aiContent = if (hasContent) contentBuilder.toString() else "（AI 未返回内容，请检查 API Key 和网络连接）"
                 val currentConv = getConversation(conversationId) ?: return@withContext
                 val aiMessage = Message(
                     id = System.currentTimeMillis().toString(),

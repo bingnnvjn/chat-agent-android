@@ -12,11 +12,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -119,7 +122,7 @@ fun ChatScreen(
                 .padding(horizontal = 16.dp, vertical = 2.dp)
         )
 
-        // 输入框
+        // 输入框（适配键盘）
         ChatInput(
             value = inputText,
             onValueChange = { inputText = it },
@@ -130,7 +133,8 @@ fun ChatScreen(
                 }
             },
             onAttach = { /* TODO */ },
-            onVoice = { /* TODO */ }
+            onVoice = { /* TODO */ },
+            modifier = Modifier.windowInsetsPadding(WindowInsets.ime)
         )
 
         Spacer(modifier = Modifier.height(4.dp))
