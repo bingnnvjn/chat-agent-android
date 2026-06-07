@@ -132,11 +132,26 @@ class ChatRepository @Inject constructor(
             if (BuildConfig.DEBUG) Log.d("ChatRepository", "Request body: $request")
 
             try {
-                val responseBody = chatApiService.chatCompletions(
+                val response = chatApiService.chatCompletions(
                     url = provider.baseUrl,
                     authorization = "Bearer $apiKey",
                     request = request
                 )
+
+                if (!response.isSuccessful) {
+                    val errBody = response.errorBody()?.string()?.take(300) ?: "(无内容)"
+                    withContext(Dispatchers.Main) {
+                        onError("HTTP ${response.code()} ${response.message()}: $errBody")
+                    }
+                    return@withContext
+                }
+
+                val responseBody = response.body() ?: run {
+                    withContext(Dispatchers.Main) {
+                        onError("服务器返回空响应")
+                    }
+                    return@withContext
+                }
 
                 // 流式读取响应
                 val reader = responseBody.byteStream().bufferedReader()

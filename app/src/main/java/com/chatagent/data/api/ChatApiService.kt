@@ -2,6 +2,7 @@ package com.chatagent.data.api
 
 import com.chatagent.data.model.ChatRequest
 import okhttp3.ResponseBody
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Header
 import retrofit2.http.POST
@@ -15,5 +16,5 @@ interface ChatApiService {
         @Url url: String,
         @Header("Authorization") authorization: String,
         @Body request: ChatRequest
-    ): ResponseBody
+    ): Response<ResponseBody>
 }
