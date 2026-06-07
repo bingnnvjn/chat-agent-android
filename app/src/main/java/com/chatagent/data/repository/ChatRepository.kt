@@ -28,7 +28,7 @@ class ChatRepository @Inject constructor(
     private val _conversations = MutableStateFlow<List<Conversation>>(emptyList())
     val conversations: Flow<List<Conversation>> = _conversations.asStateFlow()
 
-    private val json = Json { ignoreUnknownKeys = true }
+    private val json = Json { ignoreUnknownKeys = true; isLenient = true }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     init {
@@ -97,7 +97,9 @@ class ChatRepository @Inject constructor(
             val apiKey = settingsRepository.getApiKey(provider).first()
             val model = settingsRepository.currentModel.first().ifEmpty { provider.defaultModel }
 
-            Log.d("ChatRepository", "Provider: ${provider.displayName}, Model: $model")
+            Log.d("ChatRepository", "=== API Request ===")
+            Log.d("ChatRepository", "Provider: ${provider.displayName}")
+            Log.d("ChatRepository", "Model: $model")
             Log.d("ChatRepository", "API Key: ${apiKey.take(8)}...")
             Log.d("ChatRepository", "URL: ${provider.baseUrl}")
 
@@ -108,7 +110,7 @@ class ChatRepository @Inject constructor(
                 return@withContext
             }
 
-            // 构建请求消息
+            // 构建请求消息（不包含刚添加的用户消息，避免重复）
             val apiMessages = listOf(
                 ApiMessage(role = "system", content = "你是一个 AI 助手，用中文回答问题。")
             ) + conversation.messages.map {
@@ -123,6 +125,8 @@ class ChatRepository @Inject constructor(
                 max_tokens = 4096
             )
 
+            Log.d("ChatRepository", "Request body: $request")
+
             try {
                 val responseBody = chatApiService.chatCompletions(
                     url = provider.baseUrl,
@@ -131,34 +135,43 @@ class ChatRepository @Inject constructor(
                 )
 
                 val responseString = responseBody.string()
-                Log.d("ChatRepository", "Response: $responseString")
+                Log.d("ChatRepository", "=== API Response ===")
+                Log.d("ChatRepository", "Response length: ${responseString.length}")
+                Log.d("ChatRepository", "Response preview: ${responseString.take(500)}")
 
                 val contentBuilder = StringBuilder()
 
                 // 尝试解析流式响应
                 if (responseString.contains("data: ")) {
+                    Log.d("ChatRepository", "Parsing as stream response...")
                     responseString.lines().forEach { line ->
                         if (line.startsWith("data: ")) {
                             val data = line.removePrefix("data: ").trim()
-                            if (data == "[DONE]") return@forEach
+                            if (data == "[DONE]") {
+                                Log.d("ChatRepository", "Stream finished with [DONE]")
+                                return@forEach
+                            }
                             try {
                                 val response = json.decodeFromString<com.chatagent.data.model.ChatResponse>(data)
                                 val delta = response.choices?.firstOrNull()?.delta?.content
                                 if (delta != null) {
                                     contentBuilder.append(delta)
+                                    Log.d("ChatRepository", "Delta: $delta")
                                 }
                             } catch (e: Exception) {
-                                Log.e("ChatRepository", "Parse error: ${e.message}")
+                                Log.e("ChatRepository", "Parse error: ${e.message}, data: $data")
                             }
                         }
                     }
                 } else {
                     // 尝试解析非流式响应
+                    Log.d("ChatRepository", "Parsing as non-stream response...")
                     try {
                         val response = json.decodeFromString<com.chatagent.data.model.ChatResponse>(responseString)
                         val messageContent = response.choices?.firstOrNull()?.message?.content
                         if (messageContent != null) {
                             contentBuilder.append(messageContent)
+                            Log.d("ChatRepository", "Message content: $messageContent")
                         }
                     } catch (e: Exception) {
                         Log.e("ChatRepository", "Non-stream parse error: ${e.message}")
@@ -179,7 +192,8 @@ class ChatRepository @Inject constructor(
                 }
 
                 val aiContent = contentBuilder.toString().ifEmpty { "（AI 未返回内容，请检查 API Key 和网络连接）" }
-                Log.d("ChatRepository", "AI Content: $aiContent")
+                Log.d("ChatRepository", "=== Final AI Content ===")
+                Log.d("ChatRepository", "Content: $aiContent")
 
                 val currentConv = getConversation(conversationId) ?: return@withContext
                 val aiMessage = Message(
@@ -196,7 +210,8 @@ class ChatRepository @Inject constructor(
                     onComplete(aiContent)
                 }
             } catch (e: Exception) {
-                Log.e("ChatRepository", "Request failed: ${e.message}", e)
+                Log.e("ChatRepository", "=== Request Failed ===")
+                Log.e("ChatRepository", "Error: ${e.message}", e)
                 withContext(Dispatchers.Main) {
                     onError(e.message ?: "请求失败")
                 }
