@@ -136,11 +136,7 @@ fun ChatScreen(
                     viewModel.sendMessage(inputText)
                     inputText = ""
                 }
-            },
-            onAttach = { /* TODO */ },
-            onVoice = { /* TODO */ },
-            enableThinking = enableThinking,
-            onToggleThinking = { viewModel.toggleThinking() }
+            }
         )
 
         Spacer(modifier = Modifier.height(8.dp))
