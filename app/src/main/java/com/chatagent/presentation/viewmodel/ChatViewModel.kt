@@ -130,6 +130,23 @@ class ChatViewModel @Inject constructor(
             settingsRepository.setDarkTheme(isDark)
         }
     }
+
+    fun apiKeyForProvider(provider: ApiProvider): StateFlow<String> {
+        val flow = MutableStateFlow("")
+        viewModelScope.launch {
+            settingsRepository.getApiKey(provider).collect { flow.value = it }
+        }
+        return flow.asStateFlow()
+    }
+
+    val isDarkTheme: StateFlow<Boolean>
+        get() {
+            val flow = MutableStateFlow(true)
+            viewModelScope.launch {
+                settingsRepository.isDarkTheme.collect { flow.value = it }
+            }
+            return flow.asStateFlow()
+        }
 }
 
 data class ChatUiState(

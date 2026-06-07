@@ -35,6 +35,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,6 +65,17 @@ fun SettingsScreen(
     var apiKey by remember { mutableStateOf("") }
     var showApiKey by remember { mutableStateOf(false) }
     var isDarkTheme by remember { mutableStateOf(true) }
+
+    // 加载已保存的 API Key 和主题
+    val savedApiKey by viewModel.apiKeyForProvider(selectedProvider).collectAsState(initial = "")
+    val savedDarkTheme by viewModel.isDarkTheme.collectAsState(initial = true)
+
+    LaunchedEffect(savedApiKey) {
+        if (savedApiKey.isNotEmpty()) apiKey = savedApiKey
+    }
+    LaunchedEffect(savedDarkTheme) {
+        isDarkTheme = savedDarkTheme
+    }
 
     Column(
         modifier = modifier

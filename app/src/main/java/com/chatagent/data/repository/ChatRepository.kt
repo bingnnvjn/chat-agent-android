@@ -1,6 +1,7 @@
 package com.chatagent.data.repository
 
 import android.util.Log
+import com.chatagent.BuildConfig
 import com.chatagent.data.api.ChatApiService
 import com.chatagent.data.local.ConversationStorage
 import com.chatagent.data.model.ApiMessage
@@ -99,11 +100,11 @@ class ChatRepository @Inject constructor(
             val apiKey = settingsRepository.getApiKey(provider).first()
             val model = settingsRepository.currentModel.first().ifEmpty { provider.defaultModel }
 
-            Log.d("ChatRepository", "=== API Request ===")
-            Log.d("ChatRepository", "Provider: ${provider.displayName}")
-            Log.d("ChatRepository", "Model: $model")
-            Log.d("ChatRepository", "API Key: ${apiKey.take(8)}...")
-            Log.d("ChatRepository", "URL: ${provider.baseUrl}")
+            if (BuildConfig.DEBUG) {
+                Log.d("ChatRepository", "Provider: ${provider.displayName}")
+                Log.d("ChatRepository", "Model: $model")
+                Log.d("ChatRepository", "URL: ${provider.baseUrl}")
+            }
 
             if (apiKey.isEmpty()) {
                 withContext(Dispatchers.Main) {
@@ -137,7 +138,7 @@ class ChatRepository @Inject constructor(
                 chat_template_kwargs = if (enableThinking) ChatTemplateKwargs(enable_thinking = true) else null
             )
 
-            Log.d("ChatRepository", "Request body: $request")
+            if (BuildConfig.DEBUG) Log.d("ChatRepository", "Request body: $request")
 
             try {
                 val responseBody = chatApiService.chatCompletions(
@@ -155,12 +156,12 @@ class ChatRepository @Inject constructor(
                 reader.useLines { lines ->
                     lines.forEach { line ->
                         lineCount++
-                        Log.d("ChatRepository", "Line $lineCount: $line")
+                        if (BuildConfig.DEBUG) Log.d("ChatRepository", "Line $lineCount: $line")
                         
                         if (line.startsWith("data: ")) {
                             val data = line.removePrefix("data: ").trim()
                             if (data == "[DONE]") {
-                                Log.d("ChatRepository", "Stream finished with [DONE]")
+                                if (BuildConfig.DEBUG) Log.d("ChatRepository", "Stream finished with [DONE]")
                                 return@forEach
                             }
                             try {
@@ -170,7 +171,7 @@ class ChatRepository @Inject constructor(
                                 // 思考内容
                                 if (delta?.reasoning_content != null) {
                                     thinkingBuilder.append(delta.reasoning_content)
-                                    Log.d("ChatRepository", "Thinking: ${delta.reasoning_content}")
+                                    if (BuildConfig.DEBUG) Log.d("ChatRepository", "Thinking: ${delta.reasoning_content}")
                                     withContext(Dispatchers.Main) {
                                         onToken(delta.reasoning_content)
                                     }
@@ -179,13 +180,13 @@ class ChatRepository @Inject constructor(
                                 // 正式回复
                                 if (delta?.content != null) {
                                     contentBuilder.append(delta.content)
-                                    Log.d("ChatRepository", "Delta: ${delta.content}")
+                                    if (BuildConfig.DEBUG) Log.d("ChatRepository", "Delta: ${delta.content}")
                                     withContext(Dispatchers.Main) {
                                         onToken(delta.content)
                                     }
                                 }
                             } catch (e: Exception) {
-                                Log.e("ChatRepository", "Parse error: ${e.message}")
+                                if (BuildConfig.DEBUG) Log.e("ChatRepository", "Parse error: ${e.message}")
                             }
                         }
                     }
@@ -193,9 +194,10 @@ class ChatRepository @Inject constructor(
 
                 val aiContent = contentBuilder.toString().ifEmpty { "（AI 未返回内容，请检查 API Key 和网络连接）" }
                 val aiThinking = thinkingBuilder.toString().ifEmpty { null }
-                Log.d("ChatRepository", "=== Final AI Content ===")
-                Log.d("ChatRepository", "Content: $aiContent")
-                Log.d("ChatRepository", "Thinking: $aiThinking")
+                if (BuildConfig.DEBUG) {
+                    Log.d("ChatRepository", "Content: $aiContent")
+                    Log.d("ChatRepository", "Thinking: $aiThinking")
+                }
 
                 val currentConv = getConversation(conversationId) ?: return@withContext
                 val aiMessage = Message(
@@ -213,8 +215,9 @@ class ChatRepository @Inject constructor(
                     onComplete(aiContent)
                 }
             } catch (e: Exception) {
-                Log.e("ChatRepository", "=== Request Failed ===")
-                Log.e("ChatRepository", "Error: ${e.message}", e)
+                if (BuildConfig.DEBUG) {
+                    Log.e("ChatRepository", "Error: ${e.message}", e)
+                }
                 withContext(Dispatchers.Main) {
                     onError(e.message ?: "请求失败")
                 }

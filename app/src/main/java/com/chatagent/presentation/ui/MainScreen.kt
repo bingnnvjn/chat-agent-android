@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -26,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.chatagent.presentation.components.FloatingTopBar
 import com.chatagent.presentation.components.Sidebar
+import com.chatagent.presentation.ui.theme.ChatAgentTheme
 import com.chatagent.presentation.viewmodel.ChatUiState
 import com.chatagent.presentation.viewmodel.ChatViewModel
 
@@ -33,6 +35,13 @@ import com.chatagent.presentation.viewmodel.ChatViewModel
 fun MainScreen(
     viewModel: ChatViewModel = hiltViewModel()
 ) {
+    val isDarkTheme by viewModel.isDarkTheme.collectAsState(initial = true)
+
+    ChatAgentTheme(darkTheme = isDarkTheme) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
     val uiState by viewModel.uiState.collectAsState(ChatUiState())
     val conversations by viewModel.conversations.collectAsState(emptyList())
     val currentConversation by viewModel.currentConversation.collectAsState(null)
@@ -119,3 +128,4 @@ fun MainScreen(
         }
     }
 }
+    }

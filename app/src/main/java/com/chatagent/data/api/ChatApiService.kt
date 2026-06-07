@@ -10,6 +10,7 @@ import retrofit2.http.Url
 
 interface ChatApiService {
     @Streaming
+    @Headers("Content-Type: application/json")
     @POST
     suspend fun chatCompletions(
         @Url url: String,
