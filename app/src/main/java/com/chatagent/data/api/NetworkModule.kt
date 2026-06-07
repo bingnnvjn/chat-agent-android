@@ -1,7 +1,5 @@
 package com.chatagent.data.api
 
-package com.chatagent.data.api
-
 import com.chatagent.BuildConfig
 import dagger.Module
 import dagger.Provides
