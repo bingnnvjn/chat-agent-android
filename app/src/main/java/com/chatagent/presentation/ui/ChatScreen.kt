@@ -49,6 +49,7 @@ fun ChatScreen(
 ) {
     val currentConversation by viewModel.currentConversation.collectAsState()
     val isStreaming by viewModel.isStreaming.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
@@ -90,6 +91,19 @@ fun ChatScreen(
                     }
                 }
             }
+        }
+
+        // 错误提示
+        if (uiState.errorMessage != null) {
+            Text(
+                text = uiState.errorMessage!!,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+            )
         }
 
         // 提示文字

@@ -152,11 +152,12 @@ class ChatRepository @Inject constructor(
                 }
 
                 // 添加 AI 回复
+                val aiContent = contentBuilder.toString().ifEmpty { "（AI 未返回内容）" }
                 val currentConv = getConversation(conversationId) ?: return@withContext
                 val aiMessage = Message(
                     id = System.currentTimeMillis().toString(),
                     role = "assistant",
-                    content = contentBuilder.toString()
+                    content = aiContent
                 )
                 updateConversation(currentConv.copy(
                     messages = currentConv.messages + aiMessage,
@@ -164,7 +165,7 @@ class ChatRepository @Inject constructor(
                 ))
 
                 withContext(Dispatchers.Main) {
-                    onComplete(contentBuilder.toString())
+                    onComplete(aiContent)
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {

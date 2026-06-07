@@ -7,8 +7,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -40,19 +43,22 @@ fun MainScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // 主聊天界面
+        // 主聊天界面（顶部留出状态栏+顶栏空间）
         ChatScreen(
             viewModel = viewModel,
-            modifier = Modifier.padding(top = 56.dp)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 56.dp)
         )
 
-        // 悬浮顶栏
+        // 悬浮顶栏（适配状态栏）
         FloatingTopBar(
             title = currentConversation?.title ?: "Chat Agent",
             currentProvider = uiState.currentProvider,
             onMenuClick = { showSidebar = true },
             onNewChatClick = { viewModel.createConversation() },
-            onModelSelect = { model -> viewModel.setModel(model) }
+            onModelSelect = { model -> viewModel.setModel(model) },
+            modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars)
         )
 
         // 侧边栏
