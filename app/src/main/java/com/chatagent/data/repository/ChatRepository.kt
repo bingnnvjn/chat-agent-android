@@ -112,12 +112,21 @@ class ChatRepository @Inject constructor(
                 return@withContext
             }
 
-            // 构建请求消息（不包含刚添加的用户消息，避免重复）
+            // 构建请求消息
             val apiMessages = listOf(
-                ApiMessage(role = "system", content = "你是一个 AI 助手，用中文回答问题。")
-            ) + conversation.messages.map {
-                ApiMessage(role = it.role, content = it.content)
-            } + ApiMessage(role = "user", content = content)
+                ApiMessage.text(role = "system", content = "你是一个 AI 助手，用中文回答问题。")
+            ) + conversation.messages.map { msg ->
+                // 历史消息中有图片的，用 image_url 格式回传
+                if (msg.image != null) {
+                    ApiMessage.textWithImage(msg.role, msg.content, msg.image)
+                } else {
+                    ApiMessage.text(msg.role, msg.content)
+                }
+            } + if (image != null) {
+                ApiMessage.textWithImage("user", content, image)
+            } else {
+                ApiMessage.text("user", content)
+            }
 
             val request = ChatRequest(
                 model = model,

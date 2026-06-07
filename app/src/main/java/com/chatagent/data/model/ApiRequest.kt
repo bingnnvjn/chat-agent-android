@@ -1,6 +1,13 @@
 package com.chatagent.data.model
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.putJsonObject
 
 @Serializable
 data class ChatRequest(
@@ -9,7 +16,9 @@ data class ChatRequest(
     val stream: Boolean = true,
     val temperature: Double = 0.7,
     val max_tokens: Int = 4096,
-    val chat_template_kwargs: ChatTemplateKwargs? = null
+    val chat_template_kwargs: ChatTemplateKwargs? = null,
+    val tools: List<Tool>? = null,
+    val tool_choice: ToolChoice? = null
 )
 
 @Serializable
@@ -20,8 +29,66 @@ data class ChatTemplateKwargs(
 @Serializable
 data class ApiMessage(
     val role: String,
-    val content: String
+    val content: JsonElement
+) {
+    companion object {
+        /** 纯文本消息 */
+        fun text(role: String, content: String) = ApiMessage(role, JsonPrimitive(content))
+
+        /** 文本 + 图片消息 */
+        fun textWithImage(role: String, text: String, imageUrl: String): ApiMessage {
+            val parts = buildJsonArray {
+                add(buildJsonObject { put("type", "text"); put("text", text) })
+                add(buildJsonObject {
+                    put("type", "image_url")
+                    putJsonObject("image_url") { put("url", imageUrl) }
+                })
+            }
+            return ApiMessage(role, parts)
+        }
+    }
+}
+
+// --------------- 工具调用 ---------------
+
+@Serializable
+data class Tool(
+    val type: String = "function",
+    val function: ToolFunction
 )
+
+@Serializable
+data class ToolFunction(
+    val name: String,
+    val description: String = "",
+    val parameters: JsonObject? = null
+)
+
+@Serializable
+data class ToolChoice(
+    val type: String = "function",
+    val function: ToolChoiceFunction? = null
+)
+
+@Serializable
+data class ToolChoiceFunction(
+    val name: String
+)
+
+@Serializable
+data class ToolCall(
+    val id: String,
+    val type: String = "function",
+    val function: ToolCallFunction
+)
+
+@Serializable
+data class ToolCallFunction(
+    val name: String,
+    val arguments: String
+)
+
+// --------------- 响应 ---------------
 
 @Serializable
 data class ChatResponse(
@@ -41,7 +108,8 @@ data class Choice(
 @Serializable
 data class Delta(
     val content: String? = null,
-    val reasoning_content: String? = null
+    val reasoning_content: String? = null,
+    val tool_calls: List<ToolCall>? = null
 )
 
 @Serializable
