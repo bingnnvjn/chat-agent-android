@@ -40,7 +40,8 @@ data class Choice(
 
 @Serializable
 data class Delta(
-    val content: String? = null
+    val content: String? = null,
+    val reasoning_content: String? = null
 )
 
 @Serializable

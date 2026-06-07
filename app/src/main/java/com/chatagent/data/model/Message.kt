@@ -7,6 +7,7 @@ data class Message(
     val id: String = "",
     val role: String = "user",
     val content: String = "",
+    val thinkingContent: String? = null,
     val image: String? = null,
     val timestamp: Long = System.currentTimeMillis()
 )

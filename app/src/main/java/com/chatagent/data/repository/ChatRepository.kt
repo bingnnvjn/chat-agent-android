@@ -140,6 +140,7 @@ class ChatRepository @Inject constructor(
                 // 流式读取响应
                 val reader = responseBody.byteStream().bufferedReader()
                 val contentBuilder = StringBuilder()
+                val thinkingBuilder = StringBuilder()
                 var lineCount = 0
 
                 reader.useLines { lines ->
@@ -155,12 +156,23 @@ class ChatRepository @Inject constructor(
                             }
                             try {
                                 val response = json.decodeFromString<com.chatagent.data.model.ChatResponse>(data)
-                                val delta = response.choices?.firstOrNull()?.delta?.content
-                                if (delta != null) {
-                                    contentBuilder.append(delta)
-                                    Log.d("ChatRepository", "Delta: $delta")
+                                val delta = response.choices?.firstOrNull()?.delta
+                                
+                                // 思考内容
+                                if (delta?.reasoning_content != null) {
+                                    thinkingBuilder.append(delta.reasoning_content)
+                                    Log.d("ChatRepository", "Thinking: ${delta.reasoning_content}")
                                     withContext(Dispatchers.Main) {
-                                        onToken(delta)
+                                        onToken(delta.reasoning_content)
+                                    }
+                                }
+                                
+                                // 正式回复
+                                if (delta?.content != null) {
+                                    contentBuilder.append(delta.content)
+                                    Log.d("ChatRepository", "Delta: ${delta.content}")
+                                    withContext(Dispatchers.Main) {
+                                        onToken(delta.content)
                                     }
                                 }
                             } catch (e: Exception) {
@@ -171,14 +183,17 @@ class ChatRepository @Inject constructor(
                 }
 
                 val aiContent = contentBuilder.toString().ifEmpty { "（AI 未返回内容，请检查 API Key 和网络连接）" }
+                val aiThinking = thinkingBuilder.toString().ifEmpty { null }
                 Log.d("ChatRepository", "=== Final AI Content ===")
                 Log.d("ChatRepository", "Content: $aiContent")
+                Log.d("ChatRepository", "Thinking: $aiThinking")
 
                 val currentConv = getConversation(conversationId) ?: return@withContext
                 val aiMessage = Message(
                     id = System.currentTimeMillis().toString(),
                     role = "assistant",
-                    content = aiContent
+                    content = aiContent,
+                    thinkingContent = aiThinking
                 )
                 updateConversation(currentConv.copy(
                     messages = currentConv.messages + aiMessage,
