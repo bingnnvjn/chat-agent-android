@@ -1,13 +1,7 @@
 package com.chatagent.data.model
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.putJsonObject
 
 @Serializable
 data class ChatRequest(
@@ -29,26 +23,12 @@ data class ChatTemplateKwargs(
 @Serializable
 data class ApiMessage(
     val role: String,
-    val content: JsonElement
+    val content: String
 ) {
     companion object {
-        /** 纯文本消息 */
-        fun text(role: String, content: String) = ApiMessage(role, JsonPrimitive(content))
-
-        /** 文本 + 图片消息 */
-        fun textWithImage(role: String, text: String, imageUrl: String): ApiMessage {
-            val parts = buildJsonArray {
-                add(buildJsonObject {
-                    put("type", JsonPrimitive("text"))
-                    put("text", JsonPrimitive(text))
-                })
-                add(buildJsonObject {
-                    put("type", JsonPrimitive("image_url"))
-                    putJsonObject("image_url") { put("url", JsonPrimitive(imageUrl)) }
-                })
-            }
-            return ApiMessage(role, parts)
-        }
+        fun text(role: String, content: String) = ApiMessage(role, content)
+        fun textWithImage(role: String, text: String, imageUrl: String): ApiMessage =
+            ApiMessage(role, text) // image_url handled separately
     }
 }
 

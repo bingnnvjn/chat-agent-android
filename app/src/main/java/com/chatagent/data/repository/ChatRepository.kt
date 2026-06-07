@@ -115,19 +115,10 @@ class ChatRepository @Inject constructor(
 
             // 构建请求消息
             val apiMessages = listOf(
-                ApiMessage.text(role = "system", content = "你是一个 AI 助手，用中文回答问题。")
+                ApiMessage(role = "system", content = "你是一个 AI 助手，用中文回答问题。")
             ) + conversation.messages.map { msg ->
-                // 历史消息中有图片的，用 image_url 格式回传
-                if (msg.image != null) {
-                    ApiMessage.textWithImage(msg.role, msg.content, msg.image)
-                } else {
-                    ApiMessage.text(msg.role, msg.content)
-                }
-            } + if (image != null) {
-                ApiMessage.textWithImage("user", content, image)
-            } else {
-                ApiMessage.text("user", content)
-            }
+                ApiMessage(role = msg.role, content = msg.content)
+            } + ApiMessage(role = "user", content = content)
 
             val request = ChatRequest(
                 model = model,
@@ -152,10 +143,14 @@ class ChatRepository @Inject constructor(
                 val contentBuilder = StringBuilder()
                 val thinkingBuilder = StringBuilder()
                 var lineCount = 0
+                var firstDataLine = ""
 
                 reader.useLines { lines ->
                     lines.forEach { line ->
                         lineCount++
+                        if (line.startsWith("data: ") && firstDataLine.isEmpty()) {
+                            firstDataLine = line.take(200)
+                        }
                         if (BuildConfig.DEBUG) Log.d("ChatRepository", "Line $lineCount: $line")
                         
                         if (line.startsWith("data: ")) {
@@ -192,7 +187,11 @@ class ChatRepository @Inject constructor(
                     }
                 }
 
-                val aiContent = contentBuilder.toString().ifEmpty { "（AI 未返回内容，请检查 API Key 和网络连接）" }
+                val aiContent = contentBuilder.toString().ifEmpty {
+                    val hint = if (lineCount <= 1) "服务器未返回数据"
+                    else "收到 $lineCount 行数据但未解析到内容"
+                    "（AI 未返回内容，请检查 API Key 和网络连接。$hint）"
+                }
                 val aiThinking = thinkingBuilder.toString().ifEmpty { null }
                 if (BuildConfig.DEBUG) {
                     Log.d("ChatRepository", "Content: $aiContent")
