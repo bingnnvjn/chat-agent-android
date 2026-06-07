@@ -97,7 +97,9 @@ class ChatRepository @Inject constructor(
             val apiKey = settingsRepository.getApiKey(provider).first()
             val model = settingsRepository.currentModel.first().ifEmpty { provider.defaultModel }
 
-            Log.d("ChatRepository", "Provider: ${provider.displayName}, Model: $model, API Key: ${apiKey.take(8)}...")
+            Log.d("ChatRepository", "Provider: ${provider.displayName}, Model: $model")
+            Log.d("ChatRepository", "API Key: ${apiKey.take(8)}...")
+            Log.d("ChatRepository", "URL: ${provider.baseUrl}")
 
             if (apiKey.isEmpty()) {
                 withContext(Dispatchers.Main) {
@@ -106,7 +108,7 @@ class ChatRepository @Inject constructor(
                 return@withContext
             }
 
-            // 构建请求消息（不包含刚添加的用户消息，避免重复）
+            // 构建请求消息
             val apiMessages = listOf(
                 ApiMessage(role = "system", content = "你是一个 AI 助手，用中文回答问题。")
             ) + conversation.messages.map {
@@ -121,9 +123,6 @@ class ChatRepository @Inject constructor(
                 max_tokens = 4096
             )
 
-            Log.d("ChatRepository", "Request URL: ${provider.baseUrl}")
-            Log.d("ChatRepository", "Request messages count: ${apiMessages.size}")
-
             try {
                 val responseBody = chatApiService.chatCompletions(
                     url = provider.baseUrl,
@@ -131,48 +130,57 @@ class ChatRepository @Inject constructor(
                     request = request
                 )
 
-                Log.d("ChatRepository", "Response received, starting to read stream...")
+                val responseString = responseBody.string()
+                Log.d("ChatRepository", "Response: $responseString")
 
-                val reader = responseBody.byteStream().bufferedReader()
                 val contentBuilder = StringBuilder()
-                var hasContent = false
-                var lineCount = 0
 
-                reader.useLines { lines ->
-                    lines.forEach { line ->
-                        lineCount++
-                        Log.d("ChatRepository", "Line $lineCount: $line")
-                        
+                // 尝试解析流式响应
+                if (responseString.contains("data: ")) {
+                    responseString.lines().forEach { line ->
                         if (line.startsWith("data: ")) {
-                            val data = line.removePrefix("data: ")
-                            if (data == "[DONE]") {
-                                Log.d("ChatRepository", "Stream finished with [DONE]")
-                                return@forEach
-                            }
+                            val data = line.removePrefix("data: ").trim()
+                            if (data == "[DONE]") return@forEach
                             try {
                                 val response = json.decodeFromString<com.chatagent.data.model.ChatResponse>(data)
                                 val delta = response.choices?.firstOrNull()?.delta?.content
                                 if (delta != null) {
                                     contentBuilder.append(delta)
-                                    hasContent = true
-                                    Log.d("ChatRepository", "Delta content: $delta")
-                                    withContext(Dispatchers.Main) {
-                                        onToken(delta)
-                                    }
                                 }
                             } catch (e: Exception) {
-                                Log.e("ChatRepository", "Parse error: ${e.message}, data: $data")
+                                Log.e("ChatRepository", "Parse error: ${e.message}")
                             }
-                        } else if (line.isNotEmpty()) {
-                            Log.d("ChatRepository", "Non-data line: $line")
+                        }
+                    }
+                } else {
+                    // 尝试解析非流式响应
+                    try {
+                        val response = json.decodeFromString<com.chatagent.data.model.ChatResponse>(responseString)
+                        val messageContent = response.choices?.firstOrNull()?.message?.content
+                        if (messageContent != null) {
+                            contentBuilder.append(messageContent)
+                        }
+                    } catch (e: Exception) {
+                        Log.e("ChatRepository", "Non-stream parse error: ${e.message}")
+                        // 可能是错误响应
+                        try {
+                            val errorResponse = json.decodeFromString<Map<String, String>>(responseString)
+                            val errorMsg = errorResponse["error"] ?: errorResponse["message"]
+                            if (errorMsg != null) {
+                                withContext(Dispatchers.Main) {
+                                    onError("API 错误: $errorMsg")
+                                }
+                                return@withContext
+                            }
+                        } catch (e2: Exception) {
+                            Log.e("ChatRepository", "Error parse failed: ${e2.message}")
                         }
                     }
                 }
 
-                Log.d("ChatRepository", "Stream reading finished. Total lines: $lineCount, hasContent: $hasContent")
+                val aiContent = contentBuilder.toString().ifEmpty { "（AI 未返回内容，请检查 API Key 和网络连接）" }
+                Log.d("ChatRepository", "AI Content: $aiContent")
 
-                // 添加 AI 回复
-                val aiContent = if (hasContent) contentBuilder.toString() else "（AI 未返回内容，请检查 API Key 和网络连接）"
                 val currentConv = getConversation(conversationId) ?: return@withContext
                 val aiMessage = Message(
                     id = System.currentTimeMillis().toString(),

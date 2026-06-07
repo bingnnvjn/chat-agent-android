@@ -137,7 +137,7 @@ fun ChatScreen(
             modifier = Modifier.windowInsetsPadding(WindowInsets.ime)
         )
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }
 
