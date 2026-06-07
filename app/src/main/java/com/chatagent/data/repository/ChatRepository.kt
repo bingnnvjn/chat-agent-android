@@ -139,14 +139,13 @@ class ChatRepository @Inject constructor(
                 )
 
                 // 流式读取响应
-                val reader = rawResponse.byteStream().bufferedReader()
+                val allText = rawResponse.string()
                 val contentBuilder = StringBuilder()
                 val thinkingBuilder = StringBuilder()
                 var lineCount = 0
                 var firstDataLine = ""
 
-                reader.useLines { lines ->
-                    lines.forEach { line ->
+                for (line in allText.lines()) {
                         lineCount++
                         if (line.startsWith("data: ") && firstDataLine.isEmpty()) {
                             firstDataLine = line.take(200)
@@ -157,7 +156,7 @@ class ChatRepository @Inject constructor(
                             val data = line.removePrefix("data: ").trim()
                             if (data == "[DONE]") {
                                 if (BuildConfig.DEBUG) Log.d("ChatRepository", "Stream finished with [DONE]")
-                                return@forEach
+                                continue
                             }
                             try {
                                 val response = json.decodeFromString<com.chatagent.data.model.ChatResponse>(data)
@@ -188,9 +187,8 @@ class ChatRepository @Inject constructor(
                 }
 
                 val aiContent = contentBuilder.toString().ifEmpty {
-                    val hint = if (lineCount <= 1) "服务器未返回数据"
-                    else "收到 $lineCount 行数据但未解析到内容"
-                    "（AI 未返回内容，请检查 API Key 和网络连接。$hint）"
+                    val preview = allText.take(500).replace("\n", " | ")
+                    "（AI 返回空: 共${allText.length}字节, $lineCount 行, 开头: $preview）"
                 }
                 val aiThinking = thinkingBuilder.toString().ifEmpty { null }
                 if (BuildConfig.DEBUG) {
