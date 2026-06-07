@@ -183,7 +183,6 @@ class ChatRepository @Inject constructor(
                                 if (BuildConfig.DEBUG) Log.e("ChatRepository", "Parse error: ${e.message}")
                             }
                         }
-                    }
                 }
 
                 val aiContent = contentBuilder.toString().ifEmpty {
