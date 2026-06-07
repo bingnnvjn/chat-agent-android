@@ -1,5 +1,6 @@
 package com.chatagent.data.repository
 
+import android.util.Log
 import com.chatagent.data.api.ChatApiService
 import com.chatagent.data.local.ConversationStorage
 import com.chatagent.data.model.ApiMessage
@@ -96,6 +97,8 @@ class ChatRepository @Inject constructor(
             val apiKey = settingsRepository.getApiKey(provider).first()
             val model = settingsRepository.currentModel.first().ifEmpty { provider.defaultModel }
 
+            Log.d("ChatRepository", "Provider: ${provider.displayName}, Model: $model, API Key: ${apiKey.take(8)}...")
+
             if (apiKey.isEmpty()) {
                 withContext(Dispatchers.Main) {
                     onError("请先设置 API Key")
@@ -103,7 +106,7 @@ class ChatRepository @Inject constructor(
                 return@withContext
             }
 
-            // 构建请求
+            // 构建请求消息（不包含刚添加的用户消息，避免重复）
             val apiMessages = listOf(
                 ApiMessage(role = "system", content = "你是一个 AI 助手，用中文回答问题。")
             ) + conversation.messages.map {
@@ -118,6 +121,9 @@ class ChatRepository @Inject constructor(
                 max_tokens = 4096
             )
 
+            Log.d("ChatRepository", "Request URL: ${provider.baseUrl}")
+            Log.d("ChatRepository", "Request messages count: ${apiMessages.size}")
+
             try {
                 val responseBody = chatApiService.chatCompletions(
                     url = provider.baseUrl,
@@ -125,15 +131,22 @@ class ChatRepository @Inject constructor(
                     request = request
                 )
 
+                Log.d("ChatRepository", "Response received, starting to read stream...")
+
                 val reader = responseBody.byteStream().bufferedReader()
                 val contentBuilder = StringBuilder()
                 var hasContent = false
+                var lineCount = 0
 
                 reader.useLines { lines ->
                     lines.forEach { line ->
+                        lineCount++
+                        Log.d("ChatRepository", "Line $lineCount: $line")
+                        
                         if (line.startsWith("data: ")) {
                             val data = line.removePrefix("data: ")
                             if (data == "[DONE]") {
+                                Log.d("ChatRepository", "Stream finished with [DONE]")
                                 return@forEach
                             }
                             try {
@@ -142,16 +155,21 @@ class ChatRepository @Inject constructor(
                                 if (delta != null) {
                                     contentBuilder.append(delta)
                                     hasContent = true
+                                    Log.d("ChatRepository", "Delta content: $delta")
                                     withContext(Dispatchers.Main) {
                                         onToken(delta)
                                     }
                                 }
                             } catch (e: Exception) {
-                                // 忽略解析错误
+                                Log.e("ChatRepository", "Parse error: ${e.message}, data: $data")
                             }
+                        } else if (line.isNotEmpty()) {
+                            Log.d("ChatRepository", "Non-data line: $line")
                         }
                     }
                 }
+
+                Log.d("ChatRepository", "Stream reading finished. Total lines: $lineCount, hasContent: $hasContent")
 
                 // 添加 AI 回复
                 val aiContent = if (hasContent) contentBuilder.toString() else "（AI 未返回内容，请检查 API Key 和网络连接）"
@@ -170,6 +188,7 @@ class ChatRepository @Inject constructor(
                     onComplete(aiContent)
                 }
             } catch (e: Exception) {
+                Log.e("ChatRepository", "Request failed: ${e.message}", e)
                 withContext(Dispatchers.Main) {
                     onError(e.message ?: "请求失败")
                 }
