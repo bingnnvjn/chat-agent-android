@@ -143,51 +143,48 @@ class ChatRepository @Inject constructor(
                 val contentBuilder = StringBuilder()
                 val thinkingBuilder = StringBuilder()
                 var lineCount = 0
-                var firstDataLine = ""
+                var hadDelta = false
 
                 for (line in allText.lines()) {
-                        lineCount++
-                        if (line.startsWith("data: ") && firstDataLine.isEmpty()) {
-                            firstDataLine = line.take(200)
-                        }
-                        if (BuildConfig.DEBUG) Log.d("ChatRepository", "Line $lineCount: $line")
-                        
-                        if (line.startsWith("data: ")) {
-                            val data = line.removePrefix("data: ").trim()
-                            if (data == "[DONE]") {
-                                if (BuildConfig.DEBUG) Log.d("ChatRepository", "Stream finished with [DONE]")
-                                continue
+                    lineCount++
+                    if (BuildConfig.DEBUG) Log.d("ChatRepository", "Line $lineCount: $line")
+
+                    // 流式: data: {json}
+                    if (line.startsWith("data: ")) {
+                        val data = line.removePrefix("data: ").trim()
+                        if (data == "[DONE]") continue
+                        try {
+                            val r = json.decodeFromString<com.chatagent.data.model.ChatResponse>(data)
+                            val d = r.choices?.firstOrNull()?.delta
+                            if (d?.reasoning_content != null) {
+                                thinkingBuilder.append(d.reasoning_content)
+                                withContext(Dispatchers.Main) { onToken(d.reasoning_content) }
                             }
-                            try {
-                                val response = json.decodeFromString<com.chatagent.data.model.ChatResponse>(data)
-                                val delta = response.choices?.firstOrNull()?.delta
-                                
-                                // 思考内容
-                                if (delta?.reasoning_content != null) {
-                                    thinkingBuilder.append(delta.reasoning_content)
-                                    if (BuildConfig.DEBUG) Log.d("ChatRepository", "Thinking: ${delta.reasoning_content}")
-                                    withContext(Dispatchers.Main) {
-                                        onToken(delta.reasoning_content)
-                                    }
-                                }
-                                
-                                // 正式回复
-                                if (delta?.content != null) {
-                                    contentBuilder.append(delta.content)
-                                    if (BuildConfig.DEBUG) Log.d("ChatRepository", "Delta: ${delta.content}")
-                                    withContext(Dispatchers.Main) {
-                                        onToken(delta.content)
-                                    }
-                                }
-                            } catch (e: Exception) {
-                                if (BuildConfig.DEBUG) Log.e("ChatRepository", "Parse error: ${e.message}")
+                            if (d?.content != null) {
+                                contentBuilder.append(d.content); hadDelta = true
+                                withContext(Dispatchers.Main) { onToken(d.content) }
                             }
+                        } catch (_: Exception) {}
+                    }
+                }
+
+                // 非流式: 整个响应是 JSON
+                if (!hadDelta) {
+                    try {
+                        val r = json.decodeFromString<com.chatagent.data.model.ChatResponse>(allText)
+                        val m = r.choices?.firstOrNull()?.message
+                        if (m?.content != null) {
+                            contentBuilder.append(m.content)
+                            withContext(Dispatchers.Main) { onToken(m.content) }
                         }
+                    } catch (_: Exception) {
+                        if (BuildConfig.DEBUG) Log.e("ChatRepository", "Non-stream parse failed")
+                    }
                 }
 
                 val aiContent = contentBuilder.toString().ifEmpty {
-                    val preview = allText.take(500).replace("\n", " | ")
-                    "（AI 返回空: 共${allText.length}字节, $lineCount 行, 开头: $preview）"
+                    val preview = allText.take(300).replace("\n", " ")
+                    "（AI 无内容: ${allText.length}字节 $lineCount 行: $preview）"
                 }
                 val aiThinking = thinkingBuilder.toString().ifEmpty { null }
                 if (BuildConfig.DEBUG) {
