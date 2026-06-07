@@ -1,13 +1,13 @@
-package com.chatagent.presentation.ui
+package com.chatagent
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import com.chatagent.presentation.ui.MainScreen
 import com.chatagent.presentation.ui.theme.ChatAgentTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -15,7 +15,6 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             ChatAgentTheme {
                 Surface(
