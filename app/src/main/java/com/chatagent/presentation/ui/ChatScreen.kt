@@ -50,6 +50,7 @@ fun ChatScreen(
 ) {
     val currentConversation by viewModel.currentConversation.collectAsState()
     val isStreaming by viewModel.isStreaming.collectAsState()
+    val streamingContent by viewModel.streamingContent.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
     val enableThinking by viewModel.enableThinking.collectAsState()
     var inputText by remember { mutableStateOf("") }
@@ -87,10 +88,13 @@ fun ChatScreen(
                 }
 
                 if (isStreaming) {
+                    val streamingMessage = com.chatagent.data.model.Message(
+                        id = "streaming",
+                        role = "assistant",
+                        content = streamingContent
+                    )
                     item {
-                        TypingIndicator(
-                            modifier = Modifier.padding(start = 56.dp)
-                        )
+                        MessageBubble(message = streamingMessage)
                     }
                 }
             }

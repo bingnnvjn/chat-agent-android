@@ -34,6 +34,10 @@ class ChatViewModel @Inject constructor(
     private val _enableThinking = MutableStateFlow(false)
     val enableThinking: StateFlow<Boolean> = _enableThinking.asStateFlow()
 
+    /** 流式响应当前累积文本，避免每个 token 刷新整个对话 */
+    private val _streamingContent = MutableStateFlow("")
+    val streamingContent: StateFlow<String> = _streamingContent.asStateFlow()
+
     init {
         viewModelScope.launch {
             settingsRepository.currentProvider.collect { provider ->
@@ -78,20 +82,23 @@ class ChatViewModel @Inject constructor(
 
         viewModelScope.launch {
             _isStreaming.value = true
+            _streamingContent.value = ""
             chatRepository.sendMessage(
                 conversationId = conv.id,
                 content = content,
                 image = image,
                 enableThinking = thinking,
                 onToken = { token ->
-                    _currentConversation.value = chatRepository.getConversation(conv.id)
+                    _streamingContent.value = _streamingContent.value + token
                 },
                 onComplete = { fullContent ->
                     _currentConversation.value = chatRepository.getConversation(conv.id)
+                    _streamingContent.value = ""
                     _isStreaming.value = false
                 },
                 onError = { error ->
                     _uiState.value = _uiState.value.copy(errorMessage = error)
+                    _streamingContent.value = ""
                     _isStreaming.value = false
                 }
             )
