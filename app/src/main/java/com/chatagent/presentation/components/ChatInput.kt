@@ -1,7 +1,5 @@
 package com.chatagent.presentation.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,11 +26,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.chatagent.presentation.ui.theme.Accent
 import com.chatagent.presentation.ui.theme.White
-import com.kyant.backdrop.backdrops.LayerBackdrop
+import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
+import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.shadow.Shadow
 
 @Composable
 fun ChatInput(
-    backdrop: LayerBackdrop? = null,
+    backdrop: Backdrop? = null,
     value: String,
     onValueChange: (String) -> Unit,
     onSend: () -> Unit,
@@ -41,24 +45,38 @@ fun ChatInput(
     onToggleThinking: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = modifier
+    val shape = RoundedCornerShape(20.dp)
+    val modifierWithBackdrop = if (backdrop != null) {
+        modifier
             .fillMaxWidth()
             .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 16.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
-                shape = RoundedCornerShape(20.dp)
+            .drawBackdrop(
+                backdrop = backdrop,
+                shape = { shape },
+                effects = {
+                    vibrancy()
+                    blur(4f.dp.toPx())
+                    lens(12f.dp.toPx(), 20f.dp.toPx())
+                },
+                highlight = { Highlight.Default },
+                shadow = { Shadow.Default }
             )
             .padding(horizontal = 12.dp, vertical = 10.dp)
-    ) {
+    } else {
+        modifier
+            .fillMaxWidth()
+            .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 16.dp)
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+            .padding(horizontal = 12.dp, vertical = 10.dp)
+    }
+
+    Box(modifier = modifierWithBackdrop) {
         Row(
             verticalAlignment = Alignment.Bottom,
             modifier = Modifier.fillMaxWidth()
         ) {
-            // 左侧加号（占位，后续接入图片/文件）
+            // 左侧加号
             Box(
                 modifier = Modifier
                     .size(36.dp)
@@ -108,7 +126,6 @@ fun ChatInput(
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 思考模式开关
                 Box(
                     modifier = Modifier
                         .size(36.dp)
@@ -123,7 +140,6 @@ fun ChatInput(
                     Text(text = "💡", fontSize = 18.sp)
                 }
 
-                // 发送按钮
                 Box(
                     modifier = Modifier
                         .size(36.dp)

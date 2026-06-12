@@ -7,9 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -29,18 +27,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.chatagent.data.model.ApiProvider
-import com.kyant.backdrop.backdrops.LayerBackdrop
+import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
+import com.kyant.backdrop.highlight.Highlight
 
 @Composable
 fun FloatingTopBar(
-    backdrop: LayerBackdrop? = null,
+    backdrop: Backdrop? = null,
     title: String = "Chat Agent",
     currentProvider: ApiProvider,
     onMenuClick: () -> Unit,
@@ -50,25 +51,31 @@ fun FloatingTopBar(
 ) {
     var showModelMenu by remember { mutableStateOf(false) }
 
-    // 渐变模糊背景
-    Box(
-        modifier = modifier
+    val rowModifier = if (backdrop != null) {
+        Modifier
             .fillMaxWidth()
-            .background(
-                Brush.verticalGradient(
-                    0f to MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
-                    0.6f to MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
-                    1f to Color.Transparent
-                )
+            .padding(horizontal = 8.dp, vertical = 8.dp)
+            .drawBackdrop(
+                backdrop = backdrop,
+                shape = { RoundedCornerShape(28.dp) },
+                effects = {
+                    vibrancy()
+                    blur(4f.dp.toPx())
+                    lens(12f.dp.toPx(), 20f.dp.toPx())
+                },
+                highlight = { Highlight.Default }
             )
-    ) {
-    Row(
-        modifier = Modifier
+    } else {
+        Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 8.dp),
+            .padding(horizontal = 8.dp, vertical = 8.dp)
+    }
+
+    Box(modifier = modifier.fillMaxWidth()) {
+    Row(
+        modifier = rowModifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 左侧圆形按钮：侧边栏（42dp）
         Box(
             modifier = Modifier
                 .size(42.dp)
@@ -87,7 +94,6 @@ fun FloatingTopBar(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // 中间：对话标题（点击弹模型选择）
         Row(
             modifier = Modifier
                 .clickable { showModelMenu = true }
@@ -115,7 +121,6 @@ fun FloatingTopBar(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // 右侧圆形按钮：新建对话（42dp）
         Box(
             modifier = Modifier
                 .size(42.dp)
@@ -133,7 +138,6 @@ fun FloatingTopBar(
         }
     }
 
-    // 模型选择弹窗（居中圆角卡片）
     if (showModelMenu) {
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { showModelMenu = false },
