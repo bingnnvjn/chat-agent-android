@@ -28,7 +28,6 @@ import androidx.compose.ui.unit.sp
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
 
 private val SendGreen = Color(0xFF10A37F)
@@ -45,7 +44,7 @@ fun ChatInput(
     val circleGlass = if (backdrop != null) {
         Modifier.drawBackdrop(
             backdrop = backdrop, shape = { CircleShape },
-            effects = { vibrancy(); blur(4f.dp.toPx()) },
+            effects = { blur(4f.dp.toPx()) },
             highlight = { Highlight.Default },
             onDrawSurface = { drawRect(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)) }
         )
@@ -54,7 +53,7 @@ fun ChatInput(
     val capsuleGlass = if (backdrop != null) {
         Modifier.drawBackdrop(
             backdrop = backdrop, shape = { RoundedCornerShape(999.dp) },
-            effects = { vibrancy(); blur(4f.dp.toPx()) },
+            effects = { blur(4f.dp.toPx()) },
             highlight = { Highlight.Default },
             onDrawSurface = { drawRect(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)) }
         )
