@@ -28,10 +28,10 @@ import androidx.compose.ui.unit.sp
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
 
-private val Red = Color(0xFFFF3B30)
-private val MutedText = Color(0xFF8E8E93)
+private val SendGreen = Color(0xFF10A37F)
 
 @Composable
 fun ChatInput(
@@ -40,97 +40,72 @@ fun ChatInput(
     onValueChange: (String) -> Unit,
     onSend: () -> Unit,
     onAttach: () -> Unit = {},
-    enableThinking: Boolean = false,
-    onToggleThinking: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val glassMod = if (backdrop != null) {
-        Modifier.drawBackdrop(
+    fun glass(mod: Modifier, isCircle: Boolean = true) = if (backdrop != null) {
+        mod.drawBackdrop(
             backdrop = backdrop,
-            shape = { CircleShape },
-            effects = { blur(4f.dp.toPx()) },
-            highlight = { Highlight.Default }
+            shape = { if (isCircle) CircleShape else RoundedCornerShape(999.dp) },
+            effects = { vibrancy(); blur(4f.dp.toPx()) },
+            highlight = { Highlight.Default },
+            onDrawSurface = { drawRect(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)) }
         )
-    } else {
-        Modifier
-    }
-
-    val capsuleGlassMod = if (backdrop != null) {
-        Modifier.drawBackdrop(
-            backdrop = backdrop,
-            shape = { RoundedCornerShape(999.dp) },
-            effects = { blur(4f.dp.toPx()) },
-            highlight = { Highlight.Default }
-        )
-    } else {
-        Modifier
-    }
+    } else mod
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 12.dp, end = 12.dp, top = 6.dp, bottom = 18.dp),
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 左侧加号圆形按钮（玻璃）
+        // 加号（玻璃悬浮）
         Box(
-            modifier = Modifier
+            modifier = glass(Modifier, true)
                 .size(46.dp)
-                .then(glassMod)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
                 .clickable { onAttach() },
             contentAlignment = Alignment.Center
         ) {
-            Text(text = "+", color = MutedText, fontSize = 26.sp, fontWeight = FontWeight.Light)
+            Text(text = "+", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 26.sp, fontWeight = FontWeight.Light)
         }
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        // 中间输入胶囊（玻璃）
+        // 输入胶囊（玻璃悬浮）
         Box(
-            modifier = Modifier
+            modifier = glass(Modifier, false)
                 .weight(1f)
-                .then(capsuleGlassMod)
                 .clip(RoundedCornerShape(999.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
                 .padding(start = 16.dp, end = 4.dp, top = 2.dp, bottom = 2.dp)
                 .height(46.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                 BasicTextField(
                     value = value,
                     onValueChange = onValueChange,
                     modifier = Modifier.weight(1f),
                     textStyle = TextStyle(color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp),
-                    cursorBrush = SolidColor(Red),
-                    decorationBox = { innerTextField ->
-                        Box(modifier = Modifier.padding(vertical = 8.dp)) {
-                            if (value.isEmpty()) {
-                                Text(
-                                    text = "iMessage 信息",
-                                    color = MutedText,
-                                    fontSize = 16.sp
-                                )
-                            }
-                            innerTextField()
+                    cursorBrush = SolidColor(SendGreen),
+                    decorationBox = { inner ->
+                        Box(Modifier.padding(vertical = 8.dp)) {
+                            if (value.isEmpty()) Text("iMessage 信息", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 16.sp)
+                            inner()
                         }
                     }
                 )
 
-                // 发送按钮
+                // 发送胶囊
+                val sendBg = if (value.isNotBlank()) SendGreen else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
                 Box(
                     modifier = Modifier
-                        .size(42.dp)
-                        .clip(RoundedCornerShape(21.dp))
-                        .background(if (value.isNotBlank()) Red else MutedText.copy(alpha = 0.2f))
-                        .clickable { if (value.isNotBlank()) onSend() },
+                        .height(34.dp)
+                        .clip(RoundedCornerShape(17.dp))
+                        .background(sendBg)
+                        .then(if (value.isNotBlank()) Modifier.clickable { onSend() } else Modifier)
+                        .padding(horizontal = 14.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "↑", color = Color.White, fontSize = 22.sp)
+                    Text(text = "↑", color = Color.White, fontSize = 20.sp)
                 }
             }
         }

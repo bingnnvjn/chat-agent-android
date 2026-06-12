@@ -19,6 +19,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -27,6 +29,7 @@ import com.chatagent.data.model.ApiProvider
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
 
 @Composable
@@ -41,28 +44,32 @@ fun FloatingTopBar(
 ) {
     var showModelMenu by remember { mutableStateOf(false) }
 
-    val glassMod = if (backdrop != null) {
-        Modifier
-            .drawBackdrop(
+    val glassCircle = { mod: Modifier ->
+        if (backdrop != null) {
+            mod.drawBackdrop(
                 backdrop = backdrop,
                 shape = { CircleShape },
-                effects = { blur(4f.dp.toPx()) },
-                highlight = { Highlight.Default }
+                effects = { vibrancy(); blur(4f.dp.toPx()) },
+                highlight = { Highlight.Default },
+                onDrawSurface = {
+                    drawRect(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
+                }
             )
-    } else {
-        Modifier
+        } else mod
     }
 
-    val capsuleGlassMod = if (backdrop != null) {
-        Modifier
-            .drawBackdrop(
+    val glassCapsule = { mod: Modifier ->
+        if (backdrop != null) {
+            mod.drawBackdrop(
                 backdrop = backdrop,
                 shape = { RoundedCornerShape(25.dp) },
-                effects = { blur(4f.dp.toPx()) },
-                highlight = { Highlight.Default }
+                effects = { vibrancy(); blur(4f.dp.toPx()) },
+                highlight = { Highlight.Default },
+                onDrawSurface = {
+                    drawRect(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
+                }
             )
-    } else {
-        Modifier
+        } else mod
     }
 
     Row(
@@ -71,11 +78,10 @@ fun FloatingTopBar(
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.Top
     ) {
-        // 左侧圆形按钮（菜单）
+        // 左侧圆形按钮
         Box(
-            modifier = Modifier
+            modifier = glassCircle(Modifier)
                 .size(50.dp)
-                .then(glassMod)
                 .clip(CircleShape)
                 .clickable { onMenuClick() },
             contentAlignment = Alignment.Center
@@ -83,13 +89,11 @@ fun FloatingTopBar(
             Text(text = "‹", color = MaterialTheme.colorScheme.onSurface, fontSize = 24.sp)
         }
 
-        // 中间胶囊（模型名）
+        // 中间胶囊（缩短长度）
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 8.dp)
+            modifier = glassCapsule(Modifier)
+                .padding(horizontal = 6.dp)
                 .height(50.dp)
-                .then(capsuleGlassMod)
                 .clip(RoundedCornerShape(25.dp))
                 .clickable { showModelMenu = true },
             contentAlignment = Alignment.Center
@@ -97,18 +101,18 @@ fun FloatingTopBar(
             Text(
                 text = title.ifEmpty { currentProvider.defaultModel },
                 color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 18.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(horizontal = 18.dp)
             )
         }
 
-        // 右侧圆形按钮（更多）
+        // 右侧圆形按钮
         Box(
-            modifier = Modifier
+            modifier = glassCircle(Modifier)
                 .size(50.dp)
-                .then(glassMod)
                 .clip(CircleShape)
                 .clickable { onNewChatClick() },
             contentAlignment = Alignment.Center
@@ -129,14 +133,9 @@ fun FloatingTopBar(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(10.dp))
-                                .clickable {
-                                    onModelSelect(model)
-                                    showModelMenu = false
-                                }
+                                .clickable { onModelSelect(model); showModelMenu = false }
                                 .padding(vertical = 12.dp, horizontal = 8.dp)
-                        ) {
-                            Text(text = model, fontSize = 15.sp)
-                        }
+                        ) { Text(text = model, fontSize = 15.sp) }
                     }
                 }
             },

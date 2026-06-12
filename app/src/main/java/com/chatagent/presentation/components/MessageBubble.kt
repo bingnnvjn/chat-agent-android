@@ -35,8 +35,8 @@ import com.chatagent.data.model.Message
 import com.chatagent.presentation.ui.theme.Accent
 import com.chatagent.presentation.ui.theme.White
 
-private val UserBubbleRed = Color(0xFFFF3B30)
-private val AiBubblePink = Color(0xFFFCE8E6)
+private val UserGreen = Color(0xFF10A37F)
+private val AiGray = Color(0xFF1C1C1E)
 
 @Composable
 fun MessageBubble(
@@ -46,7 +46,7 @@ fun MessageBubble(
     val isUser = message.role == "user"
 
     if (isUser) {
-        // 用户消息：红色右对齐气泡
+        // 用户：绿色右对齐气泡
         Row(
             modifier = modifier
                 .fillMaxWidth()
@@ -57,21 +57,14 @@ fun MessageBubble(
                 modifier = Modifier
                     .fillMaxWidth(0.78f)
                     .clip(RoundedCornerShape(20.dp, 4.dp, 20.dp, 20.dp))
-                    .background(UserBubbleRed)
+                    .background(UserGreen)
                     .padding(horizontal = 16.dp, vertical = 10.dp)
             ) {
-                Text(
-                    text = message.content,
-                    color = Color.White,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        lineHeight = 22.sp,
-                        fontSize = 16.sp
-                    )
-                )
+                Text(text = message.content, color = Color.White, fontSize = 16.sp, lineHeight = 22.sp)
             }
         }
     } else {
-        // AI 消息：浅粉色左对齐气泡
+        // AI：深灰色左对齐气泡 + 思考弹窗
         Column(
             modifier = modifier
                 .fillMaxWidth()
@@ -91,39 +84,33 @@ fun MessageBubble(
                         .background(Accent),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "AI",
-                        color = Color.White,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 10.sp
-                        )
-                    )
+                    Text(text = "AI", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 10.sp)
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // AI 气泡
-                Column(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(4.dp, 20.dp, 20.dp, 20.dp))
-                        .background(AiBubblePink)
-                        .padding(horizontal = 16.dp, vertical = 10.dp)
-                ) {
-                    // 思考内容
+                Column {
+                    // 思考内容（独立小窗口）
                     if (!message.thinkingContent.isNullOrEmpty()) {
-                        ThinkingContent(thinking = message.thinkingContent)
-                        Spacer(modifier = Modifier.height(8.dp))
+                        ThinkingBadge(thinking = message.thinkingContent)
+                        Spacer(modifier = Modifier.height(6.dp))
                     }
 
-                    MarkdownText(
-                        markdown = message.content,
-                        color = Color.Black,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            lineHeight = 22.sp,
-                            fontSize = 16.sp
+                    // 回复气泡
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp, 20.dp, 20.dp, 20.dp))
+                            .background(AiGray)
+                            .padding(horizontal = 16.dp, vertical = 10.dp)
+                    ) {
+                        MarkdownText(
+                            markdown = message.content,
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 16.sp, lineHeight = 22.sp
+                            )
                         )
-                    )
+                    }
                 }
             }
         }
@@ -131,50 +118,27 @@ fun MessageBubble(
 }
 
 @Composable
-private fun ThinkingContent(thinking: String) {
+private fun ThinkingBadge(thinking: String) {
     var expanded by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .widthIn(max = 280.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(Color(0xFF2C2C2E))
             .clickable { expanded = !expanded }
             .padding(12.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "💡", fontSize = 14.sp)
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = "思考过程",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Medium
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = if (expanded) "▲" else "▼",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 10.sp
-            )
+            Text(text = "💡", fontSize = 13.sp)
+            Spacer(Modifier.width(6.dp))
+            Text("思考过程", color = Color(0xFF8E8E93), fontSize = 13.sp, fontWeight = FontWeight.Medium)
+            Spacer(Modifier.weight(1f))
+            Text(if (expanded) "▲" else "▼", color = Color(0xFF8E8E93), fontSize = 10.sp)
         }
         if (expanded) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = thinking,
-                style = MaterialTheme.typography.bodyMedium.copy(fontStyle = FontStyle.Italic, lineHeight = 20.sp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        } else {
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = thinking,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
+            Spacer(Modifier.height(8.dp))
+            Text(thinking, color = Color(0xFFC7C7CC), fontSize = 13.sp, lineHeight = 18.sp, fontStyle = FontStyle.Italic)
         }
     }
 }

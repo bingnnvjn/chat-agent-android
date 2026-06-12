@@ -9,8 +9,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
@@ -21,10 +19,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.chatagent.presentation.components.ChatInput
 import com.chatagent.presentation.components.FloatingTopBar
 import com.chatagent.presentation.components.Sidebar
 import com.chatagent.presentation.ui.theme.ChatAgentTheme
@@ -39,17 +38,14 @@ fun MainScreen(
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val isDarkTheme by viewModel.isDarkTheme.collectAsState(initial = true)
-
     ChatAgentTheme(darkTheme = isDarkTheme) {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
     val uiState by viewModel.uiState.collectAsState(ChatUiState())
     val conversations by viewModel.conversations.collectAsState(emptyList())
     val currentConversation by viewModel.currentConversation.collectAsState(null)
     var showSidebar by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
+    var inputText by remember { mutableStateOf("") }
 
     val backdrop = rememberLayerBackdrop()
 
@@ -66,13 +62,10 @@ fun MainScreen(
                 .layerBackdrop(backdrop)
         )
 
-        // 主聊天界面（仅避让状态栏高度，顶栏浮动带渐变背景）
+        // 主聊天界面
         ChatScreen(
             viewModel = viewModel,
-            backdrop = backdrop,
-            modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.statusBars)
+            modifier = Modifier.fillMaxSize()
         )
 
         // 悬浮顶栏（适配状态栏）
@@ -86,7 +79,24 @@ fun MainScreen(
             modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars)
         )
 
-        // 侧边栏（适配状态栏）
+        // 悬浮底栏（在内容之上）
+        ChatInput(
+            backdrop = backdrop,
+            value = inputText,
+            onValueChange = { inputText = it },
+            onSend = {
+                if (inputText.isNotBlank()) {
+                    viewModel.sendMessage(inputText)
+                    inputText = ""
+                }
+            },
+            onAttach = { /* TODO */ },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .windowInsetsPadding(WindowInsets.statusBars)
+        )
+
+        // 侧边栏
         AnimatedVisibility(
             visible = showSidebar,
             enter = slideInHorizontally { -it },
@@ -97,7 +107,6 @@ fun MainScreen(
                     .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.statusBars)
             ) {
-                // 背景遮罩
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -107,24 +116,13 @@ fun MainScreen(
                             indication = null
                         ) { showSidebar = false }
                 )
-
-                // 侧边栏
                 Sidebar(
                     conversations = conversations,
                     currentConversationId = currentConversation?.id,
-                    onConversationClick = { id ->
-                        viewModel.selectConversation(id)
-                        showSidebar = false
-                    },
-                    onNewConversation = {
-                        viewModel.createConversation()
-                        showSidebar = false
-                    },
+                    onConversationClick = { id -> viewModel.selectConversation(id); showSidebar = false },
+                    onNewConversation = { viewModel.createConversation(); showSidebar = false },
                     onDeleteConversation = { id -> viewModel.deleteConversation(id) },
-                    onSettingsClick = {
-                        showSettings = true
-                        showSidebar = false
-                    },
+                    onSettingsClick = { showSettings = true; showSidebar = false },
                     onClose = { showSidebar = false }
                 )
             }
@@ -136,10 +134,7 @@ fun MainScreen(
             enter = slideInHorizontally { it },
             exit = slideOutHorizontally { it }
         ) {
-            SettingsScreen(
-                viewModel = viewModel,
-                onClose = { showSettings = false }
-            )
+            SettingsScreen(viewModel = viewModel, onClose = { showSettings = false })
         }
     }
     }
