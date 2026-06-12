@@ -288,7 +288,8 @@ private class DrawBackdropNode(
             val padding = padding
 
             recordLayer(
-                layer,
+                node = this@DrawBackdropNode,
+                layer = layer,
                 size = IntSize(
                     size.width.toInt() + padding.toInt() * 2,
                     size.height.toInt() + padding.toInt() * 2
@@ -325,7 +326,7 @@ private class DrawBackdropNode(
         onDrawFront?.invoke(this)
 
         exportedBackdrop?.graphicsLayer?.let { layer ->
-            recordLayer(layer) {
+            recordLayer(node = this@DrawBackdropNode, layer = layer) {
                 onDrawBehind?.invoke(this)
                 drawBackdropLayer()
                 onDrawSurface?.invoke(this)

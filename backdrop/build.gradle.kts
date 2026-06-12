@@ -19,7 +19,7 @@ android {
 
     kotlinOptions {
         jvmTarget = "21"
-        freeCompilerArgs += listOf("-Xcontext-parameters")
+
     }
 
     buildFeatures {
