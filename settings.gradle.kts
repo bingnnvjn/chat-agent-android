@@ -23,3 +23,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "ChatAgent"
 include(":app")
+include(":backdrop")
