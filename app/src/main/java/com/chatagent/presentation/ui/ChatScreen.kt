@@ -28,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -56,9 +57,30 @@ fun ChatScreen(
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
+    // 新消息或流式内容变化时自动滚动到底部
+    val scrollTarget = remember {
+        derivedStateOf {
+            val msgs = currentConversation?.messages
+            if (msgs != null && msgs.isNotEmpty()) {
+                if (isStreaming) msgs.size  // 流式：滚动到消息列表末尾（streaming item 在之后）
+                else msgs.size - 1
+            } else null
+        }
+    }
+
     LaunchedEffect(currentConversation?.messages?.size) {
         if (currentConversation?.messages?.isNotEmpty() == true) {
             listState.animateScrollToItem(currentConversation!!.messages.size - 1)
+        }
+    }
+
+    // 流式输出时持续滚动
+    LaunchedEffect(isStreaming, streamingContent) {
+        if (isStreaming && currentConversation?.messages?.isNotEmpty() == true) {
+            val target = currentConversation!!.messages.size  // streaming item index
+            if (target > 0) {
+                listState.animateScrollToItem(target)
+            }
         }
     }
 

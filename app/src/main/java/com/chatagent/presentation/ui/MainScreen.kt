@@ -53,12 +53,12 @@ fun MainScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // 主聊天界面（顶部留出状态栏+顶栏空间，底部适配键盘）
+        // 主聊天界面（仅避让状态栏高度，顶栏浮动带渐变背景）
         ChatScreen(
             viewModel = viewModel,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 60.dp)
+                .windowInsetsPadding(WindowInsets.statusBars)
         )
 
         // 悬浮顶栏（适配状态栏）
