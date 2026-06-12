@@ -38,6 +38,7 @@ fun MainScreen(
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val isDarkTheme by viewModel.isDarkTheme.collectAsState(initial = true)
+    val enableThinking by viewModel.enableThinking.collectAsState()
     ChatAgentTheme(darkTheme = isDarkTheme) {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
     val uiState by viewModel.uiState.collectAsState(ChatUiState())
@@ -47,6 +48,7 @@ fun MainScreen(
     var showSettings by remember { mutableStateOf(false) }
     val backdrop = rememberLayerBackdrop()
     var inputText by remember { mutableStateOf("") }
+    var pendingImageUri by remember { mutableStateOf<android.net.Uri?>(null) }
 
     Box(
         modifier = Modifier
@@ -83,13 +85,16 @@ fun MainScreen(
             backdrop = backdrop,
             value = inputText,
             onValueChange = { inputText = it },
+            enableThinking = enableThinking,
+            onToggleThinking = { viewModel.toggleThinking() },
             onSend = {
-                if (inputText.isNotBlank()) {
-                    viewModel.sendMessage(inputText)
+                if (inputText.isNotBlank() || pendingImageUri != null) {
+                    viewModel.sendMessage(inputText, pendingImageUri?.toString())
                     inputText = ""
+                    pendingImageUri = null
                 }
             },
-            onAttach = { /* TODO */ },
+            onImagePicked = { uri -> pendingImageUri = uri },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .windowInsetsPadding(WindowInsets.statusBars)

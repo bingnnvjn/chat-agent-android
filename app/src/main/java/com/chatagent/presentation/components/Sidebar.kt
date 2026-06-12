@@ -25,6 +25,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,6 +49,8 @@ fun Sidebar(
     onClose: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var deleteTargetId by remember { mutableStateOf<String?>(null) }
+
     Column(
         modifier = modifier
             .fillMaxHeight()
@@ -113,7 +119,7 @@ fun Sidebar(
                     )
 
                     IconButton(
-                        onClick = { onDeleteConversation(conversation.id) },
+                        onClick = { deleteTargetId = conversation.id },
                         modifier = Modifier.size(28.dp)
                     ) {
                         Icon(
@@ -153,5 +159,25 @@ fun Sidebar(
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
+    }
+
+    // 删除确认弹窗
+    if (deleteTargetId != null) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { deleteTargetId = null },
+            title = { androidx.compose.material3.Text("确认删除") },
+            text = { androidx.compose.material3.Text("删除后无法恢复，确定要删除这个对话吗？") },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = {
+                    deleteTargetId?.let { onDeleteConversation(it) }
+                    deleteTargetId = null
+                }) { androidx.compose.material3.Text("删除", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { deleteTargetId = null }) {
+                    androidx.compose.material3.Text("取消")
+                }
+            }
+        )
     }
 }

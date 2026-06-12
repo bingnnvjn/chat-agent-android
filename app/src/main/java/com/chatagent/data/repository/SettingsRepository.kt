@@ -22,6 +22,7 @@ class SettingsRepository @Inject constructor(
         private val KEY_MODEL = stringPreferencesKey("model")
         private val KEY_CUSTOM_URL = stringPreferencesKey("custom_url")
         private val KEY_THEME = stringPreferencesKey("theme")
+        private val KEY_THINKING = stringPreferencesKey("thinking")
         private fun keyApiKey(provider: String) = "api_key_$provider"
     }
 
@@ -39,6 +40,10 @@ class SettingsRepository @Inject constructor(
 
     val isDarkTheme: Flow<Boolean> = dataStore.data.map { prefs ->
         prefs[KEY_THEME] != "light"
+    }
+
+    val enableThinking: Flow<Boolean> = dataStore.data.map { prefs ->
+        prefs[KEY_THINKING] == "true"
     }
 
     fun getApiKey(provider: ApiProvider): Flow<String> {
@@ -77,6 +82,12 @@ class SettingsRepository @Inject constructor(
     suspend fun setDarkTheme(isDark: Boolean) {
         dataStore.edit { prefs ->
             prefs[KEY_THEME] = if (isDark) "dark" else "light"
+        }
+    }
+
+    suspend fun setThinking(enabled: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[KEY_THINKING] = if (enabled) "true" else "false"
         }
     }
 }

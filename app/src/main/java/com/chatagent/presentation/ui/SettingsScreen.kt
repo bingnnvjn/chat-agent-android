@@ -73,6 +73,11 @@ fun SettingsScreen(
     LaunchedEffect(savedApiKey) {
         if (savedApiKey.isNotEmpty()) apiKey = savedApiKey
     }
+
+    // 切换 provider 时清空 API Key
+    LaunchedEffect(selectedProvider) {
+        apiKey = ""
+    }
     LaunchedEffect(savedDarkTheme) {
         isDarkTheme = savedDarkTheme
     }

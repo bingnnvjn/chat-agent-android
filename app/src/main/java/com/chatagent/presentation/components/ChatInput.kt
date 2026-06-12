@@ -1,19 +1,29 @@
 package com.chatagent.presentation.components
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,18 +46,25 @@ fun ChatInput(
     value: String,
     onValueChange: (String) -> Unit,
     onSend: () -> Unit,
-    onAttach: () -> Unit = {},
+    enableThinking: Boolean = false,
+    onToggleThinking: () -> Unit = {},
+    onImagePicked: (Uri) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val tintColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f)
     val textColor = MaterialTheme.colorScheme.onSurface
     val placeholderColor = MaterialTheme.colorScheme.onSurfaceVariant
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    val photoPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri -> uri?.let { selectedImageUri = it; onImagePicked(it) } }
 
     Row(
         modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 独立圆形加号按钮（玻璃悬浮）
+        // + 按钮（图片选择）
         Box(
             modifier = Modifier.size(48.dp).then(
                 if (backdrop != null) Modifier.drawBackdrop(
@@ -56,13 +73,35 @@ fun ChatInput(
                     highlight = { Highlight.Default },
                     onDrawSurface = { drawRect(tintColor) }
                 ) else Modifier
-            ).clip(CircleShape).clickable { onAttach() },
+            ).clip(CircleShape).clickable {
+                photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            },
             contentAlignment = Alignment.Center
         ) { Text("+", color = placeholderColor, fontSize = 26.sp, fontWeight = FontWeight.Light) }
 
-        // 独立长条胶囊输入框（玻璃悬浮）
+        Spacer(Modifier.width(8.dp))
+
+        // 思考模式开关
         Box(
-            modifier = Modifier.weight(1f).padding(start = 10.dp).then(
+            modifier = Modifier.size(44.dp).then(
+                if (backdrop != null) Modifier.drawBackdrop(
+                    backdrop = backdrop, shape = { CircleShape },
+                    effects = { blur(4f.dp.toPx()) },
+                    highlight = { Highlight.Default },
+                    onDrawSurface = {
+                        if (enableThinking) drawRect(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                        else drawRect(tintColor)
+                    }
+                ) else Modifier
+            ).clip(CircleShape).clickable { onToggleThinking() },
+            contentAlignment = Alignment.Center
+        ) { Text("🧠", fontSize = 20.sp) }
+
+        Spacer(Modifier.width(8.dp))
+
+        // 输入胶囊
+        Box(
+            modifier = Modifier.weight(1f).then(
                 if (backdrop != null) Modifier.drawBackdrop(
                     backdrop = backdrop, shape = { RoundedCornerShape(999.dp) },
                     effects = { blur(4f.dp.toPx()) },
@@ -71,10 +110,7 @@ fun ChatInput(
                 ) else Modifier
             ).clip(RoundedCornerShape(999.dp)).height(48.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp)
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp)) {
                 BasicTextField(
                     value = value, onValueChange = onValueChange,
                     modifier = Modifier.weight(1f),
@@ -82,22 +118,20 @@ fun ChatInput(
                     cursorBrush = SolidColor(SendGreen),
                     decorationBox = { inner ->
                         Box(Modifier.padding(vertical = 12.dp)) {
-                            if (value.isEmpty()) Text("iMessage 信息", color = placeholderColor, fontSize = 16.sp)
+                            if (value.isEmpty() && selectedImageUri == null) {
+                                Text("iMessage 信息", color = placeholderColor, fontSize = 16.sp)
+                            }
                             inner()
                         }
                     }
                 )
-
-                // 发送胶囊（嵌在输入框右侧内部）
-                val hasText = value.isNotBlank()
+                val hasSend = value.isNotBlank() || selectedImageUri != null
                 Box(
-                    modifier = Modifier
-                        .height(34.dp)
+                    modifier = Modifier.height(34.dp)
                         .let { m ->
-                            if (hasText) m.clip(RoundedCornerShape(17.dp)).background(SendGreen).clickable { onSend() }
+                            if (hasSend) m.clip(RoundedCornerShape(17.dp)).background(SendGreen).clickable { onSend() }
                             else m.clip(RoundedCornerShape(17.dp)).background(placeholderColor.copy(alpha = 0.2f))
-                        }
-                        .padding(horizontal = 14.dp),
+                        }.padding(horizontal = 14.dp),
                     contentAlignment = Alignment.Center
                 ) { Text("↑", color = Color.White, fontSize = 20.sp) }
             }

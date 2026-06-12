@@ -1,10 +1,5 @@
 package com.chatagent.presentation.ui
 
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -50,16 +45,19 @@ fun ChatScreen(
 
     // 新消息时滚动到底部
     LaunchedEffect(currentConversation?.messages?.size) {
-        if (currentConversation?.messages?.isNotEmpty() == true) {
-            listState.animateScrollToItem(currentConversation!!.messages.size - 1)
+        currentConversation?.messages?.let { msgs ->
+            if (msgs.isNotEmpty()) {
+                listState.animateScrollToItem(msgs.size - 1)
+            }
         }
     }
 
     // 流式输出时滚动到 streaming item
     LaunchedEffect(isStreaming) {
-        if (isStreaming && currentConversation?.messages != null) {
-            val target = currentConversation!!.messages.size
-            listState.animateScrollToItem(target)
+        if (isStreaming) {
+            currentConversation?.messages?.let { msgs ->
+                listState.animateScrollToItem(msgs.size)
+            }
         }
     }
 
@@ -108,33 +106,6 @@ fun ChatScreen(
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 70.dp)
-            )
-        }
-    }
-}
-
-@Composable
-fun TypingIndicator(modifier: Modifier = Modifier) {
-    val infiniteTransition = rememberInfiniteTransition(label = "typing")
-    Row(
-        modifier = modifier
-            .clip(MaterialTheme.shapes.medium)
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        repeat(3) { index ->
-            val alpha by infiniteTransition.animateFloat(
-                initialValue = 0.3f, targetValue = 1f,
-                animationSpec = infiniteRepeatable(animation = tween(600), repeatMode = RepeatMode.Reverse),
-                label = "dot$index"
-            )
-            Box(
-                modifier = Modifier
-                    .size(7.dp)
-                    .graphicsLayer { this.alpha = alpha }
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.onSurfaceVariant)
             )
         }
     }

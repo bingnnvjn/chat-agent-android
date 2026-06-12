@@ -1,32 +1,18 @@
-# Retrofit
--keepattributes Signature
--keepattributes Exceptions
--keep class retrofit2.** { *; }
--keepclasseswithmembers class * {
-    @retrofit2.http.* <methods>;
+# Keep Compose runtime
+-keepclassmembers class * {
+    @androidx.compose.runtime.Composable <methods>;
 }
 
-# OkHttp
--dontwarn okhttp3.**
--dontwarn okio.**
--keep class okhttp3.** { *; }
+# Keep kotlinx.serialization
+-keepclassmembers class kotlinx.serialization.json.** { *; }
+-keep,includedescriptorclasses class com.chatagent.data.model.**$$serializer { *; }
+-keepclassmembers class com.chatagent.data.model.** {
+    *** Companion;
+}
+-keepclasseswithmembers class com.chatagent.data.model.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
 
-# Kotlinx Serialization
--keepattributes *Annotation*, InnerClasses
--dontnote kotlinx.serialization.AnnotationsKt
--keepclassmembers class kotlinx.serialization.json.** { *** Companion; }
--keepclasseswithmembers class kotlinx.serialization.json.** { kotlinx.serialization.KSerializer serializer(...); }
--keep,includedescriptorclasses class com.chatagent.**$$serializer { *; }
--keepclassmembers class com.chatagent.** { *** Companion; }
--keepclasseswithmembers class com.chatagent.** { kotlinx.serialization.KSerializer serializer(...); }
-
-# Compose
--dontwarn androidx.compose.**
--keep class androidx.compose.** { *; }
-
-# Hilt
+# Keep Hilt
 -keep class dagger.hilt.** { *; }
--keep class * extends dagger.hilt.android.internal.managers.ViewComponentManager$FragmentContextWrapper { *; }
-
-# DataStore
--keep class androidx.datastore.** { *; }
+-keep class javax.inject.** { *; }

@@ -40,9 +40,7 @@ class ChatRepository @Inject constructor(
     private fun loadConversations() {
         scope.launch {
             conversationStorage.conversations.collect { loaded ->
-                if (loaded.isNotEmpty()) {
-                    _conversations.value = loaded
-                }
+                _conversations.value = loaded
             }
         }
     }

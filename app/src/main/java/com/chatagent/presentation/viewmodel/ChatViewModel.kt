@@ -4,10 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chatagent.data.model.ApiProvider
 import com.chatagent.data.model.Conversation
-import com.chatagent.data.model.Message
 import com.chatagent.data.repository.ChatRepository
 import com.chatagent.data.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,26 +34,58 @@ class ChatViewModel @Inject constructor(
     private val _enableThinking = MutableStateFlow(false)
     val enableThinking: StateFlow<Boolean> = _enableThinking.asStateFlow()
 
-    /** 流式响应当前累积文本，避免每个 token 刷新整个对话 */
     private val _streamingContent = MutableStateFlow("")
     val streamingContent: StateFlow<String> = _streamingContent.asStateFlow()
 
+    // 缓存 StateFlow，避免每次 getter 创建新实例
+    private val _isDarkTheme = MutableStateFlow(true)
+    val isDarkTheme: StateFlow<Boolean> = _isDarkTheme.asStateFlow()
+
+    private val _apiKeyCache = mutableMapOf<String, MutableStateFlow<String>>()
+
+    private var darkThemeJob: Job? = null
+
     init {
+        // 初始化暗色主题
+        darkThemeJob = viewModelScope.launch {
+            settingsRepository.isDarkTheme.collect { _isDarkTheme.value = it }
+        }
+        // 初始化 provider 和 model
         viewModelScope.launch {
-            settingsRepository.currentProvider.collect { provider ->
-                _uiState.value = _uiState.value.copy(currentProvider = provider)
+            settingsRepository.currentProvider.collect { p ->
+                _uiState.value = _uiState.value.copy(currentProvider = p)
             }
         }
         viewModelScope.launch {
-            settingsRepository.currentModel.collect { model ->
-                _uiState.value = _uiState.value.copy(currentModel = model)
+            settingsRepository.currentModel.collect { m ->
+                _uiState.value = _uiState.value.copy(currentModel = m)
             }
+        }
+        // 加载思考模式状态
+        viewModelScope.launch {
+            settingsRepository.enableThinking.collect { _enableThinking.value = it }
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        darkThemeJob?.cancel()
+    }
+
+    fun apiKeyForProvider(provider: ApiProvider): StateFlow<String> {
+        return _apiKeyCache.getOrPut(provider.name) {
+            val flow = MutableStateFlow("")
+            viewModelScope.launch {
+                settingsRepository.getApiKey(provider).collect { flow.value = it }
+            }
+            flow.asStateFlow()
         }
     }
 
     fun createConversation() {
-        val conversation = chatRepository.createConversation()
-        _currentConversation.value = conversation
+        chatRepository.createConversation().let { conv ->
+            _currentConversation.value = conv
+        }
     }
 
     fun selectConversation(id: String) {
@@ -70,7 +102,6 @@ class ChatViewModel @Inject constructor(
     fun sendMessage(content: String, image: String? = null) {
         if (content.isBlank() && image == null) return
 
-        // 自动创建对话
         var conversation = _currentConversation.value
         if (conversation == null) {
             conversation = chatRepository.createConversation()
@@ -91,8 +122,9 @@ class ChatViewModel @Inject constructor(
                 onToken = { token ->
                     _streamingContent.value = _streamingContent.value + token
                 },
-                onComplete = { fullContent ->
-                    _currentConversation.value = chatRepository.getConversation(conv.id)
+                onComplete = {
+                    val updated = chatRepository.getConversation(conv.id)
+                    if (updated != null) _currentConversation.value = updated
                     _streamingContent.value = ""
                     _isStreaming.value = false
                 },
@@ -105,12 +137,12 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    fun clearError() {
-        _uiState.value = _uiState.value.copy(errorMessage = null)
-    }
+    fun clearError() { _uiState.value = _uiState.value.copy(errorMessage = null) }
 
     fun toggleThinking() {
-        _enableThinking.value = !_enableThinking.value
+        val newVal = !_enableThinking.value
+        _enableThinking.value = newVal
+        viewModelScope.launch { settingsRepository.setThinking(newVal) }
     }
 
     fun setProvider(provider: ApiProvider) {
@@ -121,39 +153,16 @@ class ChatViewModel @Inject constructor(
     }
 
     fun setModel(model: String) {
-        viewModelScope.launch {
-            settingsRepository.setModel(model)
-        }
+        viewModelScope.launch { settingsRepository.setModel(model) }
     }
 
     fun setApiKey(provider: ApiProvider, apiKey: String) {
-        viewModelScope.launch {
-            settingsRepository.setApiKey(provider, apiKey)
-        }
+        viewModelScope.launch { settingsRepository.setApiKey(provider, apiKey) }
     }
 
     fun setDarkTheme(isDark: Boolean) {
-        viewModelScope.launch {
-            settingsRepository.setDarkTheme(isDark)
-        }
+        viewModelScope.launch { settingsRepository.setDarkTheme(isDark) }
     }
-
-    fun apiKeyForProvider(provider: ApiProvider): StateFlow<String> {
-        val flow = MutableStateFlow("")
-        viewModelScope.launch {
-            settingsRepository.getApiKey(provider).collect { flow.value = it }
-        }
-        return flow.asStateFlow()
-    }
-
-    val isDarkTheme: StateFlow<Boolean>
-        get() {
-            val flow = MutableStateFlow(true)
-            viewModelScope.launch {
-                settingsRepository.isDarkTheme.collect { flow.value = it }
-            }
-            return flow.asStateFlow()
-        }
 }
 
 data class ChatUiState(
