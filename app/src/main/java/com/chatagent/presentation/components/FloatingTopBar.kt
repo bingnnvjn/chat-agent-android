@@ -2,21 +2,13 @@ package com.chatagent.presentation.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,19 +19,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.chatagent.data.model.ApiProvider
-import com.kyant.backdrop.Backdrop
-import com.kyant.backdrop.drawBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.highlight.Highlight
 
 @Composable
 fun FloatingTopBar(
-    backdrop: Backdrop? = null,
+    backdrop: Any? = null,
     title: String = "Chat Agent",
     currentProvider: ApiProvider,
     onMenuClick: () -> Unit,
@@ -49,88 +38,55 @@ fun FloatingTopBar(
 ) {
     var showModelMenu by remember { mutableStateOf(false) }
 
-    val rowModifier = if (backdrop != null) {
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 8.dp)
-            .drawBackdrop(
-                backdrop = backdrop,
-                shape = { RoundedCornerShape(28.dp) },
-                effects = {
-                    blur(4f.dp.toPx())
-                },
-                highlight = { Highlight.Default }
-            )
-    } else {
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 8.dp)
-    }
-
-    Box(modifier = modifier.fillMaxWidth()) {
     Row(
-        modifier = rowModifier,
-        verticalAlignment = Alignment.CenterVertically
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.Top
     ) {
+        // 左侧圆形按钮（菜单）
         Box(
             modifier = Modifier
-                .size(42.dp)
+                .size(50.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
+                .background(Color.White.copy(alpha = 0.06f))
                 .clickable { onMenuClick() },
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Default.Menu,
-                contentDescription = "菜单",
-                tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(22.dp)
-            )
+            Text(text = "‹", color = Color.White, fontSize = 24.sp)
         }
 
-        Spacer(modifier = Modifier.weight(1f))
-
-        Row(
+        // 中间胶囊（模型名）
+        Box(
             modifier = Modifier
-                .clickable { showModelMenu = true }
-                .padding(horizontal = 12.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .weight(1f)
+                .padding(horizontal = 8.dp)
+                .height(50.dp)
+                .clip(RoundedCornerShape(25.dp))
+                .background(Color.White.copy(alpha = 0.08f))
+                .clickable { showModelMenu = true },
+            contentAlignment = Alignment.Center
         ) {
             Text(
                 text = title.ifEmpty { currentProvider.defaultModel },
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp
-                ),
-                color = MaterialTheme.colorScheme.onSurface,
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = "▾",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 10.sp
-            )
         }
 
-        Spacer(modifier = Modifier.weight(1f))
-
+        // 右侧圆形按钮（更多）
         Box(
             modifier = Modifier
-                .size(42.dp)
+                .size(50.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
+                .background(Color.White.copy(alpha = 0.06f))
                 .clickable { onNewChatClick() },
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "新对话",
-                tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(22.dp)
-            )
+            Text(text = "⋯", color = Color.White, fontSize = 22.sp)
         }
     }
 
@@ -138,15 +94,9 @@ fun FloatingTopBar(
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { showModelMenu = false },
             shape = RoundedCornerShape(16.dp),
-            title = {
-                Text(
-                    text = "选择模型",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-            },
+            title = null,
             text = {
-                Column {
+                androidx.compose.foundation.layout.Column {
                     currentProvider.models.forEach { model ->
                         Box(
                             modifier = Modifier
@@ -156,19 +106,14 @@ fun FloatingTopBar(
                                     onModelSelect(model)
                                     showModelMenu = false
                                 }
-                                .padding(vertical = 10.dp, horizontal = 4.dp)
+                                .padding(vertical = 12.dp, horizontal = 8.dp)
                         ) {
-                            Text(
-                                text = model,
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontSize = 15.sp
-                            )
+                            Text(text = model, fontSize = 15.sp)
                         }
                     }
                 }
             },
             confirmButton = {}
         )
-    }
     }
 }

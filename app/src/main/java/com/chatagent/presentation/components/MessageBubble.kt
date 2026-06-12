@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -34,6 +35,9 @@ import com.chatagent.data.model.Message
 import com.chatagent.presentation.ui.theme.Accent
 import com.chatagent.presentation.ui.theme.White
 
+private val UserBubbleRed = Color(0xFFFF3B30)
+private val AiBubblePink = Color(0xFFFCE8E6)
+
 @Composable
 fun MessageBubble(
     message: Message,
@@ -42,35 +46,36 @@ fun MessageBubble(
     val isUser = message.role == "user"
 
     if (isUser) {
-        // 用户消息：右对齐，深灰色圆角气泡
+        // 用户消息：红色右对齐气泡
         Row(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
+                .padding(horizontal = 12.dp, vertical = 2.dp),
             horizontalArrangement = Arrangement.End
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.78f)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .clip(RoundedCornerShape(20.dp, 4.dp, 20.dp, 20.dp))
+                    .background(UserBubbleRed)
+                    .padding(horizontal = 16.dp, vertical = 10.dp)
             ) {
                 Text(
                     text = message.content,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = Color.White,
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        lineHeight = 22.sp
+                        lineHeight = 22.sp,
+                        fontSize = 16.sp
                     )
                 )
             }
         }
     } else {
-        // AI 消息：左对齐，无气泡，带头像
+        // AI 消息：浅粉色左对齐气泡
         Column(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp)
+                .padding(horizontal = 12.dp, vertical = 2.dp)
                 .animateContentSize()
         ) {
             Row(
@@ -88,7 +93,7 @@ fun MessageBubble(
                 ) {
                     Text(
                         text = "AI",
-                        color = White,
+                        color = Color.White,
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 10.sp
@@ -96,22 +101,27 @@ fun MessageBubble(
                     )
                 }
 
-                // AI 内容
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // AI 气泡
                 Column(
-                    modifier = Modifier.padding(start = 12.dp)
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp, 20.dp, 20.dp, 20.dp))
+                        .background(AiBubblePink)
+                        .padding(horizontal = 16.dp, vertical = 10.dp)
                 ) {
-                    // 思考内容（如果有）
+                    // 思考内容
                     if (!message.thinkingContent.isNullOrEmpty()) {
                         ThinkingContent(thinking = message.thinkingContent)
                         Spacer(modifier = Modifier.height(8.dp))
                     }
 
-                    // 正式回复 (支持 Markdown)
                     MarkdownText(
                         markdown = message.content,
-                        color = MaterialTheme.colorScheme.onBackground,
+                        color = Color.Black,
                         style = MaterialTheme.typography.bodyLarge.copy(
-                            lineHeight = 22.sp
+                            lineHeight = 22.sp,
+                            fontSize = 16.sp
                         )
                     )
                 }
@@ -132,13 +142,8 @@ private fun ThinkingContent(thinking: String) {
             .clickable { expanded = !expanded }
             .padding(12.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "💡",
-                fontSize = 14.sp
-            )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text = "💡", fontSize = 14.sp)
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = "思考过程",
@@ -154,15 +159,11 @@ private fun ThinkingContent(thinking: String) {
                 fontSize = 10.sp
             )
         }
-
         if (expanded) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = thinking,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontStyle = FontStyle.Italic,
-                    lineHeight = 20.sp
-                ),
+                style = MaterialTheme.typography.bodyMedium.copy(fontStyle = FontStyle.Italic, lineHeight = 20.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         } else {

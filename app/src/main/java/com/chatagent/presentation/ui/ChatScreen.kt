@@ -1,10 +1,5 @@
 package com.chatagent.presentation.ui
 
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,19 +31,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.chatagent.presentation.components.ChatInput
 import com.chatagent.presentation.components.MessageBubble
 import com.chatagent.presentation.components.WelcomeScreen
 import com.chatagent.presentation.viewmodel.ChatViewModel
-import com.kyant.backdrop.Backdrop
 
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel,
-    backdrop: Backdrop? = null,
     modifier: Modifier = Modifier
 ) {
     val currentConversation by viewModel.currentConversation.collectAsState()
@@ -137,22 +129,8 @@ fun ChatScreen(
             )
         }
 
-        // 提示文字
-        Text(
-            text = "ChatGPT 可能会犯错。请核实重要信息。",
-            style = MaterialTheme.typography.bodySmall.copy(
-                fontSize = 12.sp
-            ),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 2.dp)
-        )
-
-        // 输入框（底部留空，不避让键盘）
+        // 输入框
         ChatInput(
-            backdrop = backdrop,
             value = inputText,
             onValueChange = { inputText = it },
             onSend = {
