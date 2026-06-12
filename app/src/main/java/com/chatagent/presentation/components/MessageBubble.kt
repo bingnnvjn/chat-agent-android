@@ -47,72 +47,56 @@ fun MessageBubble(
     val isUser = message.role == "user"
 
     if (isUser) {
-        // 用户：绿色右对齐气泡
+        // 用户绿色气泡 — 自适应宽度
         Row(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 2.dp),
+            modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 2.dp),
             horizontalArrangement = Arrangement.End
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.78f)
+                    .widthIn(max = 320.dp)
                     .clip(RoundedCornerShape(20.dp, 4.dp, 20.dp, 20.dp))
                     .background(UserGreen)
                     .padding(horizontal = 16.dp, vertical = 10.dp)
             ) {
-                Text(text = message.content, color = Color.White, fontSize = 16.sp, lineHeight = 22.sp)
+                Text(message.content, color = Color.White, fontSize = 16.sp, lineHeight = 22.sp)
             }
         }
     } else {
-        // AI：深灰色左对齐气泡 + 思考弹窗
+        // AI 灰色气泡 — 头像在上，内容在头像下方撑满宽度
         Column(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 2.dp)
-                .animateContentSize()
+            modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 2.dp).animateContentSize()
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.Top
-            ) {
-                // AI 头像
+            // 思考弹窗
+            if (!message.thinkingContent.isNullOrEmpty()) {
+                ThinkingBadge(thinking = message.thinkingContent)
+                Spacer(Modifier.height(6.dp))
+            }
+
+            // 头像行（AI 头像 + 名字）
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clip(CircleShape)
-                        .background(Accent),
+                    modifier = Modifier.size(28.dp).clip(CircleShape).background(Accent),
                     contentAlignment = Alignment.Center
-                ) {
-                    Text(text = "AI", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 10.sp)
-                }
+                ) { Text("AI", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 10.sp) }
+                Spacer(Modifier.width(8.dp))
+                Text("DeepSeek", color = Color(0xFF8E8E93), fontSize = 13.sp, fontWeight = FontWeight.Medium)
+            }
 
-                Spacer(modifier = Modifier.width(8.dp))
+            Spacer(Modifier.height(4.dp))
 
-                Column {
-                    // 思考内容（独立小窗口）
-                    if (!message.thinkingContent.isNullOrEmpty()) {
-                        ThinkingBadge(thinking = message.thinkingContent)
-                        Spacer(modifier = Modifier.height(6.dp))
-                    }
-
-                    // 回复气泡
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp, 20.dp, 20.dp, 20.dp))
-                            .background(AiGray)
-                            .padding(horizontal = 16.dp, vertical = 10.dp)
-                    ) {
-                        MarkdownText(
-                            markdown = message.content,
-                            color = Color.White,
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontSize = 16.sp, lineHeight = 22.sp
-                            )
-                        )
-                    }
-                }
+            // 回复气泡 — 占满宽度
+            Box(
+                modifier = Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(4.dp, 20.dp, 20.dp, 20.dp))
+                    .background(AiGray)
+                    .padding(horizontal = 16.dp, vertical = 10.dp)
+            ) {
+                MarkdownText(
+                    markdown = message.content,
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, lineHeight = 22.sp)
+                )
             }
         }
     }
@@ -121,17 +105,13 @@ fun MessageBubble(
 @Composable
 private fun ThinkingBadge(thinking: String) {
     var expanded by remember { mutableStateOf(false) }
-
     Column(
-        modifier = Modifier
-            .widthIn(max = 280.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(Color(0xFF2C2C2E))
-            .clickable { expanded = !expanded }
-            .padding(12.dp)
+        modifier = Modifier.widthIn(max = 280.dp)
+            .clip(RoundedCornerShape(14.dp)).background(Color(0xFF2C2C2E))
+            .clickable { expanded = !expanded }.padding(12.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "💡", fontSize = 13.sp)
+            Text("💡", fontSize = 13.sp)
             Spacer(Modifier.width(6.dp))
             Text("思考过程", color = Color(0xFF8E8E93), fontSize = 13.sp, fontWeight = FontWeight.Medium)
             Spacer(Modifier.weight(1f))
