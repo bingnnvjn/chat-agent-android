@@ -108,7 +108,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
     // Backdrop (Liquid Glass)
-    implementation(project(":backdrop"))
+    implementation("io.github.kyant0:backdrop:2.0.0")
 
     // Debug
     debugImplementation("androidx.compose.ui:ui-tooling")
