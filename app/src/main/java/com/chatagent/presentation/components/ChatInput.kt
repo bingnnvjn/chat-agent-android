@@ -1,15 +1,12 @@
 package com.chatagent.presentation.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -42,14 +39,16 @@ fun ChatInput(
     modifier: Modifier = Modifier
 ) {
     val tintColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f)
+    val textColor = MaterialTheme.colorScheme.onSurface
     val placeholderColor = MaterialTheme.colorScheme.onSurfaceVariant
 
     Row(
         modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // 独立圆形加号按钮（玻璃悬浮）
         Box(
-            modifier = Modifier.size(46.dp).then(
+            modifier = Modifier.size(48.dp).then(
                 if (backdrop != null) Modifier.drawBackdrop(
                     backdrop = backdrop, shape = { CircleShape },
                     effects = { blur(4f.dp.toPx()) },
@@ -60,37 +59,43 @@ fun ChatInput(
             contentAlignment = Alignment.Center
         ) { Text("+", color = placeholderColor, fontSize = 26.sp, fontWeight = FontWeight.Light) }
 
-        Spacer(Modifier.width(8.dp))
-
+        // 独立长条胶囊输入框（玻璃悬浮）
         Box(
-            modifier = Modifier.weight(1f).then(
+            modifier = Modifier.weight(1f).padding(start = 10.dp).then(
                 if (backdrop != null) Modifier.drawBackdrop(
                     backdrop = backdrop, shape = { RoundedCornerShape(999.dp) },
                     effects = { blur(4f.dp.toPx()) },
                     highlight = { Highlight.Default },
                     onDrawSurface = { drawRect(tintColor) }
                 ) else Modifier
-            ).clip(RoundedCornerShape(999.dp))
-                .padding(start = 16.dp, end = 4.dp, top = 2.dp, bottom = 2.dp).height(46.dp)
+            ).clip(RoundedCornerShape(999.dp)).height(48.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp)
+            ) {
                 BasicTextField(
                     value = value, onValueChange = onValueChange,
                     modifier = Modifier.weight(1f),
-                    textStyle = TextStyle(color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp),
+                    textStyle = TextStyle(color = textColor, fontSize = 16.sp),
                     cursorBrush = SolidColor(SendGreen),
                     decorationBox = { inner ->
-                        Box(Modifier.padding(vertical = 8.dp)) {
+                        Box(Modifier.padding(vertical = 12.dp)) {
                             if (value.isEmpty()) Text("iMessage 信息", color = placeholderColor, fontSize = 16.sp)
                             inner()
                         }
                     }
                 )
-                val sendBg = if (value.isNotBlank()) SendGreen else placeholderColor.copy(alpha = 0.2f)
+
+                // 发送胶囊（嵌在输入框右侧内部）
+                val hasText = value.isNotBlank()
                 Box(
-                    modifier = Modifier.height(34.dp).clip(RoundedCornerShape(17.dp))
-                        .background(sendBg)
-                        .then(if (value.isNotBlank()) Modifier.clickable { onSend() } else Modifier)
+                    modifier = Modifier
+                        .height(34.dp)
+                        .let { m ->
+                            if (hasText) m.clip(RoundedCornerShape(17.dp)).background(SendGreen).clickable { onSend() }
+                            else m.clip(RoundedCornerShape(17.dp)).background(placeholderColor.copy(alpha = 0.2f))
+                        }
                         .padding(horizontal = 14.dp),
                     contentAlignment = Alignment.Center
                 ) { Text("↑", color = Color.White, fontSize = 20.sp) }

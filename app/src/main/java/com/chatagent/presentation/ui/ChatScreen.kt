@@ -48,24 +48,18 @@ fun ChatScreen(
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
 
-    // Streaming 时追踪内容长度变化，触底自动滚动
-    val prevStreamLen = remember { mutableIntStateOf(0) }
-    LaunchedEffect(isStreaming, streamingContent) {
-        if (isStreaming && streamingContent.length > prevStreamLen.intValue) {
-            prevStreamLen.intValue = streamingContent.length
-            val msgCount = currentConversation?.messages?.size ?: 0
-            val target = msgCount + (if (isStreaming) 0 else 0)
-            if (target >= 0) {
-                kotlinx.coroutines.delay(30)
-                listState.animateScrollToItem(target)
-            }
-        }
-    }
-
-    // 新消息时滚动
+    // 新消息时滚动到底部
     LaunchedEffect(currentConversation?.messages?.size) {
         if (currentConversation?.messages?.isNotEmpty() == true) {
             listState.animateScrollToItem(currentConversation!!.messages.size - 1)
+        }
+    }
+
+    // 流式输出时滚动到 streaming item
+    LaunchedEffect(isStreaming) {
+        if (isStreaming && currentConversation?.messages != null) {
+            val target = currentConversation!!.messages.size
+            listState.animateScrollToItem(target)
         }
     }
 

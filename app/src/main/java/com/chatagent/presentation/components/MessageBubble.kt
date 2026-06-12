@@ -1,6 +1,5 @@
 package com.chatagent.presentation.components
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,14 +26,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.chatagent.data.model.Message
 import com.chatagent.presentation.ui.theme.Accent
-import com.chatagent.presentation.ui.theme.White
 
 private val UserGreen = Color(0xFF10A37F)
 private val AiGray = Color(0xFF1C1C1E)
@@ -47,14 +45,12 @@ fun MessageBubble(
     val isUser = message.role == "user"
 
     if (isUser) {
-        // 用户绿色气泡 — 自适应宽度
         Row(
             modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 2.dp),
             horizontalArrangement = Arrangement.End
         ) {
             Box(
-                modifier = Modifier
-                    .widthIn(max = 320.dp)
+                modifier = Modifier.widthIn(max = 320.dp)
                     .clip(RoundedCornerShape(20.dp, 4.dp, 20.dp, 20.dp))
                     .background(UserGreen)
                     .padding(horizontal = 16.dp, vertical = 10.dp)
@@ -63,17 +59,10 @@ fun MessageBubble(
             }
         }
     } else {
-        // AI 灰色气泡 — 头像在上，内容在头像下方撑满宽度
         Column(
-            modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 2.dp).animateContentSize()
+            modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 2.dp)
         ) {
-            // 思考弹窗
-            if (!message.thinkingContent.isNullOrEmpty()) {
-                ThinkingBadge(thinking = message.thinkingContent)
-                Spacer(Modifier.height(6.dp))
-            }
-
-            // 头像行（AI 头像 + 名字）
+            // 第1行：头像 + 名字
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier.size(28.dp).clip(CircleShape).background(Accent),
@@ -83,9 +72,14 @@ fun MessageBubble(
                 Text("DeepSeek", color = Color(0xFF8E8E93), fontSize = 13.sp, fontWeight = FontWeight.Medium)
             }
 
-            Spacer(Modifier.height(4.dp))
+            // 第2行：思考过程（如果有）
+            if (!message.thinkingContent.isNullOrEmpty()) {
+                Spacer(Modifier.height(6.dp))
+                ThinkingBadge(thinking = message.thinkingContent)
+            }
 
-            // 回复气泡 — 占满宽度
+            // 第3行：正文气泡
+            Spacer(Modifier.height(6.dp))
             Box(
                 modifier = Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(4.dp, 20.dp, 20.dp, 20.dp))
@@ -96,6 +90,21 @@ fun MessageBubble(
                     markdown = message.content,
                     color = Color.White,
                     style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, lineHeight = 22.sp)
+                )
+            }
+
+            // 第4行：复制按钮
+            if (message.content.isNotBlank()) {
+                Spacer(Modifier.height(4.dp))
+                val ctx = androidx.compose.ui.platform.LocalContext.current
+                Text(
+                    text = "复制",
+                    color = Color(0xFF8E8E93),
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(start = 4.dp).clickable {
+                        val clipMgr = ctx.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                        clipMgr.setPrimaryClip(android.content.ClipData.newPlainText("AI回复", message.content))
+                    }
                 )
             }
         }

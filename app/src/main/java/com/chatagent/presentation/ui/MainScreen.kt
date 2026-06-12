@@ -74,7 +74,7 @@ fun MainScreen(
             onMenuClick = { showSidebar = true },
             onNewChatClick = { viewModel.createConversation() },
             onModelSelect = { model -> viewModel.setModel(model) },
-            modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars)
+            modifier = Modifier.padding(top = 12.dp)
         )
 
         // 悬浮底栏
