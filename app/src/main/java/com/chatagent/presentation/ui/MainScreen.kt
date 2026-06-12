@@ -51,8 +51,8 @@ fun MainScreen(
     var showSidebar by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
 
-    // 液态玻璃背景捕获层
-    val backdrop = rememberLayerBackdrop()
+    // 液态玻璃 — 临时关闭排查闪退
+    val backdrop: Backdrop? = null
 
     Box(
         modifier = Modifier
