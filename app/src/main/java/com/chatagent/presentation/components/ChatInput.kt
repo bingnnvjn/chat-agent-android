@@ -25,13 +25,17 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.highlight.Highlight
 
 private val Red = Color(0xFFFF3B30)
-private val LightGray = Color(0xFFF2F2F7)
 private val MutedText = Color(0xFF8E8E93)
 
 @Composable
 fun ChatInput(
+    backdrop: Backdrop? = null,
     value: String,
     onValueChange: (String) -> Unit,
     onSend: () -> Unit,
@@ -40,37 +44,56 @@ fun ChatInput(
     onToggleThinking: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val glassMod = if (backdrop != null) {
+        Modifier.drawBackdrop(
+            backdrop = backdrop,
+            shape = { CircleShape },
+            effects = { blur(4f.dp.toPx()) },
+            highlight = { Highlight.Default }
+        )
+    } else {
+        Modifier
+    }
+
+    val capsuleGlassMod = if (backdrop != null) {
+        Modifier.drawBackdrop(
+            backdrop = backdrop,
+            shape = { RoundedCornerShape(999.dp) },
+            effects = { blur(4f.dp.toPx()) },
+            highlight = { Highlight.Default }
+        )
+    } else {
+        Modifier
+    }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(start = 12.dp, end = 12.dp, top = 6.dp, bottom = 18.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 左侧加号圆形按钮
+        // 左侧加号圆形按钮（玻璃）
         Box(
             modifier = Modifier
                 .size(46.dp)
+                .then(glassMod)
                 .clip(CircleShape)
-                .background(LightGray)
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
                 .clickable { onAttach() },
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "+",
-                color = MutedText,
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Light
-            )
+            Text(text = "+", color = MutedText, fontSize = 26.sp, fontWeight = FontWeight.Light)
         }
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        // 中间输入胶囊
+        // 中间输入胶囊（玻璃）
         Box(
             modifier = Modifier
                 .weight(1f)
+                .then(capsuleGlassMod)
                 .clip(RoundedCornerShape(999.dp))
-                .background(LightGray)
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
                 .padding(start = 16.dp, end = 4.dp, top = 2.dp, bottom = 2.dp)
                 .height(46.dp)
         ) {
@@ -82,7 +105,7 @@ fun ChatInput(
                     value = value,
                     onValueChange = onValueChange,
                     modifier = Modifier.weight(1f),
-                    textStyle = TextStyle(color = Color.Black, fontSize = 16.sp),
+                    textStyle = TextStyle(color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp),
                     cursorBrush = SolidColor(Red),
                     decorationBox = { innerTextField ->
                         Box(modifier = Modifier.padding(vertical = 8.dp)) {
@@ -103,20 +126,11 @@ fun ChatInput(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(RoundedCornerShape(21.dp))
-                        .background(
-                            if (value.isNotBlank()) Red
-                            else MutedText.copy(alpha = 0.2f)
-                        )
-                        .clickable {
-                            if (value.isNotBlank()) onSend()
-                        },
+                        .background(if (value.isNotBlank()) Red else MutedText.copy(alpha = 0.2f))
+                        .clickable { if (value.isNotBlank()) onSend() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "↑",
-                        color = Color.White,
-                        fontSize = 22.sp
-                    )
+                    Text(text = "↑", color = Color.White, fontSize = 22.sp)
                 }
             }
         }

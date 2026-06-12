@@ -43,10 +43,12 @@ import com.chatagent.presentation.components.ChatInput
 import com.chatagent.presentation.components.MessageBubble
 import com.chatagent.presentation.components.WelcomeScreen
 import com.chatagent.presentation.viewmodel.ChatViewModel
+import com.kyant.backdrop.Backdrop
 
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel,
+    backdrop: Backdrop? = null,
     modifier: Modifier = Modifier
 ) {
     val currentConversation by viewModel.currentConversation.collectAsState()
@@ -145,7 +147,7 @@ fun ChatScreen(
                     inputText = ""
                 }
             },
-            onAttach = { /* TODO: 接入文件/图片选择 */ },
+            onAttach = { /* TODO: 接入文件/图片选择 */ }
             enableThinking = enableThinking,
             onToggleThinking = { viewModel.toggleThinking() }
         )
