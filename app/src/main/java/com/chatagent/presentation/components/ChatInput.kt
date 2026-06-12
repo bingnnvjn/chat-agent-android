@@ -30,10 +30,7 @@ import com.chatagent.presentation.ui.theme.White
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
-import com.kyant.backdrop.shadow.Shadow
 
 @Composable
 fun ChatInput(
@@ -55,12 +52,9 @@ fun ChatInput(
                 backdrop = backdrop,
                 shape = { shape },
                 effects = {
-                    vibrancy()
                     blur(4f.dp.toPx())
-                    lens(12f.dp.toPx(), 20f.dp.toPx())
                 },
-                highlight = { Highlight.Default },
-                shadow = { Shadow.Default }
+                highlight = { Highlight.Default }
             )
             .padding(horizontal = 12.dp, vertical = 10.dp)
     } else {

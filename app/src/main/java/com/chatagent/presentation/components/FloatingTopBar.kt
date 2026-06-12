@@ -35,8 +35,6 @@ import com.chatagent.data.model.ApiProvider
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
 
 @Composable
@@ -59,9 +57,7 @@ fun FloatingTopBar(
                 backdrop = backdrop,
                 shape = { RoundedCornerShape(28.dp) },
                 effects = {
-                    vibrancy()
                     blur(4f.dp.toPx())
-                    lens(12f.dp.toPx(), 20f.dp.toPx())
                 },
                 highlight = { Highlight.Default }
             )

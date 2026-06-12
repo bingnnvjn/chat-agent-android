@@ -31,6 +31,8 @@ import com.chatagent.presentation.ui.theme.ChatAgentTheme
 import com.chatagent.presentation.viewmodel.ChatUiState
 import com.chatagent.presentation.viewmodel.ChatViewModel
 import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 
 @Composable
 fun MainScreen(
@@ -50,13 +52,21 @@ fun MainScreen(
     var showSettings by remember { mutableStateOf(false) }
 
     // 液态玻璃 — 临时关闭排查闪退
-    val backdrop: Backdrop? = null
+    val backdrop = rememberLayerBackdrop()
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
+        // 背景捕获（供液态玻璃组件使用）
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .layerBackdrop(backdrop)
+        )
+
         // 主聊天界面（仅避让状态栏高度，顶栏浮动带渐变背景）
         ChatScreen(
             viewModel = viewModel,
