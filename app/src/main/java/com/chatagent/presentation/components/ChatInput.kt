@@ -16,6 +16,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,7 +26,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.highlight.Highlight
@@ -34,44 +34,28 @@ private val SendGreen = Color(0xFF10A37F)
 
 @Composable
 fun ChatInput(
-    backdrop: Backdrop? = null,
     value: String,
     onValueChange: (String) -> Unit,
     onSend: () -> Unit,
     onAttach: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val circleGlass = if (backdrop != null) {
-        Modifier.drawBackdrop(
-            backdrop = backdrop, shape = { CircleShape },
-            effects = { blur(4f.dp.toPx()) },
-            highlight = { Highlight.Default },
-            onDrawSurface = { drawRect(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)) }
-        )
-    } else Modifier
-
-    val capsuleGlass = if (backdrop != null) {
-        Modifier.drawBackdrop(
-            backdrop = backdrop, shape = { RoundedCornerShape(999.dp) },
-            effects = { blur(4f.dp.toPx()) },
-            highlight = { Highlight.Default },
-            onDrawSurface = { drawRect(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)) }
-        )
-    } else Modifier
-
     Row(
         modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
-            modifier = circleGlass.size(46.dp).clip(CircleShape).clickable { onAttach() },
+            modifier = Modifier.size(46.dp).clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .clickable { onAttach() },
             contentAlignment = Alignment.Center
         ) { Text("+", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 26.sp, fontWeight = FontWeight.Light) }
 
         Spacer(Modifier.width(8.dp))
 
         Box(
-            modifier = capsuleGlass.weight(1f).clip(RoundedCornerShape(999.dp))
+            modifier = Modifier.weight(1f).clip(RoundedCornerShape(999.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                 .padding(start = 16.dp, end = 4.dp, top = 2.dp, bottom = 2.dp).height(46.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {

@@ -29,9 +29,6 @@ import com.chatagent.presentation.components.Sidebar
 import com.chatagent.presentation.ui.theme.ChatAgentTheme
 import com.chatagent.presentation.viewmodel.ChatUiState
 import com.chatagent.presentation.viewmodel.ChatViewModel
-import com.kyant.backdrop.Backdrop
-import com.kyant.backdrop.backdrops.layerBackdrop
-import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 
 @Composable
 fun MainScreen(
@@ -47,21 +44,11 @@ fun MainScreen(
     var showSettings by remember { mutableStateOf(false) }
     var inputText by remember { mutableStateOf("") }
 
-    val backdrop = rememberLayerBackdrop()
-
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // 背景捕获层
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .layerBackdrop(backdrop)
-        )
-
         // 主聊天界面
         ChatScreen(
             viewModel = viewModel,
@@ -70,7 +57,6 @@ fun MainScreen(
 
         // 悬浮顶栏（适配状态栏）
         FloatingTopBar(
-            backdrop = backdrop,
             title = currentConversation?.title ?: "Chat Agent",
             currentProvider = uiState.currentProvider,
             onMenuClick = { showSidebar = true },
@@ -79,9 +65,8 @@ fun MainScreen(
             modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars)
         )
 
-        // 悬浮底栏（在内容之上）
+        // 悬浮底栏
         ChatInput(
-            backdrop = backdrop,
             value = inputText,
             onValueChange = { inputText = it },
             onSend = {
