@@ -42,47 +42,42 @@ fun ChatInput(
     onAttach: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    fun glass(mod: Modifier, isCircle: Boolean = true) = if (backdrop != null) {
-        mod.drawBackdrop(
-            backdrop = backdrop,
-            shape = { if (isCircle) CircleShape else RoundedCornerShape(999.dp) },
+    val circleGlass = if (backdrop != null) {
+        Modifier.drawBackdrop(
+            backdrop = backdrop, shape = { CircleShape },
             effects = { vibrancy(); blur(4f.dp.toPx()) },
             highlight = { Highlight.Default },
             onDrawSurface = { drawRect(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)) }
         )
-    } else mod
+    } else Modifier
+
+    val capsuleGlass = if (backdrop != null) {
+        Modifier.drawBackdrop(
+            backdrop = backdrop, shape = { RoundedCornerShape(999.dp) },
+            effects = { vibrancy(); blur(4f.dp.toPx()) },
+            highlight = { Highlight.Default },
+            onDrawSurface = { drawRect(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)) }
+        )
+    } else Modifier
 
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+        modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 加号（玻璃悬浮）
         Box(
-            modifier = glass(Modifier, true)
-                .size(46.dp)
-                .clip(CircleShape)
-                .clickable { onAttach() },
+            modifier = circleGlass.size(46.dp).clip(CircleShape).clickable { onAttach() },
             contentAlignment = Alignment.Center
-        ) {
-            Text(text = "+", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 26.sp, fontWeight = FontWeight.Light)
-        }
+        ) { Text("+", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 26.sp, fontWeight = FontWeight.Light) }
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(Modifier.width(8.dp))
 
-        // 输入胶囊（玻璃悬浮）
         Box(
-            modifier = glass(Modifier, false)
-                .weight(1f)
-                .clip(RoundedCornerShape(999.dp))
-                .padding(start = 16.dp, end = 4.dp, top = 2.dp, bottom = 2.dp)
-                .height(46.dp)
+            modifier = capsuleGlass.weight(1f).clip(RoundedCornerShape(999.dp))
+                .padding(start = 16.dp, end = 4.dp, top = 2.dp, bottom = 2.dp).height(46.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                 BasicTextField(
-                    value = value,
-                    onValueChange = onValueChange,
+                    value = value, onValueChange = onValueChange,
                     modifier = Modifier.weight(1f),
                     textStyle = TextStyle(color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp),
                     cursorBrush = SolidColor(SendGreen),
@@ -93,20 +88,14 @@ fun ChatInput(
                         }
                     }
                 )
-
-                // 发送胶囊
                 val sendBg = if (value.isNotBlank()) SendGreen else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
                 Box(
-                    modifier = Modifier
-                        .height(34.dp)
-                        .clip(RoundedCornerShape(17.dp))
+                    modifier = Modifier.height(34.dp).clip(RoundedCornerShape(17.dp))
                         .background(sendBg)
                         .then(if (value.isNotBlank()) Modifier.clickable { onSend() } else Modifier)
                         .padding(horizontal = 14.dp),
                     contentAlignment = Alignment.Center
-                ) {
-                    Text(text = "↑", color = Color.White, fontSize = 20.sp)
-                }
+                ) { Text("↑", color = Color.White, fontSize = 20.sp) }
             }
         }
     }

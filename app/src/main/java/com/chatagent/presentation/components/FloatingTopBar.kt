@@ -19,7 +19,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -44,98 +43,65 @@ fun FloatingTopBar(
 ) {
     var showModelMenu by remember { mutableStateOf(false) }
 
-    val glassCircle = { mod: Modifier ->
-        if (backdrop != null) {
-            mod.drawBackdrop(
-                backdrop = backdrop,
-                shape = { CircleShape },
-                effects = { vibrancy(); blur(4f.dp.toPx()) },
-                highlight = { Highlight.Default },
-                onDrawSurface = {
-                    drawRect(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
-                }
-            )
-        } else mod
-    }
+    val glassCircle = if (backdrop != null) {
+        Modifier.drawBackdrop(
+            backdrop = backdrop, shape = { CircleShape },
+            effects = { vibrancy(); blur(4f.dp.toPx()) },
+            highlight = { Highlight.Default },
+            onDrawSurface = { drawRect(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)) }
+        )
+    } else Modifier
 
-    val glassCapsule = { mod: Modifier ->
-        if (backdrop != null) {
-            mod.drawBackdrop(
-                backdrop = backdrop,
-                shape = { RoundedCornerShape(25.dp) },
-                effects = { vibrancy(); blur(4f.dp.toPx()) },
-                highlight = { Highlight.Default },
-                onDrawSurface = {
-                    drawRect(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
-                }
-            )
-        } else mod
-    }
+    val glassCapsule = if (backdrop != null) {
+        Modifier.drawBackdrop(
+            backdrop = backdrop, shape = { RoundedCornerShape(25.dp) },
+            effects = { vibrancy(); blur(4f.dp.toPx()) },
+            highlight = { Highlight.Default },
+            onDrawSurface = { drawRect(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)) }
+        )
+    } else Modifier
 
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 12.dp),
+        modifier = modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.Top
     ) {
-        // 左侧圆形按钮
         Box(
-            modifier = glassCircle(Modifier)
-                .size(50.dp)
-                .clip(CircleShape)
-                .clickable { onMenuClick() },
+            modifier = glassCircle.size(50.dp).clip(CircleShape).clickable { onMenuClick() },
             contentAlignment = Alignment.Center
-        ) {
-            Text(text = "‹", color = MaterialTheme.colorScheme.onSurface, fontSize = 24.sp)
-        }
+        ) { Text("‹", color = MaterialTheme.colorScheme.onSurface, fontSize = 24.sp) }
 
-        // 中间胶囊（缩短长度）
         Box(
-            modifier = glassCapsule(Modifier)
-                .padding(horizontal = 6.dp)
-                .height(50.dp)
-                .clip(RoundedCornerShape(25.dp))
-                .clickable { showModelMenu = true },
+            modifier = glassCapsule
+                .padding(horizontal = 6.dp).height(50.dp)
+                .clip(RoundedCornerShape(25.dp)).clickable { showModelMenu = true },
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = title.ifEmpty { currentProvider.defaultModel },
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+                title.ifEmpty { currentProvider.defaultModel },
+                color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp,
+                fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(horizontal = 18.dp)
             )
         }
 
-        // 右侧圆形按钮
         Box(
-            modifier = glassCircle(Modifier)
-                .size(50.dp)
-                .clip(CircleShape)
-                .clickable { onNewChatClick() },
+            modifier = glassCircle.size(50.dp).clip(CircleShape).clickable { onNewChatClick() },
             contentAlignment = Alignment.Center
-        ) {
-            Text(text = "⋯", color = MaterialTheme.colorScheme.onSurface, fontSize = 22.sp)
-        }
+        ) { Text("⋯", color = MaterialTheme.colorScheme.onSurface, fontSize = 22.sp) }
     }
 
     if (showModelMenu) {
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { showModelMenu = false },
-            shape = RoundedCornerShape(16.dp),
-            title = null,
+            shape = RoundedCornerShape(16.dp), title = null,
             text = {
                 androidx.compose.foundation.layout.Column {
                     currentProvider.models.forEach { model ->
                         Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(10.dp))
+                            Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
                                 .clickable { onModelSelect(model); showModelMenu = false }
                                 .padding(vertical = 12.dp, horizontal = 8.dp)
-                        ) { Text(text = model, fontSize = 15.sp) }
+                        ) { Text(model, fontSize = 15.sp) }
                     }
                 }
             },
