@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.highlight.Highlight
 
 private val SendGreen = Color(0xFF10A37F)
@@ -70,7 +71,7 @@ fun ChatInput(
             modifier = Modifier.size(48.dp).then(
                 if (backdrop != null) Modifier.drawBackdrop(
                     backdrop = backdrop, shape = { CircleShape },
-                    effects = { blur(4f.dp.toPx()) },
+                    effects = { blur(4f.dp.toPx()); lens(8f.dp.toPx(), 16f.dp.toPx()) },
                     highlight = { Highlight.Default },
                     onDrawSurface = { drawRect(tintColor) }
                 ) else Modifier
@@ -87,7 +88,7 @@ fun ChatInput(
             modifier = Modifier.size(44.dp).then(
                 if (backdrop != null) Modifier.drawBackdrop(
                     backdrop = backdrop, shape = { CircleShape },
-                    effects = { blur(4f.dp.toPx()) },
+                    effects = { blur(4f.dp.toPx()); lens(8f.dp.toPx(), 16f.dp.toPx()) },
                     highlight = { Highlight.Default },
                     onDrawSurface = {
                         if (enableThinking) drawRect(accentColor)
@@ -105,7 +106,7 @@ fun ChatInput(
             modifier = Modifier.weight(1f).then(
                 if (backdrop != null) Modifier.drawBackdrop(
                     backdrop = backdrop, shape = { RoundedCornerShape(999.dp) },
-                    effects = { blur(4f.dp.toPx()) },
+                    effects = { blur(4f.dp.toPx()); lens(8f.dp.toPx(), 16f.dp.toPx()) },
                     highlight = { Highlight.Default },
                     onDrawSurface = { drawRect(tintColor) }
                 ) else Modifier

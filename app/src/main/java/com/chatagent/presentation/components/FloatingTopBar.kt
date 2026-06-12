@@ -28,6 +28,7 @@ import com.chatagent.data.model.ApiProvider
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.highlight.Highlight
 
 @Composable
@@ -51,7 +52,7 @@ fun FloatingTopBar(
             modifier = Modifier.size(50.dp).then(
                 if (backdrop != null) Modifier.drawBackdrop(
                     backdrop = backdrop, shape = { CircleShape },
-                    effects = { blur(4f.dp.toPx()) },
+                    effects = { blur(4f.dp.toPx()); lens(8f.dp.toPx(), 16f.dp.toPx()) },
                     highlight = { Highlight.Default },
                     onDrawSurface = { drawRect(tintColor) }
                 ) else Modifier
@@ -63,7 +64,7 @@ fun FloatingTopBar(
             modifier = Modifier.weight(1f).padding(horizontal = 10.dp).height(50.dp).then(
                 if (backdrop != null) Modifier.drawBackdrop(
                     backdrop = backdrop, shape = { RoundedCornerShape(25.dp) },
-                    effects = { blur(4f.dp.toPx()) },
+                    effects = { blur(4f.dp.toPx()); lens(8f.dp.toPx(), 16f.dp.toPx()) },
                     highlight = { Highlight.Default },
                     onDrawSurface = { drawRect(tintColor) }
                 ) else Modifier
@@ -82,7 +83,7 @@ fun FloatingTopBar(
             modifier = Modifier.size(50.dp).then(
                 if (backdrop != null) Modifier.drawBackdrop(
                     backdrop = backdrop, shape = { CircleShape },
-                    effects = { blur(4f.dp.toPx()) },
+                    effects = { blur(4f.dp.toPx()); lens(8f.dp.toPx(), 16f.dp.toPx()) },
                     highlight = { Highlight.Default },
                     onDrawSurface = { drawRect(tintColor) }
                 ) else Modifier
