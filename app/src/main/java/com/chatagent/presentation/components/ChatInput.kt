@@ -52,6 +52,7 @@ fun ChatInput(
     modifier: Modifier = Modifier
 ) {
     val tintColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f)
+    val accentColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
     val textColor = MaterialTheme.colorScheme.onSurface
     val placeholderColor = MaterialTheme.colorScheme.onSurfaceVariant
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
@@ -89,7 +90,7 @@ fun ChatInput(
                     effects = { blur(4f.dp.toPx()) },
                     highlight = { Highlight.Default },
                     onDrawSurface = {
-                        if (enableThinking) drawRect(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                        if (enableThinking) drawRect(accentColor)
                         else drawRect(tintColor)
                     }
                 ) else Modifier

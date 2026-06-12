@@ -41,7 +41,7 @@ class ChatViewModel @Inject constructor(
     private val _isDarkTheme = MutableStateFlow(true)
     val isDarkTheme: StateFlow<Boolean> = _isDarkTheme.asStateFlow()
 
-    private val _apiKeyCache = mutableMapOf<String, MutableStateFlow<String>>()
+    private val _apiKeyCache = mutableMapOf<String, StateFlow<String>>()
 
     private var darkThemeJob: Job? = null
 
