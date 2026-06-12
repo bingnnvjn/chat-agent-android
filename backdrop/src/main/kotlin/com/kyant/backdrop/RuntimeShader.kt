@@ -7,18 +7,35 @@ import androidx.compose.ui.graphics.Shader
 import androidx.compose.ui.graphics.toArgb
 import org.intellij.lang.annotations.Language
 
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
-actual fun RuntimeShader(@Language("AGSL") shaderString: String): RuntimeShader {
-    val shader = android.graphics.RuntimeShader(shaderString)
-    return AndroidRuntimeShader(shader)
+interface RuntimeShader {
+
+    fun setFloatUniform(name: String, value: Float)
+    fun setFloatUniform(name: String, value1: Float, value2: Float)
+    fun setFloatUniform(name: String, value1: Float, value2: Float, value3: Float)
+    fun setFloatUniform(name: String, value1: Float, value2: Float, value3: Float, value4: Float)
+    fun setFloatUniform(name: String, values: FloatArray)
+
+    fun setIntUniform(name: String, value: Int)
+    fun setIntUniform(name: String, value1: Int, value2: Int)
+    fun setIntUniform(name: String, value1: Int, value2: Int, value3: Int)
+    fun setIntUniform(name: String, value1: Int, value2: Int, value3: Int, value4: Int)
+    fun setIntUniform(name: String, values: IntArray)
+
+    fun setColorUniform(name: String, color: Color)
 }
 
-actual fun RuntimeShader.asComposeShader(): Shader {
+fun RuntimeShader.asComposeShader(): Shader {
     return this.asAndroidRuntimeShader()
 }
 
 fun RuntimeShader.asAndroidRuntimeShader(): android.graphics.RuntimeShader {
     return (this as AndroidRuntimeShader).shader
+}
+
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+fun RuntimeShader(@Language("AGSL") shaderString: String): RuntimeShader {
+    val shader = android.graphics.RuntimeShader(shaderString)
+    return AndroidRuntimeShader(shader)
 }
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -36,7 +53,9 @@ internal class AndroidRuntimeShader(val shader: android.graphics.RuntimeShader) 
         shader.setFloatUniform(name, value1, value2, value3)
     }
 
-    override fun setFloatUniform(name: String, value1: Float, value2: Float, value3: Float, value4: Float) {
+    override fun setFloatUniform(
+        name: String, value1: Float, value2: Float, value3: Float, value4: Float
+    ) {
         shader.setFloatUniform(name, value1, value2, value3, value4)
     }
 
@@ -56,7 +75,9 @@ internal class AndroidRuntimeShader(val shader: android.graphics.RuntimeShader) 
         shader.setIntUniform(name, value1, value2, value3)
     }
 
-    override fun setIntUniform(name: String, value1: Int, value2: Int, value3: Int, value4: Int) {
+    override fun setIntUniform(
+        name: String, value1: Int, value2: Int, value3: Int, value4: Int
+    ) {
         shader.setIntUniform(name, value1, value2, value3, value4)
     }
 

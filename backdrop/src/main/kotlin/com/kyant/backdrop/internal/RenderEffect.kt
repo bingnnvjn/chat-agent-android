@@ -10,7 +10,7 @@ import com.kyant.backdrop.RuntimeShader
 import com.kyant.backdrop.asAndroidRuntimeShader
 
 @RequiresApi(Build.VERSION_CODES.S)
-internal actual fun RenderEffect?.chain(other: RenderEffect): RenderEffect {
+internal fun RenderEffect?.chain(other: RenderEffect): RenderEffect {
     return if (this != null) {
         android.graphics.RenderEffect.createChainEffect(
             other.asAndroidRenderEffect(),
@@ -22,7 +22,7 @@ internal actual fun RenderEffect?.chain(other: RenderEffect): RenderEffect {
 }
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-internal actual fun RuntimeShaderEffect(
+internal fun RuntimeShaderEffect(
     runtimeShader: RuntimeShader,
     uniformShaderName: String
 ): RenderEffect {
@@ -33,7 +33,7 @@ internal actual fun RuntimeShaderEffect(
 }
 
 @RequiresApi(Build.VERSION_CODES.S)
-internal actual fun ColorFilterEffect(
+internal fun ColorFilterEffect(
     renderEffect: RenderEffect?,
     colorFilter: ColorFilter
 ): RenderEffect {
