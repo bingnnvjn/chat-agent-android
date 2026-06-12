@@ -43,10 +43,12 @@ import com.chatagent.presentation.components.ChatInput
 import com.chatagent.presentation.components.MessageBubble
 import com.chatagent.presentation.components.WelcomeScreen
 import com.chatagent.presentation.viewmodel.ChatViewModel
+import com.kyant.backdrop.backdrops.LayerBackdrop
 
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel,
+    backdrop: LayerBackdrop? = null,
     modifier: Modifier = Modifier
 ) {
     val currentConversation by viewModel.currentConversation.collectAsState()
@@ -150,6 +152,7 @@ fun ChatScreen(
 
         // 输入框（底部留空，不避让键盘）
         ChatInput(
+            backdrop = backdrop,
             value = inputText,
             onValueChange = { inputText = it },
             onSend = {

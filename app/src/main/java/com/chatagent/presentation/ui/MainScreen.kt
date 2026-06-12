@@ -30,6 +30,8 @@ import com.chatagent.presentation.components.Sidebar
 import com.chatagent.presentation.ui.theme.ChatAgentTheme
 import com.chatagent.presentation.viewmodel.ChatUiState
 import com.chatagent.presentation.viewmodel.ChatViewModel
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 
 @Composable
 fun MainScreen(
@@ -48,14 +50,26 @@ fun MainScreen(
     var showSidebar by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
 
+    // 液态玻璃背景捕获层
+    val backdrop = rememberLayerBackdrop()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
+        // 背景捕获（供液态玻璃组件使用）
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .layerBackdrop(backdrop)
+        )
+
         // 主聊天界面（仅避让状态栏高度，顶栏浮动带渐变背景）
         ChatScreen(
             viewModel = viewModel,
+            backdrop = backdrop,
             modifier = Modifier
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.statusBars)
@@ -63,6 +77,7 @@ fun MainScreen(
 
         // 悬浮顶栏（适配状态栏）
         FloatingTopBar(
+            backdrop = backdrop,
             title = currentConversation?.title ?: "Chat Agent",
             currentProvider = uiState.currentProvider,
             onMenuClick = { showSidebar = true },

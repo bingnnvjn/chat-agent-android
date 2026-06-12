@@ -36,9 +36,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.chatagent.data.model.ApiProvider
+import com.kyant.backdrop.backdrops.LayerBackdrop
 
 @Composable
 fun FloatingTopBar(
+    backdrop: LayerBackdrop? = null,
     title: String = "Chat Agent",
     currentProvider: ApiProvider,
     onMenuClick: () -> Unit,

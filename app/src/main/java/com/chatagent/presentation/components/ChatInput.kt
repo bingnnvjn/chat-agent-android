@@ -28,9 +28,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.chatagent.presentation.ui.theme.Accent
 import com.chatagent.presentation.ui.theme.White
+import com.kyant.backdrop.backdrops.LayerBackdrop
 
 @Composable
 fun ChatInput(
+    backdrop: LayerBackdrop? = null,
     value: String,
     onValueChange: (String) -> Unit,
     onSend: () -> Unit,
