@@ -31,6 +31,7 @@ import com.chatagent.presentation.components.Sidebar
 import com.chatagent.presentation.ui.theme.ChatAgentTheme
 import com.chatagent.presentation.viewmodel.ChatUiState
 import com.chatagent.presentation.viewmodel.ChatViewModel
+import com.chatagent.presentation.components.GlassTestScreen
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 
@@ -47,6 +48,7 @@ fun MainScreen(
     val currentConversation by viewModel.currentConversation.collectAsState(null)
     var showSidebar by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
+    var showGlassTest by remember { mutableStateOf(false) }
     val backdrop = rememberLayerBackdrop()
     var inputText by remember { mutableStateOf("") }
     var pendingImageUri by remember { mutableStateOf<android.net.Uri?>(null) }
@@ -137,7 +139,12 @@ fun MainScreen(
             enter = slideInHorizontally { it },
             exit = slideOutHorizontally { it }
         ) {
-            SettingsScreen(viewModel = viewModel, onClose = { showSettings = false })
+            SettingsScreen(viewModel = viewModel, onClose = { showSettings = false }, onGlassTest = { showGlassTest = true; showSettings = false })
+        }
+
+        // 玻璃效果测试
+        if (showGlassTest) {
+            GlassTestScreen(onClose = { showGlassTest = false })
         }
     }
     }
