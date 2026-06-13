@@ -11,8 +11,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -54,12 +57,8 @@ fun AdaptiveLuminanceGlassContent(
     val luminanceAnimation = remember(isLightTheme) {
         Animatable(if (isLightTheme) 1f else 0f)
     }
-    val contentColorAnimation = remember(isLightTheme) {
-        Animatable<Color, androidx.compose.animation.core.AnimationVector4D>(
-            initialValue = if (isLightTheme) Color.Black else Color.White,
-            typeConverter = Color.VectorConverter
-        )
-    }
+    val contentColor by remember { mutableStateOf(if (isLightTheme) Color.Black else Color.White) }
+    var contentColorAnim by remember { mutableStateOf(contentColor) }
     LaunchedEffect(layer) {
         val buffer = IntArray(25)
         while (isActive) {
@@ -74,10 +73,7 @@ fun AdaptiveLuminanceGlassContent(
                     0.2126 * r + 0.7152 * g + 0.0722 * b
                 } / buffer.size
             launch {
-                contentColorAnimation.animateTo(
-                    if (averageLuminance > 0.5f) Color.Black else Color.White,
-                    tween(1000)
-                )
+                contentColor = if (averageLuminance > 0.5f) Color.Black else Color.White
             }
             luminanceAnimation.animateTo(
                 averageLuminance.toFloat(),
@@ -165,7 +161,7 @@ fun AdaptiveLuminanceGlassContent(
             BasicText(
                 "luminance:\n${(luminanceAnimation.value * 100f).fastRoundToInt() / 100.0}",
                 style = TextStyle(Color.Unspecified, 16f.sp, textAlign = TextAlign.Center),
-                color = { contentColorAnimation.value }
+                color = contentColor
             )
         }
     }
