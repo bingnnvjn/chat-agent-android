@@ -20,7 +20,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import com.kyant.shapes.Capsule
+import androidx.compose.foundation.shape.RoundedCornerShape
+
+private val PillShape = RoundedCornerShape(999.dp)
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -125,7 +127,7 @@ fun ChatInput(
         Box(
             modifier = Modifier.weight(1f).then(
                 if (backdrop != null) Modifier.drawBackdrop(
-                    backdrop = backdrop, shape = { Capsule() },
+                    backdrop = backdrop, shape = { PillShape },
                     effects = {
                         val l = lum
                         colorControls(
@@ -146,7 +148,7 @@ fun ChatInput(
                     },
                     onDrawSurface = {}
                 ) else Modifier
-            ).clip(Capsule()).height(40.dp)
+            ).clip(PillShape).height(40.dp)
                 .pointerInput(capsuleScope) {
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false)
