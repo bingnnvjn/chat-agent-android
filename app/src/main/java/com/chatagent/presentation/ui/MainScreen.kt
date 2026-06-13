@@ -102,7 +102,7 @@ fun MainScreen(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 12.dp)
-                .windowInsetsPadding(WindowInsets.navigationBars)
+                .windowInsetsPadding(WindowInsets.systemBars)
         )
 
         // 侧边栏
