@@ -61,7 +61,7 @@ fun FloatingTopBar(
         ) { Text("‹", color = MaterialTheme.colorScheme.onSurface, fontSize = 24.sp) }
 
         Box(
-            modifier = Modifier.weight(1f).padding(horizontal = 10.dp).height(50.dp).then(
+            modifier = Modifier.weight(1f).padding(horizontal = 6.dp).height(50.dp).then(
                 if (backdrop != null) Modifier.drawBackdrop(
                     backdrop = backdrop, shape = { RoundedCornerShape(25.dp) },
                     effects = { blur(4f.dp.toPx()) },
@@ -75,7 +75,7 @@ fun FloatingTopBar(
                 title.ifEmpty { currentProvider.defaultModel },
                 color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp,
                 fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(horizontal = 10.dp)
+                modifier = Modifier.padding(horizontal = 6.dp)
             )
         }
 

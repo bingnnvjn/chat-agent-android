@@ -68,7 +68,7 @@ fun ChatInput(
     ) {
         // + 按钮（图片选择）
         Box(
-            modifier = Modifier.size(48.dp).then(
+            modifier = Modifier.size(38.dp).then(
                 if (backdrop != null) Modifier.drawBackdrop(
                     backdrop = backdrop, shape = { CircleShape },
                     effects = { blur(4f.dp.toPx()) },
@@ -85,7 +85,7 @@ fun ChatInput(
 
         // 思考模式开关
         Box(
-            modifier = Modifier.size(44.dp).then(
+            modifier = Modifier.size(38.dp).then(
                 if (backdrop != null) Modifier.drawBackdrop(
                     backdrop = backdrop, shape = { CircleShape },
                     effects = { blur(4f.dp.toPx()) },
@@ -110,7 +110,7 @@ fun ChatInput(
                     highlight = { Highlight.Default },
                     onDrawSurface = { drawRect(tintColor) }
                 ) else Modifier
-            ).clip(RoundedCornerShape(999.dp)).height(48.dp)
+            ).clip(RoundedCornerShape(999.dp)).height(38.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp)) {
                 BasicTextField(

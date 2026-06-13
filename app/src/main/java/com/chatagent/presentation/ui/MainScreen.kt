@@ -56,19 +56,17 @@ fun MainScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // 背景捕获层
+        // 聊天内容 + 捕获层（消息被捕获，供玻璃折射）
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
                 .layerBackdrop(backdrop)
-        )
-
-        // 主聊天界面
-        ChatScreen(
-            viewModel = viewModel,
-            modifier = Modifier.fillMaxSize()
-        )
+        ) {
+            ChatScreen(
+                viewModel = viewModel,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
 
         // 悬浮顶栏（适配状态栏）
         FloatingTopBar(
@@ -98,7 +96,7 @@ fun MainScreen(
             onImagePicked = { uri -> pendingImageUri = uri },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 8.dp)
+                .padding(bottom = 32.dp)
         )
 
         // 侧边栏
