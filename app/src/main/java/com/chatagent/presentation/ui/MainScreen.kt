@@ -49,7 +49,10 @@ fun MainScreen(
     var showSidebar by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
     var showGlassTest by remember { mutableStateOf(false) }
-    val backdrop = rememberLayerBackdrop()
+    val backdrop = rememberLayerBackdrop {
+        drawRect(MaterialTheme.colorScheme.background)
+        drawContent()
+    }
     var inputText by remember { mutableStateOf("") }
     var pendingImageUri by remember { mutableStateOf<android.net.Uri?>(null) }
 
@@ -96,7 +99,7 @@ fun MainScreen(
             onImagePicked = { uri -> pendingImageUri = uri },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 40.dp)
+                .padding(bottom = 12.dp)
         )
 
         // 侧边栏

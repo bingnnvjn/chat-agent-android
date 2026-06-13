@@ -31,14 +31,16 @@ import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
-import com.kyant.backdrop.highlight.Highlight
-import com.kyant.backdrop.shadow.Shadow
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.tanh
 
+/**
+ * 顶部液态玻璃导航栏
+ * 按钮效果直接移植自 LiquidButton 示例组件
+ */
 @Composable
 fun FloatingTopBar(
     backdrop: Backdrop? = null,
@@ -50,27 +52,23 @@ fun FloatingTopBar(
     modifier: Modifier = Modifier
 ) {
     var showModelMenu by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
 
     Box(
-        modifier = modifier.fillMaxWidth().height(64.dp).padding(horizontal = 14.dp),
+        modifier = modifier.fillMaxWidth().height(60.dp).padding(horizontal = 12.dp),
         contentAlignment = Alignment.Center
     ) {
-        // 左按钮 — Liquid Glass + 交互
+        // 左：液态玻璃圆形按钮
         if (backdrop != null) {
-            LiquidGlassCircle(
-                backdrop = backdrop,
-                size = 44.dp,
-                modifier = Modifier.align(Alignment.CenterStart),
-                onClick = onMenuClick
-            ) { Text("‹", fontSize = 20.sp) }
+            LiquidCircleButton(backdrop, 44.dp, Modifier.align(Alignment.CenterStart), onMenuClick) {
+                Text("‹", fontSize = 20.sp, color = Color.White)
+            }
         } else {
             Box(Modifier.size(44.dp).align(Alignment.CenterStart).clip(CircleShape)
                 .clickable { onMenuClick() }, contentAlignment = Alignment.Center
             ) { Text("‹", color = MaterialTheme.colorScheme.onSurface, fontSize = 20.sp) }
         }
 
-        // 中间 — 会话名
+        // 中：会话标题（纯文字，无胶囊）
         Text(
             title.ifEmpty { currentProvider.defaultModel },
             color = MaterialTheme.colorScheme.onSurface,
@@ -81,14 +79,11 @@ fun FloatingTopBar(
             modifier = Modifier.clickable { showModelMenu = true }
         )
 
-        // 右按钮
+        // 右：液态玻璃圆形按钮
         if (backdrop != null) {
-            LiquidGlassCircle(
-                backdrop = backdrop,
-                size = 44.dp,
-                modifier = Modifier.align(Alignment.CenterEnd),
-                onClick = onNewChatClick
-            ) { Text("⋯", fontSize = 20.sp) }
+            LiquidCircleButton(backdrop, 44.dp, Modifier.align(Alignment.CenterEnd), onNewChatClick) {
+                Text("⋯", fontSize = 20.sp, color = Color.White)
+            }
         } else {
             Box(Modifier.size(44.dp).align(Alignment.CenterEnd).clip(CircleShape)
                 .clickable { onNewChatClick() }, contentAlignment = Alignment.Center
@@ -116,9 +111,9 @@ fun FloatingTopBar(
     }
 }
 
-/** 液态玻璃圆形按钮 — 含按压变形效果 */
+/** 液态玻璃圆形按钮 — 从 LiquidButton 示例直接移植 */
 @Composable
-private fun LiquidGlassCircle(
+private fun LiquidCircleButton(
     backdrop: Backdrop,
     size: androidx.compose.ui.unit.Dp,
     modifier: Modifier = Modifier,
@@ -133,23 +128,22 @@ private fun LiquidGlassCircle(
     Box(
         modifier = modifier.size(size)
             .drawBackdrop(
-                backdrop = backdrop, shape = { CircleShape },
-                effects = { vibrancy(); blur(4f.dp.toPx()); lens(12f.dp.toPx(), 24f.dp.toPx()) },
-                highlight = { Highlight(width = 0.5.dp, alpha = 0.4f) },
-                shadow = { Shadow(radius = 6.dp, color = Color.Black.copy(alpha = 0.06f)) },
+                backdrop = backdrop,
+                shape = { CircleShape },
+                effects = { vibrancy(); blur(2f.dp.toPx()); lens(12f.dp.toPx(), 24f.dp.toPx()) },
+                // 液态变形：手指位置跟踪 + 各向异性缩放
                 layerBlock = {
                     val p = highlight.progress
                     val s = lerp(1f, 1f + 4f / sizePx, p)
-                    val maxOff = sizePx
                     val off = highlight.offset
-                    translationX = maxOff * tanh(0.05f * off.x / maxOff)
-                    translationY = maxOff * tanh(0.05f * off.y / maxOff)
-                    val maxDrag = 4f / sizePx
+                    translationX = sizePx * tanh(0.05f * off.x / sizePx)
+                    translationY = sizePx * tanh(0.05f * off.y / sizePx)
+                    val drag = 4f / sizePx
                     val angle = atan2(off.y, off.x)
-                    scaleX = s + maxDrag * abs(cos(angle) * off.x / sizePx) * 1f
-                    scaleY = s + maxDrag * abs(sin(angle) * off.y / sizePx) * 1f
+                    scaleX = s + drag * abs(cos(angle) * off.x / sizePx)
+                    scaleY = s + drag * abs(sin(angle) * off.y / sizePx)
                 },
-                onDrawSurface = { drawRect(Color.White.copy(alpha = 0.12f)) }
+                onDrawSurface = {} // 无纯色tint，完全透明玻璃
             )
             .clip(CircleShape)
             .then(highlight.drawModifier)
