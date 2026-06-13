@@ -85,7 +85,7 @@ fun ChatInput(
     ) {
         // + 液态玻璃按钮
         if (backdrop != null) {
-            LiquidCircleButton(backdrop, 34.dp, onClick = {
+            LiquidCircleButton(backdrop, 40.dp, onClick = {
                 photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             }) { Text("+", fontSize = 20.sp, fontWeight = FontWeight.Light, color = Color.White) }
         } else {
@@ -99,7 +99,7 @@ fun ChatInput(
         // 🧠 液态玻璃按钮（带激活状态反馈）
         if (backdrop != null) {
             LiquidCircleButton(
-                backdrop = backdrop, size = 34.dp,
+                backdrop = backdrop, size = 40.dp,
                 onClick = onToggleThinking,
                 surfaceTint = if (enableThinking) Color(0xFF10A37F).copy(alpha = 0.3f) else Color.Transparent
             ) {
@@ -119,7 +119,7 @@ fun ChatInput(
         val capsuleHighlight = remember(capsuleScope) { InteractiveHighlight(capsuleScope) }
         val isDark = isSystemInDarkTheme()
         val lum = if (isDark) 0.2f else 0.7f
-        val capsulePx = with(density) { 34.dp.toPx() }
+        val capsulePx = with(density) { 40.dp.toPx() }
 
         Box(
             modifier = Modifier.weight(1f).then(
@@ -145,8 +145,7 @@ fun ChatInput(
                     },
                     onDrawSurface = {}
                 ) else Modifier
-            ).clip(RoundedCornerShape(999.dp)).height(34.dp)
-                .then(capsuleHighlight.modifier)
+            ).clip(RoundedCornerShape(999.dp)).height(40.dp)
                 .pointerInput(capsuleScope) {
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false)

@@ -81,7 +81,7 @@ fun MainScreen(
             onMenuClick = { showSidebar = true },
             onNewChatClick = { viewModel.createConversation() },
             onModelSelect = { model -> viewModel.setModel(model) },
-            modifier = Modifier.padding(top = 12.dp)
+            modifier = Modifier.padding(top = 24.dp)
         )
 
         // 悬浮底栏
@@ -101,7 +101,7 @@ fun MainScreen(
             onImagePicked = { uri -> pendingImageUri = uri },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 24.dp)
+                .padding(bottom = 36.dp)
         )
 
         // 侧边栏
