@@ -18,12 +18,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.chatagent.data.model.ApiProvider
 import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.highlight.Highlight
@@ -40,6 +42,8 @@ fun FloatingTopBar(
     modifier: Modifier = Modifier
 ) {
     var showModelMenu by remember { mutableStateOf(false) }
+    val tintColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.12f)
+    val shadowColor = Color.Black.copy(alpha = 0.08f)
 
     Box(
         modifier = modifier.fillMaxWidth().height(76.dp).padding(horizontal = 14.dp),
@@ -49,6 +53,7 @@ fun FloatingTopBar(
         GlassCircle(
             backdrop = backdrop,
             size = 44.dp,
+            tintColor = tintColor,
             modifier = Modifier.align(Alignment.CenterStart),
             onClick = onMenuClick
         ) { Text("‹", fontSize = 20.sp) }
@@ -59,10 +64,10 @@ fun FloatingTopBar(
                 if (backdrop != null) Modifier.drawBackdrop(
                     backdrop = backdrop, shape = { RoundedCornerShape(22.dp) },
                     effects = { blur(8f.dp.toPx()) },
-                    highlight = { Highlight(width = 0.5.dp, alpha = 0.6f) },
-                    shadow = { Shadow(radius = 8.dp, color = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.08f)) },
+                    highlight = { Highlight(width = 0.5.dp, alpha = 0.5f) },
+                    shadow = { Shadow(radius = 8.dp, color = shadowColor) },
                     onDrawSurface = {
-                        drawRect(MaterialTheme.colorScheme.surface.copy(alpha = 0.12f))
+                        drawRect(tintColor)
                     }
                 ) else Modifier
             ).clip(RoundedCornerShape(22.dp)).clickable { showModelMenu = true }
@@ -80,6 +85,7 @@ fun FloatingTopBar(
         GlassCircle(
             backdrop = backdrop,
             size = 44.dp,
+            tintColor = tintColor,
             modifier = Modifier.align(Alignment.CenterEnd),
             onClick = onNewChatClick
         ) { Text("⋯", fontSize = 20.sp) }
@@ -107,6 +113,7 @@ fun FloatingTopBar(
 private fun GlassCircle(
     backdrop: Backdrop?,
     size: androidx.compose.ui.unit.Dp,
+    tintColor: androidx.compose.ui.graphics.Color,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
     content: @Composable () -> Unit
@@ -117,9 +124,9 @@ private fun GlassCircle(
                 backdrop = backdrop, shape = { CircleShape },
                 effects = { blur(8f.dp.toPx()) },
                 highlight = { Highlight(width = 0.5.dp, alpha = 0.5f) },
-                shadow = { Shadow(radius = 8.dp, color = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.08f)) },
+                shadow = { Shadow(radius = 8.dp, color = tintColor.copy(alpha = 0.6f)) },
                 onDrawSurface = {
-                    drawRect(MaterialTheme.colorScheme.surface.copy(alpha = 0.12f))
+                    drawRect(tintColor)
                 }
             ) else Modifier
         ).clip(CircleShape).clickable { onClick() },
