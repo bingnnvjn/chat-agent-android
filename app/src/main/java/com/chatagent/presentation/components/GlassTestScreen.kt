@@ -75,7 +75,7 @@ fun GlassTestScreen(onClose: () -> Unit = {}) {
 
     // 背景渐变画布
     val canvasBackdrop = rememberCanvasBackdrop {
-        drawRect(brush = androidx.compose.ui.graphics.Brush.verticalGradient(bg.top, bg.bottom))
+        drawRect(brush = androidx.compose.ui.graphics.Brush.verticalGradient(listOf(bg.top, bg.bottom)))
         drawCircle(Color.White.copy(alpha = 0.08f), 80f, center = androidx.compose.ui.geometry.Offset(size.width * 0.8f, size.height * 0.25f))
         drawCircle(Color.White.copy(alpha = 0.05f), 50f, center = androidx.compose.ui.geometry.Offset(size.width * 0.2f, size.height * 0.6f))
     }
@@ -112,7 +112,7 @@ fun GlassTestScreen(onClose: () -> Unit = {}) {
                     Box(
                         modifier = Modifier.size(44.dp, 36.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(androidx.compose.ui.graphics.Brush.verticalGradient(option.top, option.bottom))
+                            .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(option.top, option.bottom)))
                             .clickable { bgIndex = i }
                             .then(if (i == bgIndex) Modifier.padding(2.dp) else Modifier),
                         contentAlignment = Alignment.Center
