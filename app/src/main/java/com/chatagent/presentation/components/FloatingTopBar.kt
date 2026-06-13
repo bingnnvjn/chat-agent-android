@@ -137,7 +137,7 @@ private fun LiquidGlassCircle(
                 shadow = { Shadow(radius = 6.dp, color = Color.Black.copy(alpha = 0.06f)) },
                 layerBlock = {
                     val p = highlight.progress
-                    val w = size.width.toFloat(); val h = size.height.toFloat()
+                    val w = width; val h = height
                     val s = lerp(1f, 1f + 4.dp.toPx() / h, p)
                     val maxOff = minOf(w, h)
                     val off = highlight.offset
