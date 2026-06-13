@@ -81,7 +81,7 @@ fun ChatInput(
         if (backdrop != null) {
             LiquidGlassCircleSmall(
                 backdrop = backdrop, size = 34.dp,
-                onClick = { photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly())) },
+                onClick = { photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
                 onDrawSurface = { drawRect(surfaceTint) }
             ) { Text("+", fontSize = 20.sp, fontWeight = FontWeight.Light) }
         } else {
