@@ -39,7 +39,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
-import com.kyant.shapes.Capsule
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
@@ -124,7 +123,7 @@ fun ChatInput(
         Box(
             modifier = Modifier.weight(1f).then(
                 if (backdrop != null) Modifier.drawBackdrop(
-                    backdrop = backdrop, shape = { Capsule() },
+                    backdrop = backdrop, shape = { RoundedCornerShape(999.dp) },
                     effects = {
                         val l = lum
                         colorControls(
@@ -145,7 +144,7 @@ fun ChatInput(
                     },
                     onDrawSurface = {}
                 ) else Modifier
-            ).clip(Capsule()).height(40.dp)
+            ).clip(RoundedCornerShape(999.dp)).height(40.dp)
                 .pointerInput(capsuleScope) {
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false)
