@@ -4,31 +4,51 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.fastCoerceAtMost
+import androidx.compose.ui.util.lerp
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.Shadow
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.tanh
 
 private val SendGreen = Color(0xFF10A37F)
 
@@ -45,51 +65,44 @@ fun ChatInput(
 ) {
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     val surfaceTint = MaterialTheme.colorScheme.surface.copy(alpha = 0.12f)
-    val activeTint = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+    val activeTint = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
     val textColor = MaterialTheme.colorScheme.onSurface
     val placeholderColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val textColorVariant = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
 
-    val photoPicker = rememberLauncherForActivityResult(
-        ActivityResultContracts.PickVisualMedia()
-    ) { uri -> uri?.let { selectedImageUri = it; onImagePicked(it) } }
+    val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        uri?.let { selectedImageUri = it; onImagePicked(it) }
+    }
 
     Row(
         modifier = modifier.fillMaxWidth().padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // + 按钮（图片选择）
-        GlassCircle(
-            backdrop = backdrop,
-            size = 34.dp,
-            onClick = {
-                photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-            },
-            content = { Text("+", fontSize = 20.sp, fontWeight = FontWeight.Light) }
-        )
+        // + 按钮
+        if (backdrop != null) {
+            LiquidGlassCircleSmall(
+                backdrop = backdrop, size = 34.dp,
+                onClick = { photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly())) },
+                onDrawSurface = { drawRect(surfaceTint) }
+            ) { Text("+", fontSize = 20.sp, fontWeight = FontWeight.Light) }
+        } else {
+            Box(Modifier.size(34.dp).clip(CircleShape).clickable { }.background(MaterialTheme.colorScheme.surface),
+                contentAlignment = Alignment.Center
+            ) { Text("+", color = placeholderColor, fontSize = 20.sp) }
+        }
 
         Spacer(Modifier.width(8.dp))
 
         // 🧠 按钮
-        Box(
-            modifier = Modifier.size(34.dp).then(
-                if (backdrop != null) Modifier.drawBackdrop(
-                    backdrop = backdrop, shape = { CircleShape },
-                    effects = { blur(8f.dp.toPx()) },
-                    highlight = { Highlight(width = 0.5.dp, alpha = 0.5f) },
-                    shadow = { Shadow(radius = 6.dp, color = Color.Black.copy(alpha = 0.06f)) },
-                    onDrawSurface = {
-                        if (enableThinking) drawRect(activeTint)
-                        else drawRect(surfaceTint)
-                    }
-                ) else Modifier
-            ).clip(CircleShape).clickable { onToggleThinking() },
-            contentAlignment = Alignment.Center
-        ) {
-            Text("🧠", fontSize = 16.sp, modifier = Modifier.graphicsLayer {
-                scaleX = if (enableThinking) 1.15f else 1f
-                scaleY = if (enableThinking) 1.15f else 1f
-            })
+        if (backdrop != null) {
+            LiquidGlassCircleSmall(
+                backdrop = backdrop, size = 34.dp,
+                onClick = onToggleThinking,
+                onDrawSurface = { if (enableThinking) drawRect(activeTint) else drawRect(surfaceTint) }
+            ) { Text("🧠", fontSize = 16.sp) }
+        } else {
+            Box(Modifier.size(34.dp).clip(CircleShape).clickable { }.background(MaterialTheme.colorScheme.surface),
+                contentAlignment = Alignment.Center
+            ) { Text("🧠", fontSize = 16.sp) }
         }
 
         Spacer(Modifier.width(8.dp))
@@ -99,12 +112,12 @@ fun ChatInput(
             modifier = Modifier.weight(1f).then(
                 if (backdrop != null) Modifier.drawBackdrop(
                     backdrop = backdrop, shape = { RoundedCornerShape(999.dp) },
-                    effects = { blur(8f.dp.toPx()) },
-                    highlight = { Highlight(width = 0.5.dp, alpha = 0.5f) },
+                    effects = { vibrancy(); blur(4f.dp.toPx()); lens(10f.dp.toPx(), 18f.dp.toPx()) },
+                    highlight = { Highlight(width = 0.5.dp, alpha = 0.4f) },
                     shadow = { Shadow(radius = 6.dp, color = Color.Black.copy(alpha = 0.06f)) },
                     onDrawSurface = { drawRect(surfaceTint) }
                 ) else Modifier
-        ).clip(RoundedCornerShape(999.dp)).height(34.dp)
+            ).clip(RoundedCornerShape(999.dp)).height(34.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(start = 14.dp, end = 4.dp)) {
                 BasicTextField(
@@ -124,10 +137,9 @@ fun ChatInput(
                 val hasSend = value.isNotBlank() || selectedImageUri != null
                 Box(
                     modifier = Modifier.height(28.dp)
-                        .animateContentSize()
                         .let { m ->
                             if (hasSend) m.clip(RoundedCornerShape(14.dp)).background(SendGreen).clickable { onSend() }
-                            else m.clip(RoundedCornerShape(14.dp)).background(textColorVariant)
+                            else m.clip(RoundedCornerShape(14.dp)).background(placeholderColor.copy(alpha = 0.2f))
                         }.padding(horizontal = 12.dp),
                     contentAlignment = Alignment.Center
                 ) { Text("↑", color = Color.White, fontSize = 16.sp) }
@@ -136,29 +148,44 @@ fun ChatInput(
     }
 }
 
-/** 底栏玻璃圆钮 */
+/** 小型液态玻璃圆钮 */
 @Composable
-private fun GlassCircle(
-    backdrop: Backdrop?,
+private fun LiquidGlassCircleSmall(
+    backdrop: Backdrop,
     size: androidx.compose.ui.unit.Dp,
     onClick: () -> Unit,
+    onDrawSurface: com.kyant.backdrop.BackdropEffectScope.() -> Unit = {},
     content: @Composable () -> Unit
 ) {
-    val tint = MaterialTheme.colorScheme.surface.copy(alpha = 0.12f)
+    val scope = rememberCoroutineScope()
+    val highlight = remember(scope) { InteractiveHighlight(scope) }
+
     Box(
-        modifier = Modifier.size(size).then(
-            if (backdrop != null) Modifier.drawBackdrop(
+        modifier = Modifier.size(size)
+            .drawBackdrop(
                 backdrop = backdrop, shape = { CircleShape },
-                effects = { blur(8f.dp.toPx()) },
-                highlight = { Highlight(width = 0.5.dp, alpha = 0.5f) },
-                shadow = { Shadow(radius = 6.dp, color = Color.Black.copy(alpha = 0.06f)) },
-                onDrawSurface = {
-                    drawRect(tint)
-                }
-            ) else Modifier
-        ).clip(CircleShape).clickable { onClick() },
+                effects = { vibrancy(); blur(4f.dp.toPx()); lens(8f.dp.toPx(), 14f.dp.toPx()) },
+                highlight = { Highlight(width = 0.5.dp, alpha = 0.4f) },
+                shadow = { Shadow(radius = 4.dp, color = Color.Black.copy(alpha = 0.04f)) },
+                layerBlock = {
+                    val p = highlight.progress
+                    val s = lerp(1f, 1f + 3.dp.toPx() / size.height, p)
+                    val maxOff = size.minDimension
+                    val off = highlight.offset
+                    translationX = maxOff * tanh(0.05f * off.x / maxOff)
+                    translationY = maxOff * tanh(0.05f * off.y / maxOff)
+                    val maxDrag = 3.dp.toPx() / size.height
+                    val angle = atan2(off.y, off.x)
+                    val w = size.width; val h = size.height
+                    scaleX = s + maxDrag * abs(cos(angle) * off.x / size.maxDimension) * (w / h).fastCoerceAtMost(1f)
+                    scaleY = s + maxDrag * abs(sin(angle) * off.y / size.maxDimension) * (h / w).fastCoerceAtMost(1f)
+                },
+                onDrawSurface = onDrawSurface
+            )
+            .clip(CircleShape)
+            .then(highlight.drawModifier)
+            .then(highlight.gestureModifier)
+            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick),
         contentAlignment = Alignment.Center
-    ) {
-        content()
-    }
+    ) { content() }
 }

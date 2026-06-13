@@ -56,7 +56,6 @@ fun MainScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
     ) {
         // 聊天内容 + 捕获层（消息被捕获，供玻璃折射）
         Box(
@@ -70,15 +69,14 @@ fun MainScreen(
             )
         }
 
-        // 悬浮顶栏（适配状态栏）
+        // 悬浮顶栏（无状态栏适配）
         FloatingTopBar(
             backdrop = backdrop,
             title = currentConversation?.title ?: "Chat Agent",
             currentProvider = uiState.currentProvider,
             onMenuClick = { showSidebar = true },
             onNewChatClick = { viewModel.createConversation() },
-            onModelSelect = { model -> viewModel.setModel(model) },
-            modifier = Modifier.padding(top = 48.dp)
+            onModelSelect = { model -> viewModel.setModel(model) }
         )
 
         // 悬浮底栏
