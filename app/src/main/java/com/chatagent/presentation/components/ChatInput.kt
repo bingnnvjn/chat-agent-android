@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.sp
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
-
 import com.kyant.backdrop.highlight.Highlight
 
 private val SendGreen = Color(0xFF10A37F)
@@ -63,12 +62,12 @@ fun ChatInput(
     ) { uri -> uri?.let { selectedImageUri = it; onImagePicked(it) } }
 
     Row(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+        modifier = modifier.fillMaxWidth().padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // + 按钮（图片选择）
         Box(
-            modifier = Modifier.size(38.dp).then(
+            modifier = Modifier.size(34.dp).then(
                 if (backdrop != null) Modifier.drawBackdrop(
                     backdrop = backdrop, shape = { CircleShape },
                     effects = { blur(4f.dp.toPx()) },
@@ -79,13 +78,13 @@ fun ChatInput(
                 photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             },
             contentAlignment = Alignment.Center
-        ) { Text("+", color = placeholderColor, fontSize = 26.sp, fontWeight = FontWeight.Light) }
+        ) { Text("+", color = placeholderColor, fontSize = 20.sp, fontWeight = FontWeight.Light) }
 
         Spacer(Modifier.width(8.dp))
 
         // 思考模式开关
         Box(
-            modifier = Modifier.size(38.dp).then(
+            modifier = Modifier.size(34.dp).then(
                 if (backdrop != null) Modifier.drawBackdrop(
                     backdrop = backdrop, shape = { CircleShape },
                     effects = { blur(4f.dp.toPx()) },
@@ -97,7 +96,7 @@ fun ChatInput(
                 ) else Modifier
             ).clip(CircleShape).clickable { onToggleThinking() },
             contentAlignment = Alignment.Center
-        ) { Text("🧠", fontSize = 20.sp) }
+        ) { Text("🧠", fontSize = 16.sp) }
 
         Spacer(Modifier.width(8.dp))
 
@@ -110,18 +109,18 @@ fun ChatInput(
                     highlight = { Highlight.Default },
                     onDrawSurface = { drawRect(tintColor) }
                 ) else Modifier
-            ).clip(RoundedCornerShape(999.dp)).height(38.dp)
+            ).clip(RoundedCornerShape(999.dp)).height(34.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(start = 14.dp, end = 4.dp)) {
                 BasicTextField(
                     value = value, onValueChange = onValueChange,
                     modifier = Modifier.weight(1f),
-                    textStyle = TextStyle(color = textColor, fontSize = 16.sp),
+                    textStyle = TextStyle(color = textColor, fontSize = 14.sp),
                     cursorBrush = SolidColor(SendGreen),
                     decorationBox = { inner ->
-                        Box(Modifier.padding(vertical = 12.dp)) {
+                        Box(Modifier.padding(vertical = 10.dp)) {
                             if (value.isEmpty() && selectedImageUri == null) {
-                                Text("iMessage 信息", color = placeholderColor, fontSize = 16.sp)
+                                Text("iMessage 信息", color = placeholderColor, fontSize = 14.sp)
                             }
                             inner()
                         }
@@ -129,13 +128,13 @@ fun ChatInput(
                 )
                 val hasSend = value.isNotBlank() || selectedImageUri != null
                 Box(
-                    modifier = Modifier.height(34.dp)
+                    modifier = Modifier.height(28.dp)
                         .let { m ->
-                            if (hasSend) m.clip(RoundedCornerShape(17.dp)).background(SendGreen).clickable { onSend() }
-                            else m.clip(RoundedCornerShape(17.dp)).background(placeholderColor.copy(alpha = 0.2f))
-                        }.padding(horizontal = 14.dp),
+                            if (hasSend) m.clip(RoundedCornerShape(14.dp)).background(SendGreen).clickable { onSend() }
+                            else m.clip(RoundedCornerShape(14.dp)).background(placeholderColor.copy(alpha = 0.2f))
+                        }.padding(horizontal = 12.dp),
                     contentAlignment = Alignment.Center
-                ) { Text("↑", color = Color.White, fontSize = 20.sp) }
+                ) { Text("↑", color = Color.White, fontSize = 16.sp) }
             }
         }
     }

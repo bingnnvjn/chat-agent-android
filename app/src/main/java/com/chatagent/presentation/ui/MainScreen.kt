@@ -96,7 +96,7 @@ fun MainScreen(
             onImagePicked = { uri -> pendingImageUri = uri },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 32.dp)
+                .padding(bottom = 40.dp)
         )
 
         // 侧边栏

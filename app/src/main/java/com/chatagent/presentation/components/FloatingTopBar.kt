@@ -2,7 +2,6 @@ package com.chatagent.presentation.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -19,7 +18,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -28,7 +26,6 @@ import com.chatagent.data.model.ApiProvider
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
-
 import com.kyant.backdrop.highlight.Highlight
 
 @Composable
@@ -44,12 +41,13 @@ fun FloatingTopBar(
     var showModelMenu by remember { mutableStateOf(false) }
     val tintColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
 
-    Row(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.Top
+    Box(
+        modifier = modifier.fillMaxWidth().height(76.dp).padding(horizontal = 14.dp),
+        contentAlignment = Alignment.Center
     ) {
+        // 左侧 ☰ 按钮
         Box(
-            modifier = Modifier.size(50.dp).then(
+            modifier = Modifier.size(44.dp).align(Alignment.CenterStart).then(
                 if (backdrop != null) Modifier.drawBackdrop(
                     backdrop = backdrop, shape = { CircleShape },
                     effects = { blur(4f.dp.toPx()) },
@@ -58,29 +56,31 @@ fun FloatingTopBar(
                 ) else Modifier
             ).clip(CircleShape).clickable { onMenuClick() },
             contentAlignment = Alignment.Center
-        ) { Text("‹", color = MaterialTheme.colorScheme.onSurface, fontSize = 24.sp) }
+        ) { Text("‹", color = MaterialTheme.colorScheme.onSurface, fontSize = 20.sp) }
 
+        // 中间胶囊（模型名称）
         Box(
-            modifier = Modifier.weight(1f).padding(horizontal = 6.dp).height(50.dp).then(
+            modifier = Modifier.height(44.dp).then(
                 if (backdrop != null) Modifier.drawBackdrop(
-                    backdrop = backdrop, shape = { RoundedCornerShape(25.dp) },
+                    backdrop = backdrop, shape = { RoundedCornerShape(22.dp) },
                     effects = { blur(4f.dp.toPx()) },
                     highlight = { Highlight.Default },
                     onDrawSurface = { drawRect(tintColor) }
                 ) else Modifier
-            ).clip(RoundedCornerShape(25.dp)).clickable { showModelMenu = true },
+            ).clip(RoundedCornerShape(22.dp)).clickable { showModelMenu = true }
+                .padding(horizontal = 18.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 title.ifEmpty { currentProvider.defaultModel },
-                color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp,
-                fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(horizontal = 6.dp)
+                color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp,
+                fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis
             )
         }
 
+        // 右侧 ⋯ 按钮
         Box(
-            modifier = Modifier.size(50.dp).then(
+            modifier = Modifier.size(44.dp).align(Alignment.CenterEnd).then(
                 if (backdrop != null) Modifier.drawBackdrop(
                     backdrop = backdrop, shape = { CircleShape },
                     effects = { blur(4f.dp.toPx()) },
@@ -89,7 +89,7 @@ fun FloatingTopBar(
                 ) else Modifier
             ).clip(CircleShape).clickable { onNewChatClick() },
             contentAlignment = Alignment.Center
-        ) { Text("⋯", color = MaterialTheme.colorScheme.onSurface, fontSize = 22.sp) }
+        ) { Text("⋯", color = MaterialTheme.colorScheme.onSurface, fontSize = 20.sp) }
     }
 
     if (showModelMenu) {
