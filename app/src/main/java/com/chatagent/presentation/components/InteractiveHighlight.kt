@@ -35,7 +35,7 @@ class InteractiveHighlight(
     val offset: Offset get() = positionAnim.value - startPos
 
     /** 绘制高光层 */
-    val drawModifier: Modifier = Modifier.drawWithContent {
+    val modifier: Modifier = Modifier.drawWithContent {
         val p = progress
         if (p > 0f) {
             drawRect(Color.White.copy(0.08f * p), blendMode = BlendMode.Plus)

@@ -151,7 +151,7 @@ private fun LiquidCircleButton(
                 indication = null,
                 onClick = onClick
             )
-            .then(highlight.drawModifier)
+            .then(highlight.modifier)
             .then(highlight.gestureModifier),
         contentAlignment = Alignment.Center
     ) { content() }
