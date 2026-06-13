@@ -27,6 +27,7 @@ import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.shadow.Shadow
 
 @Composable
 fun FloatingTopBar(
@@ -39,33 +40,30 @@ fun FloatingTopBar(
     modifier: Modifier = Modifier
 ) {
     var showModelMenu by remember { mutableStateOf(false) }
-    val tintColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
 
     Box(
         modifier = modifier.fillMaxWidth().height(76.dp).padding(horizontal = 14.dp),
         contentAlignment = Alignment.Center
     ) {
         // 左侧 ☰ 按钮
-        Box(
-            modifier = Modifier.size(44.dp).align(Alignment.CenterStart).then(
-                if (backdrop != null) Modifier.drawBackdrop(
-                    backdrop = backdrop, shape = { CircleShape },
-                    effects = { blur(4f.dp.toPx()) },
-                    highlight = { Highlight.Default },
-                    onDrawSurface = { drawRect(tintColor) }
-                ) else Modifier
-            ).clip(CircleShape).clickable { onMenuClick() },
-            contentAlignment = Alignment.Center
-        ) { Text("‹", color = MaterialTheme.colorScheme.onSurface, fontSize = 20.sp) }
+        GlassCircle(
+            backdrop = backdrop,
+            size = 44.dp,
+            modifier = Modifier.align(Alignment.CenterStart),
+            onClick = onMenuClick
+        ) { Text("‹", fontSize = 20.sp) }
 
         // 中间胶囊（模型名称）
         Box(
             modifier = Modifier.height(44.dp).then(
                 if (backdrop != null) Modifier.drawBackdrop(
                     backdrop = backdrop, shape = { RoundedCornerShape(22.dp) },
-                    effects = { blur(4f.dp.toPx()) },
-                    highlight = { Highlight.Default },
-                    onDrawSurface = { drawRect(tintColor) }
+                    effects = { blur(8f.dp.toPx()) },
+                    highlight = { Highlight(width = 0.5.dp, alpha = 0.6f) },
+                    shadow = { Shadow(radius = 8.dp, color = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.08f)) },
+                    onDrawSurface = {
+                        drawRect(MaterialTheme.colorScheme.surface.copy(alpha = 0.12f))
+                    }
                 ) else Modifier
             ).clip(RoundedCornerShape(22.dp)).clickable { showModelMenu = true }
                 .padding(horizontal = 18.dp),
@@ -79,17 +77,12 @@ fun FloatingTopBar(
         }
 
         // 右侧 ⋯ 按钮
-        Box(
-            modifier = Modifier.size(44.dp).align(Alignment.CenterEnd).then(
-                if (backdrop != null) Modifier.drawBackdrop(
-                    backdrop = backdrop, shape = { CircleShape },
-                    effects = { blur(4f.dp.toPx()) },
-                    highlight = { Highlight.Default },
-                    onDrawSurface = { drawRect(tintColor) }
-                ) else Modifier
-            ).clip(CircleShape).clickable { onNewChatClick() },
-            contentAlignment = Alignment.Center
-        ) { Text("⋯", color = MaterialTheme.colorScheme.onSurface, fontSize = 20.sp) }
+        GlassCircle(
+            backdrop = backdrop,
+            size = 44.dp,
+            modifier = Modifier.align(Alignment.CenterEnd),
+            onClick = onNewChatClick
+        ) { Text("⋯", fontSize = 20.sp) }
     }
 
     if (showModelMenu) {
@@ -106,5 +99,32 @@ fun FloatingTopBar(
                 }
             }, confirmButton = {}
         )
+    }
+}
+
+/** 玻璃圆形按钮封装 */
+@Composable
+private fun GlassCircle(
+    backdrop: Backdrop?,
+    size: androidx.compose.ui.unit.Dp,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    Box(
+        modifier = modifier.size(size).then(
+            if (backdrop != null) Modifier.drawBackdrop(
+                backdrop = backdrop, shape = { CircleShape },
+                effects = { blur(8f.dp.toPx()) },
+                highlight = { Highlight(width = 0.5.dp, alpha = 0.5f) },
+                shadow = { Shadow(radius = 8.dp, color = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.08f)) },
+                onDrawSurface = {
+                    drawRect(MaterialTheme.colorScheme.surface.copy(alpha = 0.12f))
+                }
+            ) else Modifier
+        ).clip(CircleShape).clickable { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        content()
     }
 }
