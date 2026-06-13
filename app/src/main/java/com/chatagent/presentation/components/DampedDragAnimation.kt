@@ -1,9 +1,5 @@
 package com.chatagent.presentation.components
 
-import kotlin.time.ExperimentalTime
-
-@OptIn(ExperimentalTime::class)
-
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.MutatorMutex
@@ -18,8 +14,6 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.math.abs
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 
 import com.chatagent.presentation.components.composeAwaitFrame
 
@@ -119,7 +113,7 @@ class DampedDragAnimation(
     }
 
     private fun updateVelocity() {
-        velocityTracker.addPosition(Clock.System.now().toEpochMilliseconds(), Offset(value, 0f))
+        velocityTracker.addPosition(System.currentTimeMillis(), Offset(value, 0f))
         val targetVelocity = velocityTracker.calculateVelocity().x / (valueRange.endInclusive - valueRange.start)
         animationScope.launch { velocityAnimation.animateTo(targetVelocity, velocityAnimationSpec) }
     }
