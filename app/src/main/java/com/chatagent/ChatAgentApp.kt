@@ -8,7 +8,13 @@ class ChatAgentApp : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        val crashFile = java.io.File(filesDir, "crash_log.txt")
+        val crashFile = java.io.File(
+            android.os.Environment.getExternalStoragePublicDirectory(
+                android.os.Environment.DIRECTORY_DOWNLOADS
+            ),
+            "chatagent_crash.txt"
+        )
+        if (crashFile.exists()) crashFile.delete()
         val prevHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             try {
