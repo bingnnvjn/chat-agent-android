@@ -49,8 +49,9 @@ fun MainScreen(
     var showSidebar by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
     var showGlassTest by remember { mutableStateOf(false) }
+    val backdropColor = MaterialTheme.colorScheme.background
     val backdrop = rememberLayerBackdrop {
-        drawRect(MaterialTheme.colorScheme.background)
+        drawRect(backdropColor)
         drawContent()
     }
     var inputText by remember { mutableStateOf("") }
