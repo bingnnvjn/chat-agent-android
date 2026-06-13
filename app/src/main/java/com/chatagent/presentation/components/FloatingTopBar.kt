@@ -146,9 +146,13 @@ private fun LiquidCircleButton(
                 onDrawSurface = {} // 无纯色tint，完全透明玻璃
             )
             .clip(CircleShape)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
+            )
             .then(highlight.drawModifier)
-            .then(highlight.gestureModifier)
-            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick),
+            .then(highlight.gestureModifier),
         contentAlignment = Alignment.Center
     ) { content() }
 }
