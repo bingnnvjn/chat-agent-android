@@ -112,3 +112,7 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
 
+ksp {
+    useKSP2 = false
+}
+
