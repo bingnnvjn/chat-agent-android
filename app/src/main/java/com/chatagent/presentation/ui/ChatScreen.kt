@@ -3,9 +3,7 @@ package com.chatagent.presentation.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -20,13 +18,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.chatagent.presentation.components.MessageBubble
 import com.chatagent.presentation.components.WelcomeScreen
@@ -43,25 +38,27 @@ fun ChatScreen(
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
 
-    // 新消息时滚动到底部
+    // 当消息数量变化时滚动到底部（新消息发送）
     LaunchedEffect(currentConversation?.messages?.size) {
         currentConversation?.messages?.let { msgs ->
             if (msgs.isNotEmpty()) {
+                kotlinx.coroutines.delay(50) // 等列表渲染
                 listState.animateScrollToItem(msgs.size - 1)
             }
         }
     }
 
-    // 流式输出时滚动到 streaming item
-    LaunchedEffect(isStreaming) {
-        if (isStreaming) {
-            currentConversation?.messages?.let { msgs ->
-                listState.animateScrollToItem(msgs.size)
-            }
+    // 流式输出时持续跟随滚动
+    LaunchedEffect(streamingContent) {
+        if (isStreaming && streamingContent.isNotEmpty()) {
+            val targetIndex = currentConversation?.messages?.size ?: 0
+            // 用 scrollToItem 不带动画实现实时跟随
+            listState.scrollToItem(targetIndex)
         }
     }
 
     Box(modifier = modifier.fillMaxSize()) {
+        // 没有对话或消息为空时显示欢迎页
         if (currentConversation == null || currentConversation!!.messages.isEmpty()) {
             WelcomeScreen(
                 onSuggestionClick = { suggestion ->
@@ -73,7 +70,7 @@ fun ChatScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 76.dp, bottom = 80.dp),
+                    .padding(top = 64.dp, bottom = 48.dp),
                 state = listState,
                 contentPadding = PaddingValues(vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -82,13 +79,15 @@ fun ChatScreen(
                     MessageBubble(message = message)
                 }
 
+                // 流式输出中的 AI 回复
                 if (isStreaming) {
                     val streamingMessage = com.chatagent.data.model.Message(
                         id = "streaming",
                         role = "assistant",
-                        content = streamingContent
+                        content = streamingContent,
+                        thinkingContent = "" // 思考过程由 ViewModel 单独处理
                     )
-                    item {
+                    item(key = "streaming") {
                         MessageBubble(message = streamingMessage)
                     }
                 }
@@ -105,7 +104,7 @@ fun ChatScreen(
                     .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f))
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 70.dp)
+                    .padding(bottom = 60.dp)
             )
         }
     }

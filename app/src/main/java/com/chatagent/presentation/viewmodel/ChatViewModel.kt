@@ -111,6 +111,18 @@ class ChatViewModel @Inject constructor(
         val conv = conversation
         val thinking = _enableThinking.value
 
+        // 立即添加用户消息到界面
+        val userMsg = com.chatagent.data.model.Message(
+            id = "user_${System.currentTimeMillis()}",
+            role = "user",
+            content = content,
+            image = image
+        )
+        _currentConversation.value = conv.copy(
+            messages = conv.messages + userMsg,
+            updatedAt = System.currentTimeMillis()
+        )
+
         viewModelScope.launch {
             _isStreaming.value = true
             _streamingContent.value = ""
