@@ -263,7 +263,7 @@ private fun AdaptiveLuminanceGlass(backdrop: Backdrop) {
     val isDark = isSystemInDarkTheme()
     val layer = rememberGraphicsLayer()
     val luminanceAnim = remember(isDark) { Animatable(if (isDark) 0f else 1f) }
-    val contentColorAnim = remember(isDark) { Animatable(if (isDark) Color.White else Color.Black) }
+    val contentColorAnim = remember(isDark) { Animatable<Color>(if (isDark) Color.White else Color.Black) }
 
     LaunchedEffect(layer) {
         val buffer = IntArray(25)
