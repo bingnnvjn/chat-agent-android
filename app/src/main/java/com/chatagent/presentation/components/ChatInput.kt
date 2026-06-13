@@ -158,6 +158,8 @@ private fun LiquidGlassCircleSmall(
 ) {
     val scope = rememberCoroutineScope()
     val highlight = remember(scope) { InteractiveHighlight(scope) }
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val sizePx = with(density) { size.toPx() }
 
     Box(
         modifier = Modifier.size(size)
@@ -168,16 +170,15 @@ private fun LiquidGlassCircleSmall(
                 shadow = { Shadow(radius = 4.dp, color = Color.Black.copy(alpha = 0.04f)) },
                 layerBlock = {
                     val p = highlight.progress
-                    val w = width; val h = height
-                    val s = lerp(1f, 1f + 3.dp.toPx() / h, p)
-                    val maxOff = minOf(w, h)
+                    val s = lerp(1f, 1f + 3f / sizePx, p)
+                    val maxOff = sizePx
                     val off = highlight.offset
                     translationX = maxOff * tanh(0.05f * off.x / maxOff)
                     translationY = maxOff * tanh(0.05f * off.y / maxOff)
-                    val maxDrag = 3.dp.toPx() / h
+                    val maxDrag = 3f / sizePx
                     val angle = atan2(off.y, off.x)
-                    scaleX = s + maxDrag * abs(cos(angle) * off.x / maxOf(w, h)) * (w / h).coerceAtMost(1f)
-                    scaleY = s + maxDrag * abs(sin(angle) * off.y / maxOf(w, h)) * (h / w).coerceAtMost(1f)
+                    scaleX = s + maxDrag * abs(cos(angle) * off.x / sizePx) * 1f
+                    scaleY = s + maxDrag * abs(sin(angle) * off.y / sizePx) * 1f
                 },
                 onDrawSurface = onDrawSurface
             )
