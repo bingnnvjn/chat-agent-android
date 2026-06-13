@@ -10,7 +10,7 @@ pluginManagement {
         id("org.jetbrains.kotlin.plugin.compose") version "2.1.20"
         id("com.google.dagger.hilt.android") version "2.59.2"
         id("org.jetbrains.kotlin.plugin.serialization") version "2.1.20"
-        id("com.google.devtools.ksp") version "2.1.20-1.0.29"
+        id("com.google.devtools.ksp") version "2.1.20-2.0.1"
     }
 }
 
