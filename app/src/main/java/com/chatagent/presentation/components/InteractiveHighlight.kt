@@ -34,6 +34,25 @@ class InteractiveHighlight(
     val progress: Float get() = pressProgress.value
     val offset: Offset get() = positionAnim.value - startPos
 
+    fun onPress(position: Offset) {
+        startPos = position
+        animationScope.launch {
+            launch { pressProgress.animateTo(1f, pressProgressSpec) }
+            launch { positionAnim.snapTo(startPos) }
+        }
+    }
+
+    fun onMove(position: Offset) {
+        animationScope.launch { positionAnim.snapTo(position) }
+    }
+
+    fun onRelease() {
+        animationScope.launch {
+            launch { pressProgress.animateTo(0f, pressProgressSpec) }
+            launch { positionAnim.animateTo(startPos, positionSpec) }
+        }
+    }
+
     /** 绘制高光层 */
     val modifier: Modifier = Modifier.drawWithContent {
         val p = progress

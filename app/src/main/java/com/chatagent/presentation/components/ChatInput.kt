@@ -6,7 +6,10 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -31,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -39,8 +43,10 @@ import androidx.compose.ui.util.lerp
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.colorControls
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
+import kotlin.math.tanh
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -107,15 +113,53 @@ fun ChatInput(
 
         Spacer(Modifier.width(8.dp))
 
-        // 输入胶囊（液态玻璃）
+        // 输入胶囊（液态玻璃 + 交互变形 + 自适应亮度）
+        val capsuleScope = rememberCoroutineScope()
+        val capsuleHighlight = remember(capsuleScope) { InteractiveHighlight(capsuleScope) }
+        val isDark = isSystemInDarkTheme()
+        val lum = if (isDark) 0.2f else 0.7f
+
         Box(
             modifier = Modifier.weight(1f).then(
                 if (backdrop != null) Modifier.drawBackdrop(
                     backdrop = backdrop, shape = { RoundedCornerShape(999.dp) },
-                    effects = { vibrancy(); blur(2f.dp.toPx()); lens(10f.dp.toPx(), 18f.dp.toPx()) },
-                    onDrawSurface = {} // 无 tint
+                    effects = {
+                        val l = lum
+                        colorControls(
+                            brightness = if (l > 0.5f) 0.05f else 0.15f,
+                            contrast = if (l > 0.5f) 1f else 0.9f
+                        )
+                        vibrancy()
+                        blur(if (l > 0.5f) 2f.dp.toPx() else 4f.dp.toPx())
+                        lens(10f.dp.toPx(), 18f.dp.toPx())
+                    },
+                    layerBlock = {
+                        val p = capsuleHighlight.progress
+                        val off = capsuleHighlight.offset
+                        val h = height.toFloat()
+                        val s = lerp(1f, 1f + 2f / h, p)
+                        translationX = h * tanh(0.03f * off.x / h)
+                        translationY = h * tanh(0.03f * off.y / h)
+                        scaleX = s; scaleY = s
+                    },
+                    onDrawSurface = {}
                 ) else Modifier
             ).clip(RoundedCornerShape(999.dp)).height(34.dp)
+                .then(capsuleHighlight.drawModifier)
+                .pointerInput(capsuleScope) {
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = false)
+                        capsuleHighlight.onPress(down.position)
+                        do {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull { it.id == down.id }
+                            if (change != null) {
+                                capsuleHighlight.onMove(change.position)
+                            }
+                        } while (event.changes.any { it.pressed })
+                        capsuleHighlight.onRelease()
+                    }
+                }
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(start = 14.dp, end = 4.dp)) {
                 BasicTextField(

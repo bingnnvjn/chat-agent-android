@@ -73,14 +73,15 @@ fun MainScreen(
             )
         }
 
-        // 悬浮顶栏
+        // 悬浮顶栏 + 顶部安全间距
         FloatingTopBar(
             backdrop = backdrop,
             title = currentConversation?.title ?: "Chat Agent",
             currentProvider = uiState.currentProvider,
             onMenuClick = { showSidebar = true },
             onNewChatClick = { viewModel.createConversation() },
-            onModelSelect = { model -> viewModel.setModel(model) }
+            onModelSelect = { model -> viewModel.setModel(model) },
+            modifier = Modifier.padding(top = 12.dp)
         )
 
         // 悬浮底栏
@@ -100,7 +101,7 @@ fun MainScreen(
             onImagePicked = { uri -> pendingImageUri = uri },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 12.dp)
+                .padding(bottom = 24.dp)
         )
 
         // 侧边栏
