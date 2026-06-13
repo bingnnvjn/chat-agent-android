@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -69,28 +70,32 @@ fun ChatScreen(
         } else {
             LazyColumn(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = 64.dp, bottom = 48.dp),
+                    .fillMaxSize(),
                 state = listState,
                 contentPadding = PaddingValues(vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
+                // 顶部 spacer — 让首条消息可滑到 Top 栏下方
+                item { Spacer(Modifier.height(72.dp)) }
+
                 items(currentConversation!!.messages) { message ->
                     MessageBubble(message = message)
                 }
 
-                // 流式输出中的 AI 回复
-                if (isStreaming) {
+                // 流式输出中的 AI 回复（仅在内容非空时显示）
+                if (isStreaming && streamingContent.isNotEmpty()) {
                     val streamingMessage = com.chatagent.data.model.Message(
                         id = "streaming",
                         role = "assistant",
-                        content = streamingContent,
-                        thinkingContent = "" // 思考过程由 ViewModel 单独处理
+                        content = streamingContent
                     )
                     item(key = "streaming") {
                         MessageBubble(message = streamingMessage)
                     }
                 }
+
+                // 底部 spacer — 让末条消息可滑到 Under 栏下方
+                item { Spacer(Modifier.height(64.dp)) }
             }
         }
 

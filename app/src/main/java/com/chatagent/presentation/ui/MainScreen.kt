@@ -73,14 +73,15 @@ fun MainScreen(
             )
         }
 
-        // 悬浮顶栏（无状态栏适配）
+        // 悬浮顶栏 + 状态栏避让（纯 padding，无背景板）
         FloatingTopBar(
             backdrop = backdrop,
             title = currentConversation?.title ?: "Chat Agent",
             currentProvider = uiState.currentProvider,
             onMenuClick = { showSidebar = true },
             onNewChatClick = { viewModel.createConversation() },
-            onModelSelect = { model -> viewModel.setModel(model) }
+            onModelSelect = { model -> viewModel.setModel(model) },
+            modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars)
         )
 
         // 悬浮底栏
@@ -101,6 +102,7 @@ fun MainScreen(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 12.dp)
+                .windowInsetsPadding(WindowInsets.navigationBars)
         )
 
         // 侧边栏

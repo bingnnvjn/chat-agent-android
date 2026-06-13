@@ -89,13 +89,18 @@ fun ChatInput(
 
         Spacer(Modifier.width(8.dp))
 
-        // 🧠 液态玻璃按钮
+        // 🧠 液态玻璃按钮（带激活状态反馈）
         if (backdrop != null) {
-            LiquidCircleButton(backdrop, 34.dp, onClick = onToggleThinking) {
+            LiquidCircleButton(
+                backdrop = backdrop, size = 34.dp,
+                onClick = onToggleThinking,
+                surfaceTint = if (enableThinking) Color(0xFF10A37F).copy(alpha = 0.3f) else Color.Transparent
+            ) {
                 Text("🧠", fontSize = 16.sp)
             }
         } else {
-            Box(Modifier.size(34.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surface),
+            Box(Modifier.size(34.dp).clip(CircleShape)
+                .background(if (enableThinking) Color(0xFF10A37F).copy(alpha = 0.2f) else MaterialTheme.colorScheme.surface),
                 contentAlignment = Alignment.Center
             ) { Text("🧠", fontSize = 16.sp) }
         }
@@ -147,6 +152,7 @@ private fun LiquidCircleButton(
     backdrop: Backdrop,
     size: androidx.compose.ui.unit.Dp,
     onClick: () -> Unit,
+    surfaceTint: Color = Color.Transparent,
     content: @Composable () -> Unit
 ) {
     val scope = rememberCoroutineScope()
@@ -171,7 +177,9 @@ private fun LiquidCircleButton(
                     scaleX = s + drag * abs(cos(angle) * off.x / sizePx)
                     scaleY = s + drag * abs(sin(angle) * off.y / sizePx)
                 },
-                onDrawSurface = {}
+                onDrawSurface = {
+                    if (surfaceTint.alpha > 0f) drawRect(surfaceTint)
+                }
             )
             .clip(CircleShape)
             .clickable(
