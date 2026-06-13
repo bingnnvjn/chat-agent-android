@@ -35,7 +35,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.util.fastCoerceAtMost
 import androidx.compose.ui.util.lerp
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
@@ -169,16 +168,16 @@ private fun LiquidGlassCircleSmall(
                 shadow = { Shadow(radius = 4.dp, color = Color.Black.copy(alpha = 0.04f)) },
                 layerBlock = {
                     val p = highlight.progress
-                    val s = lerp(1f, 1f + 3.dp.toPx() / size.height, p)
-                    val maxOff = size.minDimension
+                    val w = size.width.toFloat(); val h = size.height.toFloat()
+                    val s = lerp(1f, 1f + 3.dp.toPx() / h, p)
+                    val maxOff = minOf(w, h)
                     val off = highlight.offset
                     translationX = maxOff * tanh(0.05f * off.x / maxOff)
                     translationY = maxOff * tanh(0.05f * off.y / maxOff)
-                    val maxDrag = 3.dp.toPx() / size.height
+                    val maxDrag = 3.dp.toPx() / h
                     val angle = atan2(off.y, off.x)
-                    val w = size.width; val h = size.height
-                    scaleX = s + maxDrag * abs(cos(angle) * off.x / size.maxDimension) * (w / h).fastCoerceAtMost(1f)
-                    scaleY = s + maxDrag * abs(sin(angle) * off.y / size.maxDimension) * (h / w).fastCoerceAtMost(1f)
+                    scaleX = s + maxDrag * abs(cos(angle) * off.x / maxOf(w, h)) * (w / h).coerceAtMost(1f)
+                    scaleY = s + maxDrag * abs(sin(angle) * off.y / maxOf(w, h)) * (h / w).coerceAtMost(1f)
                 },
                 onDrawSurface = onDrawSurface
             )
