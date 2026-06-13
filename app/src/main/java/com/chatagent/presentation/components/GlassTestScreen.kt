@@ -6,10 +6,12 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,10 +35,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -61,9 +65,15 @@ import com.kyant.backdrop.highlight.Highlight
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.cos
 import kotlin.math.sign
+import kotlin.math.sin
+import kotlin.math.tanh
 
-private val tabNames = listOf("液态按钮", "自适应亮度", "渐进模糊")
+private val tabNames = listOf("液态按钮", "自适应亮度", "渐进模糊", "完全体")
 
 @Composable
 fun GlassTestScreen(onClose: () -> Unit = {}) {
@@ -111,6 +121,7 @@ fun GlassTestScreen(onClose: () -> Unit = {}) {
                     0 -> ButtonsPage(backdrop, textColor)
                     1 -> AdaptivePage(backdrop, textColor)
                     2 -> BlurPage(backdrop, textColor)
+                    3 -> FusionPage(backdrop, textColor)
                 }
             }
 
@@ -144,10 +155,99 @@ private fun ButtonsPage(backdrop: Backdrop, textColor: Color) {
 }
 
 // ══════════════════════════
-// Tab 1: 自适应亮度 — 直接从 demoAPP 移植
+// Tab 1: 自适应亮度 — 可拖拽/缩放/旋转
 // ══════════════════════════
 @Composable
 private fun AdaptivePage(backdrop: Backdrop, textColor: Color) {
+    val isLight = !isSystemInDarkTheme()
+    val layer = rememberGraphicsLayer()
+    val luminanceAnim = remember(isLight) { Animatable(if (isLight) 1f else 0f) }
+    val scope = rememberCoroutineScope()
+    val offsetAnim = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
+    val zoomAnim = remember { Animatable(1f) }
+    val rotAnim = remember { Animatable(0f) }
+
+    LaunchedEffect(layer) {
+        val buffer = IntArray(25)
+        while (isActive) {
+            try {
+                delay(500)
+                val img = layer.toImageBitmap()
+                val thumb = img.scale(5, 5)
+                thumb.readPixels(buffer)
+                val avg = buffer.sumOf { argb ->
+                    val r = (argb shr 16 and 0xFF) / 255f
+                    val g = (argb shr 8 and 0xFF) / 255f
+                    val b = (argb and 0xFF) / 255f
+                    0.2126 * r + 0.7152 * g + 0.0722 * b
+                } / buffer.size
+                launch { luminanceAnim.animateTo(avg.toFloat(), tween(1000)) }
+            } catch (_: Exception) {}
+        }
+    }
+
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
+        Spacer(Modifier.height(8.dp))
+        Text("自适应亮度玻璃", color = textColor.copy(alpha = 0.5f), fontSize = 13.sp)
+        Text("拖拽移动 · 双指缩放/旋转", color = textColor.copy(alpha = 0.4f), fontSize = 11.sp)
+        Spacer(Modifier.height(8.dp))
+
+        Box(
+            Modifier.size(200.dp)
+                .drawBackdrop(backdrop = backdrop, shape = { RoundedCornerShape(24.dp) },
+                    effects = {
+                        val l = (luminanceAnim.value * 2f - 1f).let { sign(it) * it * it }
+                        colorControls(
+                            brightness = if (l > 0f) lerp(0.1f, 0.5f, l) else lerp(0.1f, -0.2f, -l),
+                            contrast = if (l > 0f) lerp(1f, 0f, l) else 1f,
+                            saturation = 1.5f
+                        )
+                        blur(if (l > 0f) lerp(8f.dp.toPx(), 16f.dp.toPx(), l) else lerp(8f.dp.toPx(), 2f.dp.toPx(), -l))
+                        lens(24f.dp.toPx(), size.minDimension / 2f, depthEffect = true)
+                    },
+                    highlight = { Highlight.Plain },
+                    layerBlock = {
+                        translationX = offsetAnim.value.x; translationY = offsetAnim.value.y
+                        scaleX = zoomAnim.value; scaleY = zoomAnim.value; rotationZ = rotAnim.value
+                    },
+                    onDrawBackdrop = { drawBackdrop ->
+                        drawBackdrop()
+                        layer.record { drawBackdrop() }
+                    }
+                )
+                .pointerInput(scope) {
+                    fun Offset.rotateBy(a: Float): Offset {
+                        val r = a * (PI / 180)
+                        return Offset((x * cos(r) - y * sin(r)).toFloat(), (x * sin(r) + y * cos(r)).toFloat())
+                    }
+                    detectTransformGestures { _, pan, gz, gr ->
+                        scope.launch {
+                            offsetAnim.snapTo(offsetAnim.value + pan.rotateBy(rotAnim.value) * zoomAnim.value)
+                            zoomAnim.snapTo(zoomAnim.value * gz)
+                            rotAnim.snapTo(rotAnim.value + gr)
+                        }
+                    }
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            BasicText(
+                "luminance: ${(luminanceAnim.value * 100f).fastRoundToInt() / 100.0}",
+                style = TextStyle(fontSize = 16.sp, textAlign = TextAlign.Center, color = textColor)
+            )
+        }
+
+        Spacer(Modifier.height(12.dp))
+        Text("拖拽面板到壁纸不同区域，亮度值实时变化",
+            color = textColor.copy(alpha = 0.5f), fontSize = 12.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 24.dp))
+        Spacer(Modifier.height(24.dp))
+    }
+}
+
+// ══════════════════════════
+// Tab 3: 完全体 — 自适应亮度 × 液态按钮
+// ══════════════════════════
+@Composable
+private fun FusionPage(backdrop: Backdrop, textColor: Color) {
     val isLight = !isSystemInDarkTheme()
     val layer = rememberGraphicsLayer()
     val luminanceAnim = remember(isLight) { Animatable(if (isLight) 1f else 0f) }
@@ -173,40 +273,82 @@ private fun AdaptivePage(backdrop: Backdrop, textColor: Color) {
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
         Spacer(Modifier.height(8.dp))
-        Text("自适应亮度玻璃", color = textColor.copy(alpha = 0.5f), fontSize = 13.sp)
-        Text("实时检测背景亮度，动态调参", color = textColor.copy(alpha = 0.4f), fontSize = 11.sp)
+        Text("完全体 — 自适应 × 液态按钮", color = textColor.copy(alpha = 0.5f), fontSize = 13.sp)
+        Text("按住→晕染高光+液态变形", color = textColor.copy(alpha = 0.4f), fontSize = 11.sp)
         Spacer(Modifier.height(8.dp))
 
-        Box(
-            Modifier.size(200.dp)
-                .drawBackdrop(backdrop = backdrop, shape = { RoundedCornerShape(24.dp) },
+        val lum = luminanceAnim.value
+        val h = androidx.compose.ui.platform.LocalDensity.current
+        val hPx = with(h) { 48.dp.toPx() }
+        val fusionScope = rememberCoroutineScope()
+        val fusionHl = remember(fusionScope) { InteractiveHighlight(fusionScope) }
+
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 32.dp).height(48.dp)
+                .drawBackdrop(backdrop = backdrop, shape = { RoundedCornerShape(999.dp) },
                     effects = {
-                        val l = (luminanceAnim.value * 2f - 1f).let { sign(it) * it * it }
+                        val l = (lum * 2f - 1f).let { sign(it) * it * it }
                         colorControls(
                             brightness = if (l > 0f) lerp(0.1f, 0.5f, l) else lerp(0.1f, -0.2f, -l),
                             contrast = if (l > 0f) lerp(1f, 0f, l) else 1f,
                             saturation = 1.5f
                         )
-                        blur(if (l > 0f) lerp(8f.dp.toPx(), 16f.dp.toPx(), l) else lerp(8f.dp.toPx(), 2f.dp.toPx(), -l))
-                        lens(24f.dp.toPx(), size.minDimension / 2f, depthEffect = true)
+                        vibrancy()
+                        blur(if (l > 0f) lerp(2f.dp.toPx(), 4f.dp.toPx(), l) else lerp(2f.dp.toPx(), 6f.dp.toPx(), -l))
+                        lens(
+                            if (l > 0f) lerp(12f.dp.toPx(), 20f.dp.toPx(), l) else lerp(12f.dp.toPx(), 24f.dp.toPx(), -l),
+                            if (l > 0f) lerp(24f.dp.toPx(), 32f.dp.toPx(), l) else lerp(24f.dp.toPx(), 40f.dp.toPx(), -l),
+                            depthEffect = true
+                        )
                     },
-                    highlight = { Highlight.Plain },
-                    onDrawBackdrop = { drawBackdrop ->
-                        drawBackdrop()
-                        layer.record { drawBackdrop() }
-                    }
-                ),
-            contentAlignment = Alignment.Center
+                    layerBlock = {
+                        val p = fusionHl.progress; val off = fusionHl.offset
+                        val s = lerp(1f, 1f + 4f / hPx, p)
+                        translationX = hPx * tanh(0.05f * off.x / hPx)
+                        translationY = hPx * tanh(0.05f * off.y / hPx)
+                        val drag = 4f / hPx; val angle = atan2(off.y, off.x)
+                        scaleX = s + drag * abs(cos(angle) * off.x / hPx)
+                        scaleY = s + drag * abs(sin(angle) * off.y / hPx)
+                    },
+                    onDrawSurface = {}
+                )
+                .then(fusionHl.modifier).then(fusionHl.gestureModifier)
+                .clickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null) {}
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            BasicText(
-                "luminance: ${(luminanceAnim.value * 100f).fastRoundToInt() / 100.0}",
-                style = TextStyle(fontSize = 16.sp, textAlign = TextAlign.Center, color = textColor)
+            androidx.compose.foundation.text.BasicText(
+                "完全体  |  lum: ${(lum * 100f).fastRoundToInt() / 100.0}",
+                style = TextStyle(textColor, 14.sp)
             )
         }
 
         Spacer(Modifier.height(12.dp))
-        Text("luminance 值随背景变化自动调节 blur/brightness/contrast",
-            color = textColor.copy(alpha = 0.4f), fontSize = 11.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 24.dp))
+        Text("壁纸越暗→模糊越强、亮度越高、透镜折射越大",
+            color = textColor.copy(alpha = 0.5f), fontSize = 12.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 24.dp))
+
+        // 第2个: 自适应亮度面板（供背景采样用）
+        Spacer(Modifier.height(16.dp))
+        Text("背景采样区域（需在壁纸上采样）", color = textColor.copy(alpha = 0.3f), fontSize = 11.sp)
+        Spacer(Modifier.height(4.dp))
+        Box(
+            Modifier.size(140.dp)
+                .drawBackdrop(backdrop = backdrop, shape = { RoundedCornerShape(16.dp) },
+                    effects = {
+                        val l = (lum * 2f - 1f).let { sign(it) * it * it }
+                        colorControls(brightness = if (l > 0f) 0.3f else -0.1f, contrast = if (l > 0f) 0.5f else 1f, saturation = 1.5f)
+                        blur(if (l > 0f) 12f.dp.toPx() else 4f.dp.toPx())
+                        lens(16f.dp.toPx(), 24f.dp.toPx())
+                    },
+                    highlight = { Highlight.Plain },
+                    onDrawBackdrop = { d -> d(); layer.record { d() } }
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            BasicText("lum: ${(lum * 100f).fastRoundToInt() / 100.0}",
+                style = TextStyle(fontSize = 14.sp, textAlign = TextAlign.Center, color = textColor))
+        }
 
         Spacer(Modifier.height(24.dp))
     }
