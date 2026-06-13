@@ -1,6 +1,15 @@
 package com.chatagent.presentation.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,395 +27,365 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.backdrops.rememberCanvasBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
-import com.kyant.backdrop.drawPlainBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.colorControls
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.opacity
 import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.Shadow
+import kotlinx.coroutines.launch
 
 /**
  * Liquid Glass 效果测试界面
- * 展示所有可用参数：blur、lens、colorFilter、highlight、shadow
+ *
+ * 严格按照官方文档 (https://kyant.gitbook.io/backdrop) 实现：
+ * 效果顺序：color filter ⇒ blur ⇒ lens
  */
 @Composable
 fun GlassTestScreen(
     onClose: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
+    val bgColor = Color(0xFF1A0533)
 
-    // LayerBackdrop: 捕获下方内容的真实画面
-    val layerBackdrop = rememberLayerBackdrop()
-
-    // CanvasBackdrop: 自定义绘制内容（纯色渐变，不需要layerBackdrop时用）
+    // 1. CanvasBackdrop: 自定义渐变背景 + 装饰图形
     val canvasBackdrop = rememberCanvasBackdrop {
-        // 画一个渐变背景供玻璃折射
         drawRect(
             brush = androidx.compose.ui.graphics.Brush.verticalGradient(
-                colors = listOf(
-                    Color(0xFF1A0533),
-                    Color(0xFF6B2FA0),
-                    Color(0xFF9B4DCA)
+                colors = listOf(Color(0xFF1A0533), Color(0xFF6B2FA0), Color(0xFF9B4DCA))
+            )
+        )
+        // 装饰光晕
+        drawCircle(Color.White.copy(alpha = 0.12f), 80f, center = androidx.compose.ui.geometry.Offset(size.width * 0.8f, size.height * 0.3f))
+        drawCircle(Color(0xFF34C759).copy(alpha = 0.08f), 60f, center = androidx.compose.ui.geometry.Offset(size.width * 0.2f, size.height * 0.6f))
+        drawCircle(Color(0xFF007AFF).copy(alpha = 0.06f), 50f, center = androidx.compose.ui.geometry.Offset(size.width * 0.5f, size.height * 0.8f))
+    }
+
+    // 2. LayerBackdrop: 捕获实际内容（包含背景绘制）
+    val layerBackdrop = rememberLayerBackdrop {
+        drawRect(bgColor)
+        drawContent()
+    }
+
+    Box(modifier = Modifier.fillMaxSize().background(bgColor)) {
+        // 背景捕获层
+        Box(
+            modifier = Modifier.fillMaxSize().then(
+                Modifier.drawBackdrop(
+                    backdrop = canvasBackdrop,
+                    shape = { RoundedCornerShape(0.dp) },
+                    effects = { /* 直接绘制canvas内容 */ }
                 )
             )
         )
-        // 画一些文字/图形让折射效果更明显
-        drawCircle(Color.White.copy(alpha = 0.1f), 60f, center = androidx.compose.ui.geometry.Offset(size.width * 0.8f, size.height * 0.3f))
-        drawCircle(Color.White.copy(alpha = 0.08f), 40f, center = androidx.compose.ui.geometry.Offset(size.width * 0.2f, size.height * 0.6f))
-    }
 
-    Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF1A0533)) {
-        // 使用 layerBackdrop 捕获全屏内容
+        // 可滚动内容
         Box(modifier = Modifier.fillMaxSize()) {
-            // 背景捕获层
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFF1A0533))
-                    .then(
-                        // 用 drawPlainBackdrop 绘制canvas内容到捕获层
-                        Modifier.drawPlainBackdrop(
-                            backdrop = canvasBackdrop,
-                            shape = { RoundedCornerShape(0.dp) },
-                            effects = { /* 无效果 - direct draw */ }
-                        )
-                    )
-            )
+            Column(
+                modifier = Modifier.fillMaxSize().verticalScroll(scrollState).padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(Modifier.height(60.dp))
+                Text("Liquid Glass 测试", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                Text("按官方文档效果顺序: colorFilter → blur → lens",
+                    color = Color.White.copy(alpha = 0.5f), fontSize = 13.sp, textAlign = TextAlign.Center)
+                Spacer(Modifier.height(32.dp))
 
-            // 可滚动内容
-            Box(modifier = Modifier.fillMaxSize()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(scrollState)
-                        .padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                // ═══ 1. blur 不同半径 ═══
+                SectionTitle("blur (模糊)")
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Spacer(Modifier.height(60.dp))
-
-                    Text("Liquid Glass 效果测试",
-                        color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(8.dp))
-                    Text("查看不同效果参数下的玻璃渲染表现",
-                        color = Color.White.copy(alpha = 0.6f), fontSize = 14.sp)
-                    Spacer(Modifier.height(32.dp))
-
-                    // ═══ 测试组 1: blur 不同半径 ═══
-                    SectionTitle("blur (模糊半径)")
-                    GlassDemoRow(
-                        labels = listOf("2dp", "6dp", "12dp", "24dp"),
-                        values = listOf(2f, 6f, 12f, 24f)
-                    ) { radius ->
-                        GlassDemoItem(
-                            backdrop = layerBackdrop,
-                            shape = RoundedCornerShape(16.dp),
-                            effects = { blur(radius) }
-                        )
-                    }
-
-                    SectionTitle("blur + 高光 (Highlight)")
-                    GlassDemoRow(
-                        labels = listOf("Default", "Ambient", "Plain"),
-                        values = listOf(
-                            Highlight.Default,
-                            Highlight.Ambient,
-                            Highlight.Plain
-                        )
-                    ) { h ->
-                        GlassDemoItem(
-                            backdrop = layerBackdrop,
-                            shape = RoundedCornerShape(16.dp),
-                            effects = { blur(6f) },
-                            highlight = { h }
-                        )
-                    }
-
-                    SectionTitle("blur + 阴影 (Shadow)")
-                    GlassDemoRow(
-                        labels = listOf("Default", "大阴影", "浅阴影"),
-                        values = listOf(
-                            Shadow.Default,
-                            Shadow(radius = 48.dp, color = Color.Black.copy(alpha = 0.3f)),
-                            Shadow(radius = 12.dp, color = Color.Black.copy(alpha = 0.05f))
-                        )
-                    ) { s ->
-                        GlassDemoItem(
-                            backdrop = layerBackdrop,
-                            shape = RoundedCornerShape(16.dp),
-                            effects = { blur(6f) },
-                            shadow = { s }
-                        )
-                    }
-
-                    SectionTitle("opacity (透明度)")
-                    GlassDemoRow(
-                        labels = listOf("100%", "70%", "40%", "15%"),
-                        values = listOf(1f, 0.7f, 0.4f, 0.15f)
-                    ) { alpha ->
-                        GlassDemoItem(
-                            backdrop = layerBackdrop,
-                            shape = RoundedCornerShape(16.dp),
-                            effects = { blur(6f); opacity(alpha) }
-                        )
-                    }
-
-                    SectionTitle("vibrancy (增强饱和度)")
-                    GlassDemoItem(
-                        backdrop = layerBackdrop,
-                        shape = RoundedCornerShape(16.dp),
-                        effects = { blur(6f); vibrancy() },
-                        modifier = Modifier.size(100.dp)
-                    )
-                    Spacer(Modifier.height(6.dp))
-                    Text("vibrancy 将饱和度提升 1.5 倍",
-                        color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
-
-                    SectionTitle("colorControls (色彩控制)")
-                    GlassDemoItem(
-                        backdrop = layerBackdrop,
-                        shape = RoundedCornerShape(16.dp),
-                        effects = { blur(6f); colorControls(saturation = 1.8f, brightness = 0.05f) },
-                        modifier = Modifier.size(100.dp)
-                    )
-                    Spacer(Modifier.height(6.dp))
-                    Text("saturation=1.8 brightness=0.05",
-                        color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
-
-                    SectionTitle("onDrawSurface (覆盖色)")
-                    GlassDemoRow(
-                        labels = listOf("无覆盖", "10%白", "30%白", "50%黑"),
-                        values = listOf(0, 1, 2, 3)
-                    ) { index ->
-                        val surfaceColor = when (index) {
-                            0 -> Color.Transparent
-                            1 -> Color.White.copy(alpha = 0.1f)
-                            2 -> Color.White.copy(alpha = 0.3f)
-                            else -> Color.Black.copy(alpha = 0.5f)
+                    listOf(2f to "2dp", 6f to "6dp", 12f to "12dp", 24f to "24dp").forEach { (r, l) ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
+                            GlassBlock(backdrop = layerBackdrop, shape = RoundedCornerShape(16.dp), effects = { blur(r) })
+                            Spacer(Modifier.height(4.dp))
+                            Text(l, color = Color.White.copy(alpha = 0.6f), fontSize = 10.sp)
                         }
-                        GlassDemoItem(
-                            backdrop = layerBackdrop,
-                            shape = RoundedCornerShape(16.dp),
-                            effects = { blur(6f) },
-                            onDrawSurface = { drawRect(surfaceColor) }
-                        )
                     }
-
-                    // ═══ 模拟顶栏按钮测试 ═══
-                    SectionTitle("模拟顶栏按钮 (实际尺寸)")
-                    Text("44dp 圆形按钮 + 44dp 胶囊",
-                        color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
-
-                    Spacer(Modifier.height(12.dp))
-
-                    // 模拟顶栏布局
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 14.dp)
-                            .height(50.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        // 左按钮
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .align(Alignment.CenterStart)
-                                .drawBackdrop(
-                                    backdrop = layerBackdrop,
-                                    shape = { CircleShape },
-                                    effects = { blur(8f) },
-                                    highlight = { Highlight.Default },
-                                    shadow = { Shadow.Default },
-                                    onDrawSurface = { drawRect(Color.White.copy(alpha = 0.15f)) }
-                                )
-                                .clip(CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) { Text("‹", color = Color.White, fontSize = 20.sp) }
-
-                        // 中胶囊
-                        Box(
-                            modifier = Modifier
-                                .height(44.dp)
-                                .drawBackdrop(
-                                    backdrop = layerBackdrop,
-                                    shape = { RoundedCornerShape(22.dp) },
-                                    effects = { blur(8f) },
-                                    highlight = { Highlight.Default },
-                                    shadow = { Shadow.Default },
-                                    onDrawSurface = { drawRect(Color.White.copy(alpha = 0.15f)) }
-                                )
-                                .clip(RoundedCornerShape(22.dp))
-                                .padding(horizontal = 20.dp),
-                            contentAlignment = Alignment.Center
-                        ) { Text("DeepSeek", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium) }
-
-                        // 右按钮
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .align(Alignment.CenterEnd)
-                                .drawBackdrop(
-                                    backdrop = layerBackdrop,
-                                    shape = { CircleShape },
-                                    effects = { blur(8f) },
-                                    highlight = { Highlight.Default },
-                                    shadow = { Shadow.Default },
-                                    onDrawSurface = { drawRect(Color.White.copy(alpha = 0.15f)) }
-                                )
-                                .clip(CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) { Text("⋯", color = Color.White, fontSize = 20.sp) }
-                    }
-
-                    // ═══ 模拟底栏输入框测试 ═══
-                    SectionTitle("模拟底栏 (实际尺寸)")
-                    Text("34dp +按钮 + 34dp 🧠 + 34dp 输入胶囊",
-                        color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
-
-                    Spacer(Modifier.height(12.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        // + 按钮
-                        Box(
-                            modifier = Modifier.size(34.dp)
-                                .drawBackdrop(
-                                    backdrop = layerBackdrop,
-                                    shape = { CircleShape },
-                                    effects = { blur(8f) },
-                                    highlight = { Highlight.Default },
-                                    shadow = { Shadow.Default },
-                                    onDrawSurface = { drawRect(Color.White.copy(alpha = 0.15f)) }
-                                )
-                                .clip(CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) { Text("+", color = Color.White, fontSize = 20.sp) }
-
-                        Spacer(Modifier.width(8.dp))
-
-                        // 🧠 按钮
-                        Box(
-                            modifier = Modifier.size(34.dp)
-                                .drawBackdrop(
-                                    backdrop = layerBackdrop,
-                                    shape = { CircleShape },
-                                    effects = { blur(8f) },
-                                    highlight = { Highlight.Default },
-                                    shadow = { Shadow.Default },
-                                    onDrawSurface = { drawRect(Color.White.copy(alpha = 0.15f)) }
-                                )
-                                .clip(CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) { Text("🧠", fontSize = 16.sp) }
-
-                        Spacer(Modifier.width(8.dp))
-
-                        // 输入胶囊
-                        Box(
-                            modifier = Modifier.weight(1f).height(34.dp)
-                                .drawBackdrop(
-                                    backdrop = layerBackdrop,
-                                    shape = { RoundedCornerShape(17.dp) },
-                                    effects = { blur(8f) },
-                                    highlight = { Highlight.Default },
-                                    shadow = { Shadow.Default },
-                                    onDrawSurface = { drawRect(Color.White.copy(alpha = 0.15f)) }
-                                )
-                                .clip(RoundedCornerShape(17.dp))
-                                .padding(horizontal = 14.dp),
-                            contentAlignment = Alignment.CenterStart
-                        ) { Text("iMessage 信息", color = Color.White.copy(alpha = 0.5f), fontSize = 14.sp) }
-                    }
-
-                    Spacer(Modifier.height(24.dp))
-
-                    // lens 效果说明
-                    SectionTitle("lens (折射效果)")
-                    Text("lens 使用 AGSL RuntimeShader，需要 GPU 支持",
-                        color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
-                    Text("参数：refractionHeight, refractionAmount, depthEffect, chromaticAberration",
-                        color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
-                    Text("⚠️ 部分 Android 15 设备可能不支持 RuntimeShader",
-                        color = Color(0xFFFF6B6B).copy(alpha = 0.7f), fontSize = 12.sp)
-
-                    Spacer(Modifier.height(12.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // lens 效果（小尺寸测试）
-                        Box(
-                            modifier = Modifier.weight(1f).height(80.dp)
-                                .drawBackdrop(
-                                    backdrop = layerBackdrop,
-                                    shape = { RoundedCornerShape(50.dp) },
-                                    effects = { blur(6f) },
-                                    highlight = { Highlight.Default },
-                                    shadow = { Shadow.Default },
-                                    onDrawSurface = { drawRect(Color.White.copy(alpha = 0.15f)) }
-                                )
-                                .clip(RoundedCornerShape(50.dp)),
-                            contentAlignment = Alignment.Center
-                        ) { Text("blur only", color = Color.White, fontSize = 13.sp) }
-
-                        Box(
-                            modifier = Modifier.weight(1f).height(80.dp)
-                                .drawBackdrop(
-                                    backdrop = layerBackdrop,
-                                    shape = { RoundedCornerShape(50.dp) },
-                                    effects = {
-                                        blur(4f)
-                                        // lens 暂时注释掉，用 stronger blur 代替
-                                    },
-                                    highlight = { Highlight.Default },
-                                    shadow = { Shadow.Default },
-                                    onDrawSurface = { drawRect(Color.White.copy(alpha = 0.1f)) }
-                                )
-                                .clip(RoundedCornerShape(50.dp)),
-                            contentAlignment = Alignment.Center
-                        ) { Text("blur+高亮", color = Color.White, fontSize = 13.sp) }
-                    }
-
-                    Spacer(Modifier.height(40.dp))
-
-                    Button(
-                        onClick = onClose,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.2f))
-                    ) {
-                        Text("关闭", color = Color.White)
-                    }
-
-                    Spacer(Modifier.height(60.dp))
                 }
+
+                // ═══ 2. 效果链: opacity + blur ═══
+                SectionTitle("opacity → blur (透明度+模糊)")
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    listOf(1f to "100%", 0.6f to "60%", 0.3f to "30%", 0.1f to "10%").forEach { (a, l) ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
+                            GlassBlock(backdrop = layerBackdrop, shape = RoundedCornerShape(16.dp), effects = { opacity(a); blur(6f) })
+                            Spacer(Modifier.height(4.dp))
+                            Text(l, color = Color.White.copy(alpha = 0.6f), fontSize = 10.sp)
+                        }
+                    }
+                }
+
+                // ═══ 3. vibrancy + blur ═══
+                SectionTitle("vibrancy → blur (增强饱和度)")
+                GlassBlock(backdrop = layerBackdrop, shape = RoundedCornerShape(16.dp), effects = { vibrancy(); blur(6f) }, modifier = Modifier.size(100.dp))
+                Spacer(Modifier.height(4.dp))
+                Text("饱和度×1.5，颜色更鲜艳", color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
+
+                // ═══ 4. colorControls + blur ═══
+                SectionTitle("colorControls → blur (色彩控制)")
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    listOf("鲜艳" to 1.8f to 0f, "明亮" to 1.2f to 0.1f, "冷色" to 1f to -0.05f).forEach { ((l, s), b) ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
+                            GlassBlock(backdrop = layerBackdrop, shape = RoundedCornerShape(16.dp), effects = { colorControls(saturation = s, brightness = b); blur(6f) })
+                            Spacer(Modifier.height(4.dp))
+                            Text(l, color = Color.White.copy(alpha = 0.6f), fontSize = 10.sp)
+                        }
+                    }
+                }
+
+                // ═══ 5. lens 效果 ═══
+                SectionTitle("lens (折射) — Android 13+ 需 RuntimeShader")
+                Text("使用 RoundedCornerShape + refraction, shape 必须是 CornerBasedShape",
+                    color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp, textAlign = TextAlign.Center)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    listOf(
+                        "折射 8px" to 8f to 16f to false to false,
+                        "折射 16px" to 16f to 32f to false to false,
+                        "带景深" to 16f to 32f to true to false,
+                        "色散色彩" to 16f to 32f to false to true
+                    ).forEach { ((l, rh), ra, de, ca) ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
+                            GlassBlock(
+                                backdrop = layerBackdrop,
+                                shape = RoundedCornerShape(16.dp),
+                                effects = { blur(4f); lens(rh, ra, de, ca) }
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(l, color = Color.White.copy(alpha = 0.6f), fontSize = 10.sp)
+                        }
+                    }
+                }
+
+                // ═══ 7. 交互式玻璃按钮 (Interactive Glass Bottom Bar 教程) ═══
+                SectionTitle("交互式玻璃按钮 (按压缩放)")
+                Text("使用 pointerInput + layerBlock 防止背景缩放",
+                    color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
+
+                Spacer(Modifier.height(12.dp))
+                InteractiveGlassButton(backdrop = layerBackdrop)
+
+                // ═══ 8. 完整效果链：colorControls → blur → lens ═══
+                SectionTitle("完整效果链: vibrancy → blur → lens")
+                Box(
+                    modifier = Modifier.size(140.dp, 80.dp)
+                        .drawBackdrop(
+                            backdrop = layerBackdrop,
+                            shape = { RoundedCornerShape(40.dp) },
+                            effects = { vibrancy(); blur(6f); lens(12f, 20f) },
+                            highlight = { Highlight(width = 0.5.dp, alpha = 0.6f) },
+                            shadow = { Shadow(radius = 12.dp, color = Color.Black.copy(alpha = 0.1f)) },
+                            onDrawSurface = { drawRect(Color.White.copy(alpha = 0.12f)) }
+                        )
+                        .clip(RoundedCornerShape(40.dp)),
+                    contentAlignment = Alignment.Center
+                ) { Text("✨", fontSize = 28.sp) }
+                Spacer(Modifier.height(8.dp))
+                Text("玻璃胶囊", color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp)
+
+                // ═══ 9. 模拟顶栏 ═══
+                SectionTitle("模拟顶栏 (实际 44dp)")
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp).height(50.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    GlassButton44(backdrop = layerBackdrop, modifier = Modifier.align(Alignment.CenterStart)) { Text("‹", fontSize = 20.sp) }
+                    Box(
+                        modifier = Modifier.height(44.dp)
+                            .drawBackdrop(
+                                backdrop = layerBackdrop, shape = { RoundedCornerShape(22.dp) },
+                                effects = { vibrancy(); blur(8f); lens(8f, 12f) },
+                                highlight = { Highlight(width = 0.5.dp, alpha = 0.6f) },
+                                shadow = { Shadow(radius = 8.dp, color = Color.Black.copy(alpha = 0.08f)) },
+                                onDrawSurface = { drawRect(Color.White.copy(alpha = 0.15f)) }
+                            ).clip(RoundedCornerShape(22.dp)).padding(horizontal = 18.dp),
+                        contentAlignment = Alignment.Center
+                    ) { Text("DeepSeek", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium) }
+                    GlassButton44(backdrop = layerBackdrop, modifier = Modifier.align(Alignment.CenterEnd)) { Text("⋯", fontSize = 20.sp) }
+                }
+
+                // ═══ 10. 模拟底栏 ═══
+                SectionTitle("模拟底栏 (实际 34dp)")
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    GlassButton34(backdrop = layerBackdrop) { Text("+", fontSize = 18.sp) }
+                    Spacer(Modifier.width(8.dp))
+                    GlassButton34(backdrop = layerBackdrop) { Text("🧠", fontSize = 14.sp) }
+                    Spacer(Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier.weight(1f).height(34.dp)
+                            .drawBackdrop(
+                                backdrop = layerBackdrop, shape = { RoundedCornerShape(17.dp) },
+                                effects = { vibrancy(); blur(8f); lens(6f, 10f) },
+                                highlight = { Highlight(width = 0.5.dp, alpha = 0.5f) },
+                                shadow = { Shadow(radius = 6.dp, color = Color.Black.copy(alpha = 0.06f)) },
+                                onDrawSurface = { drawRect(Color.White.copy(alpha = 0.12f)) }
+                            ).clip(RoundedCornerShape(17.dp)).padding(horizontal = 14.dp),
+                        contentAlignment = Alignment.CenterStart
+                    ) { Text("iMessage 信息", color = Color.White.copy(alpha = 0.5f), fontSize = 14.sp) }
+                }
+
+                // ═══ lens 说明 ═══
+                SectionTitle("关于 lens 效果")
+                Text("• lens 使用 AGSL RuntimeShader (Android 13+)\n" +
+                     "• shape 必须是 CornerBasedShape (RoundedCornerShape)\n" +
+                     "• 效果顺序: colorFilter → blur → lens\n" +
+                     "• 部分 Android 15 设备可能因 GPU 驱动不兼容崩溃\n" +
+                     "• refractionHeight: 折射区域高度 (px)\n" +
+                     "• refractionAmount: 折射偏移量 (px)\n" +
+                     "• depthEffect: 是否启用景深感\n" +
+                     "• chromaticAberration: 是否启用色散",
+                    color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp, lineHeight = 18.sp)
+
+                Spacer(Modifier.height(32.dp))
+                Button(
+                    onClick = onClose,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.2f))
+                ) { Text("关闭", color = Color.White) }
+                Spacer(Modifier.height(60.dp))
             }
         }
     }
+}
+
+// ═══ 玻璃效果方块 ═══
+@Composable
+private fun GlassBlock(
+    backdrop: Backdrop,
+    shape: RoundedCornerShape,
+    effects: com.kyant.backdrop.BackdropEffectScope.() -> Unit,
+    modifier: Modifier = Modifier.size(80.dp)
+) {
+    Box(
+        modifier = modifier
+            .drawBackdrop(
+                backdrop = backdrop, shape = { shape },
+                effects = effects,
+                highlight = { Highlight(width = 0.5.dp, alpha = 0.5f) },
+                shadow = { Shadow(radius = 8.dp, color = Color.Black.copy(alpha = 0.08f)) },
+                onDrawSurface = { drawRect(Color.White.copy(alpha = 0.12f)) }
+            )
+            .clip(shape)
+    )
+}
+
+// ═══ 交互式玻璃按钮 ═══
+@Composable
+private fun InteractiveGlassButton(backdrop: Backdrop) {
+    val scope = rememberCoroutineScope()
+    val progress = remember { mutableFloatStateOf(0f) }
+    val scale by animateFloatAsState(
+        targetValue = 1f + progress.floatValue * 0.15f,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "scale"
+    )
+
+    Box(
+        modifier = Modifier.size(80.dp)
+            .drawBackdrop(
+                backdrop = backdrop, shape = { CircleShape },
+                effects = { vibrancy(); blur(8f); lens(8f, 14f) },
+                highlight = { Highlight(width = 0.5.dp, alpha = 0.6f) },
+                shadow = { Shadow(radius = 10.dp, color = Color.Black.copy(alpha = 0.1f)) },
+                layerBlock = {
+                    scaleX = scale
+                    scaleY = scale
+                },
+                onDrawSurface = { drawRect(Color.White.copy(alpha = 0.12f)) }
+            )
+            .clip(CircleShape)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) { /* click action */ }
+            .pointerInput(scope) {
+                awaitEachGesture {
+                    awaitFirstDown(requireUnconsumed = false)
+                    scope.launch { progress.floatValue = 1f }
+                    waitForUpOrCancellation()
+                    scope.launch { progress.floatValue = 0f }
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) { Text("👆", fontSize = 24.sp) }
+}
+
+// ═══ 44dp 玻璃圆钮 ═══
+@Composable
+private fun GlassButton44(
+    backdrop: Backdrop,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Box(
+        modifier = modifier.size(44.dp)
+            .drawBackdrop(
+                backdrop = backdrop, shape = { CircleShape },
+                effects = { vibrancy(); blur(8f); lens(6f, 10f) },
+                highlight = { Highlight(width = 0.5.dp, alpha = 0.5f) },
+                shadow = { Shadow(radius = 8.dp, color = Color.Black.copy(alpha = 0.08f)) },
+                onDrawSurface = { drawRect(Color.White.copy(alpha = 0.12f)) }
+            ).clip(CircleShape),
+        contentAlignment = Alignment.Center
+    ) { content() }
+}
+
+// ═══ 34dp 玻璃圆钮 ═══
+@Composable
+private fun GlassButton34(
+    backdrop: Backdrop,
+    content: @Composable () -> Unit
+) {
+    Box(
+        modifier = Modifier.size(34.dp)
+            .drawBackdrop(
+                backdrop = backdrop, shape = { CircleShape },
+                effects = { vibrancy(); blur(8f); lens(5f, 8f) },
+                highlight = { Highlight(width = 0.5.dp, alpha = 0.5f) },
+                shadow = { Shadow(radius = 6.dp, color = Color.Black.copy(alpha = 0.06f)) },
+                onDrawSurface = { drawRect(Color.White.copy(alpha = 0.12f)) }
+            ).clip(CircleShape),
+        contentAlignment = Alignment.Center
+    ) { content() }
 }
 
 @Composable
@@ -415,58 +394,3 @@ private fun SectionTitle(title: String) {
     Text(title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
     Spacer(Modifier.height(8.dp))
 }
-
-@Composable
-private inline fun <reified T> GlassDemoRow(
-    labels: List<String>,
-    values: List<T>,
-    crossinline content: @Composable (T) -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        labels.forEachIndexed { index, label ->
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.weight(1f)
-            ) {
-                content(values[index])
-                Spacer(Modifier.height(4.dp))
-                Text(label, color = Color.White.copy(alpha = 0.6f), fontSize = 10.sp)
-            }
-        }
-    }
-}
-
-/**
- * 单个玻璃效果演示方块
- */
-@Composable
-private fun GlassDemoItem(
-    backdrop: Backdrop,
-    shape: RoundedCornerShape,
-    effects: com.kyant.backdrop.BackdropEffectScope.() -> Unit,
-    highlight: (() -> Highlight?)? = null,
-    shadow: (() -> Shadow?)? = null,
-    innerShadow: (() -> com.kyant.backdrop.shadow.InnerShadow?)? = null,
-    onDrawSurface: (DrawScope.() -> Unit)? = null,
-    modifier: Modifier = Modifier.size(80.dp)
-) {
-    // 用 `onDrawSurface` 接收 DrawScope 参数（需要完整类型的 lambda）
-    Box(
-        modifier = modifier
-            .drawBackdrop(
-                backdrop = backdrop,
-                shape = { shape },
-                effects = effects,
-                highlight = highlight,
-                shadow = shadow,
-                innerShadow = innerShadow,
-                onDrawSurface = onDrawSurface
-            )
-            .clip(shape)
-            .background(Color.Transparent)
-    )
-}
-
