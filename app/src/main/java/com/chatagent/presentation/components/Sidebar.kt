@@ -1,4 +1,5 @@
 package com.chatagent.presentation.components
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,8 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import com.kyant.shapes.RoundedRectangle
-import com.kyant.shapes.RoundedRectangularShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -98,7 +97,7 @@ fun Sidebar(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedRectangle(12.dp))
+                        .clip(RoundedCornerShape(12.dp))
                         .background(
                             if (isSelected) MaterialTheme.colorScheme.surfaceVariant
                             else MaterialTheme.colorScheme.surface
@@ -140,7 +139,7 @@ fun Sidebar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedRectangle(12.dp))
+                .clip(RoundedCornerShape(12.dp))
                 .clickable { onSettingsClick() }
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically

@@ -1,4 +1,5 @@
 package com.chatagent.presentation.components
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -10,8 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import com.kyant.shapes.RoundedRectangle
-import com.kyant.shapes.RoundedRectangularShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -132,7 +131,7 @@ private fun CodePreviewBox(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .clip(RoundedRectangle(10.dp))
+            .clip(RoundedCornerShape(10.dp))
             .background(codeBg)
     ) {
         // 代码内容（可水平和垂直滚动）
@@ -163,7 +162,7 @@ private fun CodePreviewBox(
                     color = Color.White.copy(alpha = 0.5f),
                     fontSize = 11.sp,
                     modifier = Modifier
-                        .background(Color.White.copy(alpha = 0.1f), RoundedRectangle(4.dp))
+                        .background(Color.White.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
                         .padding(horizontal = 6.dp, vertical = 2.dp)
                 )
             }
@@ -173,7 +172,7 @@ private fun CodePreviewBox(
                 color = Color.White.copy(alpha = 0.6f),
                 fontSize = 11.sp,
                 modifier = Modifier
-                    .background(Color.White.copy(alpha = 0.1f), RoundedRectangle(4.dp))
+                    .background(Color.White.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
                     .padding(horizontal = 8.dp, vertical = 2.dp)
                     .clickable {
                         val clip = ctx.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager

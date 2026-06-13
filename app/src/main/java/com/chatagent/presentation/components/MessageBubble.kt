@@ -1,4 +1,5 @@
 package com.chatagent.presentation.components
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
@@ -7,8 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import com.kyant.shapes.RoundedRectangle
-import com.kyant.shapes.RoundedRectangularShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -90,9 +89,9 @@ fun MessageBubble(
 
             // 气泡正文
             val bubbleShape = if (isUser) {
-                RoundedRectangularShape(20.dp, 4.dp, 20.dp, 20.dp)
+                RoundedCornerShape(20.dp, 4.dp, 20.dp, 20.dp)
             } else {
-                RoundedRectangularShape(4.dp, 20.dp, 20.dp, 20.dp)
+                RoundedCornerShape(4.dp, 20.dp, 20.dp, 20.dp)
             }
             val bgColor = if (isUser) userColor else aiColor
 
@@ -163,7 +162,7 @@ private fun ThinkingBadge(thinking: String, isDark: Boolean) {
 
     Column(
         modifier = Modifier.fillMaxWidth()
-            .clip(RoundedRectangle(14.dp))
+            .clip(RoundedCornerShape(14.dp))
             .background(badgeBg)
             .clickable { expanded = !expanded }
             .padding(12.dp)
