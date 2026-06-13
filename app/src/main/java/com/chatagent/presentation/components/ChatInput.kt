@@ -1,6 +1,4 @@
 package com.chatagent.presentation.components
-import androidx.compose.foundation.shape.RoundedCornerShape
-
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -21,8 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-
-private val PillShape = RoundedCornerShape(999.dp)
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -57,6 +53,7 @@ import kotlin.math.sin
 import kotlin.math.tanh
 
 private val SendGreen = Color(0xFF10A37F)
+private val PillShape = RoundedCornerShape(999.dp)
 
 /**
  * 底部液态玻璃输入栏
