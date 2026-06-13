@@ -6,11 +6,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,13 +33,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -48,26 +44,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.fastRoundToInt
 import androidx.compose.ui.util.lerp
+import com.chatagent.presentation.components.LiquidButton
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.drawPlainBackdrop
 import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.colorControls
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.runtimeShaderEffect
 import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlin.math.PI
-import kotlin.math.abs
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.tanh
+import kotlin.math.sign
 
-private val tabNames = listOf("液态按钮", "效果调试", "渐进模糊")
+private val tabNames = listOf("液态按钮", "自适应亮度", "渐进模糊")
 
 @Composable
 fun GlassTestScreen(onClose: () -> Unit = {}) {
@@ -87,7 +83,7 @@ fun GlassTestScreen(onClose: () -> Unit = {}) {
 
     Box(Modifier.fillMaxSize().background(bgColor)) {
         if (bitmapPainter != null) {
-            Image(painter = bitmapPainter, contentDescription = null, Modifier.fillMaxSize().layerBackdrop(backdrop), contentScale = ContentScale.Crop)
+            Image(painter = bitmapPainter, null, Modifier.fillMaxSize().layerBackdrop(backdrop), contentScale = ContentScale.Crop)
         } else {
             Box(Modifier.fillMaxSize().layerBackdrop(backdrop))
         }
@@ -97,12 +93,10 @@ fun GlassTestScreen(onClose: () -> Unit = {}) {
             Text("Liquid Glass", color = textColor, fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp))
             Spacer(Modifier.height(4.dp))
             Button(onClick = { photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
-                colors = ButtonDefaults.buttonColors(containerColor = textColor.copy(alpha = 0.1f)),
-                modifier = Modifier.padding(horizontal = 16.dp)
+                colors = ButtonDefaults.buttonColors(containerColor = textColor.copy(alpha = 0.1f)), modifier = Modifier.padding(horizontal = 16.dp)
             ) { Text(if (bgUri == null) "📷 选择壁纸" else "🔄 换壁纸", color = textColor, fontSize = 13.sp) }
             Spacer(Modifier.height(8.dp))
 
-            // Tab 导航
             Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 tabNames.forEachIndexed { i, name ->
                     Box(Modifier.clip(RoundedCornerShape(20.dp)).background(if (selectedTab == i) textColor.copy(alpha = 0.2f) else Color.Transparent).clickable { selectedTab = i }.padding(horizontal = 14.dp, vertical = 7.dp)) {
@@ -115,21 +109,19 @@ fun GlassTestScreen(onClose: () -> Unit = {}) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 when (selectedTab) {
                     0 -> ButtonsPage(backdrop, textColor)
-                    1 -> PlaygroundPage(backdrop, textColor)
+                    1 -> AdaptivePage(backdrop, textColor)
                     2 -> BlurPage(backdrop, textColor)
                 }
             }
 
-            Button(onClick = onClose, colors = ButtonDefaults.buttonColors(containerColor = textColor.copy(alpha = 0.1f)),
-                modifier = Modifier.padding(16.dp).align(Alignment.CenterHorizontally)
-            ) { Text("关闭", color = textColor) }
+            Button(onClick = onClose, colors = ButtonDefaults.buttonColors(containerColor = textColor.copy(alpha = 0.1f)), modifier = Modifier.padding(16.dp).align(Alignment.CenterHorizontally)) { Text("关闭", color = textColor) }
             Spacer(Modifier.height(8.dp))
         }
     }
 }
 
 // ══════════════════════════
-// Tab 0: ButtonsContent
+// Tab 0: Buttons — 直接用 demoAPP 的 LiquidButton
 // ══════════════════════════
 @Composable
 private fun ButtonsPage(backdrop: Backdrop, textColor: Color) {
@@ -137,136 +129,91 @@ private fun ButtonsPage(backdrop: Backdrop, textColor: Color) {
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Spacer(Modifier.height(8.dp))
-        Text("LiquidButton 五种变体", color = textColor.copy(alpha = 0.5f), fontSize = 13.sp)
+        Text("demoAPP 原版 LiquidButton", color = textColor.copy(alpha = 0.5f), fontSize = 13.sp)
         Spacer(Modifier.height(4.dp))
-        data class BtnItem(val text: String, val tint: Color? = null, val surface: Color? = null)
-        listOf(
-            BtnItem("透明液态按钮"),
-            BtnItem("半透明表面", surface = textColor.copy(alpha = 0.15f)),
-            BtnItem("蓝色着色", tint = Color(0xFF0088FF)),
-            BtnItem("橙色着色", tint = Color(0xFFFF8D28)),
-            BtnItem("绿色着色", tint = Color(0xFF10A37F)),
-        ).forEach { item ->
-            LiquidBtn(backdrop, onClick = {}, tint = item.tint, surface = item.surface, content = { BasicText(item.text, style = TextStyle(if (item.tint != null) Color.White else textColor, 15.sp)) })
-        }
+
+        // 直接复用 demoAPP 的 LiquidButton
+        LiquidButton({}, backdrop) { BasicText("透明按钮", style = TextStyle(textColor, 15.sp)) }
+        LiquidButton({}, backdrop, surfaceColor = textColor.copy(alpha = 0.15f)) { BasicText("半透明表面", style = TextStyle(textColor, 15.sp)) }
+        LiquidButton({}, backdrop, tint = Color(0xFF0088FF)) { BasicText("蓝色着色", style = TextStyle(Color.White, 15.sp)) }
+        LiquidButton({}, backdrop, tint = Color(0xFFFF8D28)) { BasicText("橙色着色", style = TextStyle(Color.White, 15.sp)) }
+        LiquidButton({}, backdrop, tint = Color(0xFF10A37F)) { BasicText("绿色着色", style = TextStyle(Color.White, 15.sp)) }
+
         Spacer(Modifier.height(16.dp))
     }
 }
 
-@Composable
-private fun LiquidBtn(backdrop: Backdrop, onClick: () -> Unit, tint: Color?, surface: Color?, content: @Composable () -> Unit) {
-    val scope = rememberCoroutineScope()
-    val hl = remember(scope) { InteractiveHighlight(scope) }
-    val density = androidx.compose.ui.platform.LocalDensity.current
-    val hPx = with(density) { 48.dp.toPx() }
-
-    Row(
-        Modifier.fillMaxWidth().height(48.dp)
-            .drawBackdrop(backdrop = backdrop, shape = { RoundedCornerShape(999.dp) },
-                effects = { vibrancy(); blur(2f.dp.toPx()); lens(12f.dp.toPx(), 24f.dp.toPx()) },
-                layerBlock = {
-                    val p = hl.progress; val off = hl.offset
-                    val s = lerp(1f, 1f + 4f / hPx, p)
-                    translationX = hPx * tanh(0.05f * off.x / hPx)
-                    translationY = hPx * tanh(0.05f * off.y / hPx)
-                    val drag = 4f / hPx; val angle = atan2(off.y, off.x)
-                    scaleX = s + drag * abs(cos(angle) * off.x / hPx)
-                    scaleY = s + drag * abs(sin(angle) * off.y / hPx)
-                },
-                onDrawSurface = {
-                    if (tint != null) { drawRect(tint, blendMode = BlendMode.Hue); drawRect(tint.copy(alpha = 0.75f)) }
-                    if (surface != null) drawRect(surface)
-                }
-            ).clip(RoundedCornerShape(999.dp))
-            .then(hl.modifier).then(hl.gestureModifier)
-            .clickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null, onClick = onClick)
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically,
-        content = { content() }
-    )
-}
-
 // ══════════════════════════
-// Tab 1: GlassPlayground
+// Tab 1: 自适应亮度 — 直接从 demoAPP 移植
 // ══════════════════════════
 @Composable
-private fun PlaygroundPage(backdrop: Backdrop, textColor: Color) {
-    val scope = rememberCoroutineScope()
-    val offsetAnim = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
-    val zoomAnim = remember { Animatable(1f) }
-    val rotAnim = remember { Animatable(0f) }
-    var cornerFrac by remember { mutableFloatStateOf(0.5f) }
-    var blurDp by remember { mutableFloatStateOf(0f) }
-    var refrH by remember { mutableFloatStateOf(0.2f) }
-    var refrA by remember { mutableFloatStateOf(0.2f) }
-    var chromAb by remember { mutableFloatStateOf(0f) }
+private fun AdaptivePage(backdrop: Backdrop, textColor: Color) {
+    val isLight = !isSystemInDarkTheme()
+    val layer = rememberGraphicsLayer()
+    val luminanceAnim = remember(isLight) { Animatable(if (isLight) 1f else 0f) }
 
-    val reset = {
-        scope.launch { launch { offsetAnim.animateTo(Offset.Zero) }; launch { zoomAnim.animateTo(1f) }; launch { rotAnim.animateTo(0f) } }
-        cornerFrac = 0.5f; blurDp = 0f; refrH = 0.2f; refrA = 0.2f; chromAb = 0f
+    LaunchedEffect(layer) {
+        val buffer = IntArray(25)
+        while (isActive) {
+            try {
+                delay(500)
+                val img = layer.toImageBitmap()
+                val thumb = img.scale(5, 5)
+                thumb.readPixels(buffer)
+                val avg = buffer.sumOf { argb ->
+                    val r = (argb shr 16 and 0xFF) / 255f
+                    val g = (argb shr 8 and 0xFF) / 255f
+                    val b = (argb and 0xFF) / 255f
+                    0.2126 * r + 0.7152 * g + 0.0722 * b
+                } / buffer.size
+                launch { luminanceAnim.animateTo(avg.toFloat(), tween(1000)) }
+            } catch (_: Exception) {}
+        }
     }
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
         Spacer(Modifier.height(8.dp))
-        Text("效果调试器", color = textColor.copy(alpha = 0.5f), fontSize = 13.sp)
-        Text("双指缩放/旋转/拖拽", color = textColor.copy(alpha = 0.4f), fontSize = 11.sp)
+        Text("自适应亮度玻璃", color = textColor.copy(alpha = 0.5f), fontSize = 13.sp)
+        Text("实时检测背景亮度，动态调参", color = textColor.copy(alpha = 0.4f), fontSize = 11.sp)
         Spacer(Modifier.height(8.dp))
 
-        Box(Modifier.size(200.dp).drawBackdrop(backdrop = backdrop, shape = { RoundedCornerShape(100.dp * cornerFrac) },
-            effects = {
-                val md = size.minDimension; vibrancy(); blur(blurDp.dp.toPx())
-                lens(refrH * md * 0.5f, refrA * md, depthEffect = true, chromaticAberration = chromAb > 0f)
-            },
-            highlight = { Highlight.Plain },
-            layerBlock = { translationX = offsetAnim.value.x; translationY = offsetAnim.value.y; scaleX = zoomAnim.value; scaleY = zoomAnim.value; rotationZ = rotAnim.value }
-        ).pointerInput(scope) {
-            fun Offset.rotateBy(a: Float): Offset { val r = a * (PI / 180); return Offset((x * cos(r) - y * sin(r)).toFloat(), (x * sin(r) + y * cos(r)).toFloat()) }
-            detectTransformGestures { _, pan, gz, gr ->
-                scope.launch { offsetAnim.snapTo(offsetAnim.value + pan.rotateBy(rotAnim.value) * zoomAnim.value); zoomAnim.snapTo(zoomAnim.value * gz); rotAnim.snapTo(rotAnim.value + gr) }
-            }
-        }, contentAlignment = Alignment.Center) {
-            BasicText("双指交互", style = TextStyle(textColor.copy(alpha = 0.6f), 14.sp))
-        }
-
-        Spacer(Modifier.height(12.dp))
-        Column(Modifier.padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            SliderRow("圆角", cornerFrac, { cornerFrac = it }, 0f..1f, backdrop, textColor)
-            SliderRow("模糊", blurDp, { blurDp = it }, 0f..32f, backdrop, textColor)
-            SliderRow("折射高度", refrH, { refrH = it }, 0f..1f, backdrop, textColor)
-            SliderRow("折射量", refrA, { refrA = it }, 0f..1f, backdrop, textColor)
-            SliderRow("色散", chromAb, { chromAb = it }, 0f..1f, backdrop, textColor)
-        }
-        Spacer(Modifier.height(12.dp))
-        Box(Modifier.padding(horizontal = 24.dp).fillMaxWidth().height(40.dp)
-            .drawBackdrop(backdrop = backdrop, shape = { RoundedCornerShape(999.dp) },
-                effects = { vibrancy(); blur(2f.dp.toPx()); lens(8f.dp.toPx(), 14f.dp.toPx()) },
-                onDrawSurface = { drawRect(Color(0xFFFF8D28), blendMode = BlendMode.Hue); drawRect(Color(0xFFFF8D28).copy(alpha = 0.75f)) }
-            ).clip(RoundedCornerShape(999.dp)).clickable { reset() },
+        Box(
+            Modifier.size(200.dp)
+                .drawBackdrop(backdrop = backdrop, shape = { RoundedCornerShape(24.dp) },
+                    effects = {
+                        val l = (luminanceAnim.value * 2f - 1f).let { sign(it) * it * it }
+                        colorControls(
+                            brightness = if (l > 0f) lerp(0.1f, 0.5f, l) else lerp(0.1f, -0.2f, -l),
+                            contrast = if (l > 0f) lerp(1f, 0f, l) else 1f,
+                            saturation = 1.5f
+                        )
+                        blur(if (l > 0f) lerp(8f.dp.toPx(), 16f.dp.toPx(), l) else lerp(8f.dp.toPx(), 2f.dp.toPx(), -l))
+                        lens(24f.dp.toPx(), size.minDimension / 2f, depthEffect = true)
+                    },
+                    highlight = { Highlight.Plain },
+                    onDrawBackdrop = { drawBackdrop ->
+                        drawBackdrop()
+                        layer.record { drawBackdrop() }
+                    }
+                ),
             contentAlignment = Alignment.Center
-        ) { Text("重置", color = Color.White, fontSize = 14.sp) }
-        Spacer(Modifier.height(16.dp))
-    }
-}
+        ) {
+            BasicText(
+                "luminance: ${(luminanceAnim.value * 100f).fastRoundToInt() / 100.0}",
+                style = TextStyle(fontSize = 16.sp, textAlign = TextAlign.Center, color = textColor)
+            )
+        }
 
-@Composable
-private fun SliderRow(label: String, value: Float, onChange: (Float) -> Unit, range: ClosedFloatingPointRange<Float>, backdrop: Backdrop, textColor: Color) {
-    Column {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(label, color = textColor, fontSize = 13.sp)
-            Text(String.format("%.2f", value), color = textColor.copy(alpha = 0.5f), fontSize = 12.sp)
-        }
-        val progress = (value - range.start) / (range.endInclusive - range.start)
-        Box(Modifier.fillMaxWidth().height(22.dp).drawBackdrop(backdrop = backdrop, shape = { RoundedCornerShape(999.dp) },
-            effects = { vibrancy(); blur(2f.dp.toPx()); lens(4f.dp.toPx(), 8f.dp.toPx()) }, onDrawSurface = {}
-        ).clip(RoundedCornerShape(999.dp))) {
-            Box(Modifier.fillMaxWidth(progress).fillMaxSize().clip(RoundedCornerShape(999.dp)).background(Color(0xFF0088FF).copy(alpha = 0.3f)))
-        }
+        Spacer(Modifier.height(12.dp))
+        Text("luminance 值随背景变化自动调节 blur/brightness/contrast",
+            color = textColor.copy(alpha = 0.4f), fontSize = 11.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 24.dp))
+
+        Spacer(Modifier.height(24.dp))
     }
 }
 
 // ══════════════════════════
-// Tab 2: ProgressiveBlur
+// Tab 2: ProgressiveBlur — 保持
 // ══════════════════════════
 @Composable
 private fun BlurPage(backdrop: Backdrop, textColor: Color) {
@@ -278,7 +225,7 @@ private fun BlurPage(backdrop: Backdrop, textColor: Color) {
         Text("渐进模糊 (Alpha-masked)", color = textColor.copy(alpha = 0.5f), fontSize = 13.sp)
         Text("AGSL RuntimeShader · Android 13+", color = textColor.copy(alpha = 0.4f), fontSize = 11.sp)
         Spacer(Modifier.height(8.dp))
-        Box(Modifier.fillMaxWidth().padding(horizontal = 24.dp).height(160.dp).drawPlainBackdrop(backdrop = backdrop, shape = { RectangleShape },
+        Box(Modifier.fillMaxWidth().padding(horizontal = 24.dp).height(160.dp).drawPlainBackdrop(backdrop = backdrop, shape = { androidx.compose.ui.graphics.RectangleShape },
             effects = {
                 blur(4f.dp.toPx())
                 runtimeShaderEffect("AlphaMask", """
