@@ -42,7 +42,7 @@ import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
-import com.kyant.shapes.Capsule
+import androidx.compose.foundation.shape.RoundedCornerShape
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -111,7 +111,7 @@ fun LiquidSlider(
         Box(Modifier.layerBackdrop(trackBackdrop)) {
             Box(
                 Modifier
-                    .clip(Capsule())
+                    .clip(RoundedCornerShape(999.dp))
                     .background(trackColor)
                     .pointerInput(animationScope) {
                         detectTapGestures { position ->
@@ -130,7 +130,7 @@ fun LiquidSlider(
 
             Box(
                 Modifier
-                    .clip(Capsule())
+                    .clip(RoundedCornerShape(999.dp))
                     .background(accentColor)
                     .height(6f.dp)
                     .layout { measurable, constraints ->
@@ -163,7 +163,7 @@ fun LiquidSlider(
                             }
                         }
                     ),
-                    shape = { Capsule() },
+                    shape = { RoundedCornerShape(999.dp) },
                     effects = {
                         val progress = dampedDragAnimation.pressProgress
                         blur(8f.dp.toPx() * (1f - progress))

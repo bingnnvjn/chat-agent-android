@@ -41,7 +41,7 @@ import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
-import com.kyant.shapes.Capsule
+import androidx.compose.foundation.shape.RoundedCornerShape
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -121,7 +121,7 @@ fun LiquidToggle(
         Box(
             Modifier
                 .layerBackdrop(trackBackdrop)
-                .clip(Capsule())
+                .clip(RoundedCornerShape(999.dp))
                 .drawBehind {
                     val fraction = dampedDragAnimation.value
                     drawRect(lerp(trackColor, accentColor, fraction))
@@ -154,7 +154,7 @@ fun LiquidToggle(
                             }
                         }
                     ),
-                    shape = { Capsule() },
+                    shape = { RoundedCornerShape(999.dp) },
                     effects = {
                         val progress = dampedDragAnimation.pressProgress
                         blur(8f.dp.toPx() * (1f - progress))

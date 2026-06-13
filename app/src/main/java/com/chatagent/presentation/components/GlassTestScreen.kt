@@ -73,7 +73,7 @@ import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.Shadow
-import com.kyant.shapes.Capsule
+import androidx.compose.foundation.shape.RoundedCornerShape
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.PI
@@ -209,7 +209,7 @@ private fun LiquidButtonDemo(backdrop: Backdrop, h: InteractiveHighlight) {
     val sizePx = with(density) { 44.dp.toPx() }
     Box(
         Modifier.size(44.dp)
-            .drawBackdrop(backdrop = backdrop, shape = { com.kyant.shapes.Capsule() },
+            .drawBackdrop(backdrop = backdrop, shape = { com.kyant.shapes.RoundedCornerShape(999.dp) },
                 effects = { vibrancy(); blur(2f.dp.toPx()); lens(12f.dp.toPx(), 24f.dp.toPx()) },
                 layerBlock = {
                     val p = h.progress; val s = lerp(1f, 1f + 4f / sizePx, p)
@@ -221,7 +221,7 @@ private fun LiquidButtonDemo(backdrop: Backdrop, h: InteractiveHighlight) {
                     scaleY = s + drag * abs(sin(angle) * off.y / sizePx)
                 },
                 onDrawSurface = {}
-            ).clip(com.kyant.shapes.Capsule())
+            ).clip(com.kyant.shapes.RoundedCornerShape(999.dp))
             .then(h.drawModifier).then(h.gestureModifier),
         contentAlignment = Alignment.Center
     ) { Text("✈", fontSize = 18.sp) }
@@ -239,7 +239,7 @@ private fun InteractiveGlassCapsule(backdrop: Backdrop) {
 
     Box(
         Modifier.fillMaxWidth().padding(horizontal = 8.dp).height(48.dp)
-            .drawBackdrop(backdrop = backdrop, shape = { Capsule() },
+            .drawBackdrop(backdrop = backdrop, shape = { RoundedCornerShape(999.dp) },
                 effects = { vibrancy(); blur(4f.dp.toPx()); lens(16f.dp.toPx(), 32f.dp.toPx()) },
                 highlight = { Highlight.Default },
                 shadow = { Shadow.Default },
@@ -253,7 +253,7 @@ private fun InteractiveGlassCapsule(backdrop: Backdrop) {
                     scaleY = s + drag * abs(sin(angle) * off.y / heightPx)
                 },
                 onDrawSurface = { drawRect(Color.White.copy(alpha = 0.4f)) }
-            ).clip(Capsule()).then(h.drawModifier).then(h.gestureModifier),
+            ).clip(RoundedCornerShape(999.dp)).then(h.drawModifier).then(h.gestureModifier),
         contentAlignment = Alignment.Center
     ) { Text("按住→液态变形  松开→回弹", color = Color.White, fontSize = 14.sp) }
 }
@@ -294,7 +294,7 @@ private fun AdaptiveLuminanceGlass(backdrop: Backdrop) {
 
     Box(
         Modifier.fillMaxWidth().padding(horizontal = 8.dp).height(80.dp)
-            .drawBackdrop(backdrop = backdrop, shape = { Capsule() },
+            .drawBackdrop(backdrop = backdrop, shape = { RoundedCornerShape(999.dp) },
                 effects = {
                     val l = (luminanceAnim.value * 2f - 1f).let { sign(it) * it * it }
                     colorControls(
@@ -310,7 +310,7 @@ private fun AdaptiveLuminanceGlass(backdrop: Backdrop) {
                     drawBackdrop()
                     layer.record { drawBackdrop() }
                 }
-            ).clip(Capsule()),
+            ).clip(RoundedCornerShape(999.dp)),
         contentAlignment = Alignment.Center
     ) {
         BasicText(
