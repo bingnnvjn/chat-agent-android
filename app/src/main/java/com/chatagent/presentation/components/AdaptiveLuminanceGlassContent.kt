@@ -57,7 +57,7 @@ fun AdaptiveLuminanceGlassContent(
     val luminanceAnimation = remember(isLightTheme) {
         Animatable(if (isLightTheme) 1f else 0f)
     }
-    val contentColor by remember { mutableStateOf(if (isLightTheme) Color.Black else Color.White) }
+    var contentColor by remember { mutableStateOf(if (isLightTheme) Color.Black else Color.White) }
     var contentColorAnim by remember { mutableStateOf(contentColor) }
     LaunchedEffect(layer) {
         val buffer = IntArray(25)
