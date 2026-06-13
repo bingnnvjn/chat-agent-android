@@ -1,7 +1,7 @@
 package com.chatagent.presentation.components
 
-import kotlinx.coroutines.android.awaitFrame
+import kotlinx.coroutines.android.awaitFrame as androidAwaitFrame
 
-suspend fun awaitFrame() {
-    awaitFrame()
+suspend fun composeAwaitFrame() {
+    androidAwaitFrame()
 }

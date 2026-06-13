@@ -16,6 +16,8 @@ import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.time.Clock
 
+import com.chatagent.presentation.components.composeAwaitFrame
+
 class DampedDragAnimation(
     private val animationScope: CoroutineScope,
     val initialValue: Float,
@@ -77,7 +79,7 @@ class DampedDragAnimation(
 
     fun release() {
         animationScope.launch {
-            awaitFrame()
+            composeAwaitFrame()
             if (value != targetValue) {
                 val threshold = (valueRange.endInclusive - valueRange.start) * 0.025f
                 snapshotFlow { valueAnimation.value }

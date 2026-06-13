@@ -66,8 +66,6 @@ import kotlin.math.tanh
 import androidx.compose.ui.graphics.asImageBitmap
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import com.chatagent.presentation.components.LiquidBottomTab
-import com.chatagent.presentation.components.LiquidBottomTabs
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.colorControls
@@ -273,19 +271,23 @@ private fun AdaptiveLuminanceGlass(backdrop: Backdrop) {
     LaunchedEffect(layer) {
         val buffer = IntArray(25)
         while (isActive) {
-            kotlinx.coroutines.delay(500)
-            val img = layer.toImageBitmap()
-            val thumb = img.scale(5, 5)
-            thumb.readPixels(buffer)
-            val avg = buffer.sumOf { argb ->
-                val r = (argb shr 16 and 0xFF) / 255f
-                val g = (argb shr 8 and 0xFF) / 255f
-                val b = (argb and 0xFF) / 255f
-                0.2126 * r + 0.7152 * g + 0.0722 * b
-            } / buffer.size
-            launch { 
-                contentColorAnim.animateTo(if (avg > 0.5f) Color.Black else Color.White, tween(1000))
-                luminanceAnim.animateTo(avg.toFloat(), tween(1000))
+            try {
+                kotlinx.coroutines.delay(500)
+                val img = layer.toImageBitmap()
+                val thumb = img.scale(5, 5)
+                thumb.readPixels(buffer)
+                val avg = buffer.sumOf { argb ->
+                    val r = (argb shr 16 and 0xFF) / 255f
+                    val g = (argb shr 8 and 0xFF) / 255f
+                    val b = (argb and 0xFF) / 255f
+                    0.2126 * r + 0.7152 * g + 0.0722 * b
+                } / buffer.size
+                launch { 
+                    contentColorAnim.animateTo(if (avg > 0.5f) Color.Black else Color.White, tween(1000))
+                    luminanceAnim.animateTo(avg.toFloat(), tween(1000))
+                }
+            } catch (_: Exception) {
+                // 布局未完成时跳过
             }
         }
     }
