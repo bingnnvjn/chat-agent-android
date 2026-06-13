@@ -121,11 +121,11 @@ fun GlassTestScreen(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    listOf(2f to "2dp", 6f to "6dp", 12f to "12dp", 24f to "24dp").forEach { (r, l) ->
+                    listOf(2f to "2dp", 6f to "6dp", 12f to "12dp", 24f to "24dp").forEach { (r, label) ->
                         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
                             GlassBlock(backdrop = layerBackdrop, shape = RoundedCornerShape(16.dp), effects = { blur(r) })
                             Spacer(Modifier.height(4.dp))
-                            Text(l, color = Color.White.copy(alpha = 0.6f), fontSize = 10.sp)
+                            Text(label, color = Color.White.copy(alpha = 0.6f), fontSize = 10.sp)
                         }
                     }
                 }
@@ -136,11 +136,11 @@ fun GlassTestScreen(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    listOf(1f to "100%", 0.6f to "60%", 0.3f to "30%", 0.1f to "10%").forEach { (a, l) ->
+                    listOf(1f to "100%", 0.6f to "60%", 0.3f to "30%", 0.1f to "10%").forEach { (a, label) ->
                         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
                             GlassBlock(backdrop = layerBackdrop, shape = RoundedCornerShape(16.dp), effects = { opacity(a); blur(6f) })
                             Spacer(Modifier.height(4.dp))
-                            Text(l, color = Color.White.copy(alpha = 0.6f), fontSize = 10.sp)
+                            Text(label, color = Color.White.copy(alpha = 0.6f), fontSize = 10.sp)
                         }
                     }
                 }
@@ -157,11 +157,11 @@ fun GlassTestScreen(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    listOf("鲜艳" to 1.8f to 0f, "明亮" to 1.2f to 0.1f, "冷色" to 1f to -0.05f).forEach { ((l, s), b) ->
+                    listOf("鲜艳" to 1.8f to 0f, "明亮" to 1.2f to 0.1f, "冷色" to 1f to -0.05f).forEach { ((label, sat), bri) ->
                         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
-                            GlassBlock(backdrop = layerBackdrop, shape = RoundedCornerShape(16.dp), effects = { colorControls(saturation = s, brightness = b); blur(6f) })
+                            GlassBlock(backdrop = layerBackdrop, shape = RoundedCornerShape(16.dp), effects = { colorControls(saturation = sat, brightness = bri); blur(6f) })
                             Spacer(Modifier.height(4.dp))
-                            Text(l, color = Color.White.copy(alpha = 0.6f), fontSize = 10.sp)
+                            Text(label, color = Color.White.copy(alpha = 0.6f), fontSize = 10.sp)
                         }
                     }
                 }
@@ -180,15 +180,15 @@ fun GlassTestScreen(
                         "折射 16px" to 16f to 32f to false to false,
                         "带景深" to 16f to 32f to true to false,
                         "色散色彩" to 16f to 32f to false to true
-                    ).forEach { ((l, rh), ra, de, ca) ->
+                    ).forEach { ((label, refrHeight), refrAmount, depthEn, chromAb) ->
                         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
                             GlassBlock(
                                 backdrop = layerBackdrop,
                                 shape = RoundedCornerShape(16.dp),
-                                effects = { blur(4f); lens(rh, ra, de, ca) }
+                                effects = { blur(4f); lens(refrHeight, refrAmount, depthEn, chromAb) }
                             )
                             Spacer(Modifier.height(4.dp))
-                            Text(l, color = Color.White.copy(alpha = 0.6f), fontSize = 10.sp)
+                            Text(label, color = Color.White.copy(alpha = 0.6f), fontSize = 10.sp)
                         }
                     }
                 }
