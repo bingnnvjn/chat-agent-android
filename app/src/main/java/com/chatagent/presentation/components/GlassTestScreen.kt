@@ -199,7 +199,6 @@ fun GlassTestScreen(onClose: () -> Unit = {}) {
                     // 交互按钮 (用 Animatable)
                     val animScope = rememberCoroutineScope()
                     val progressAnim = remember { androidx.compose.animation.core.Animatable(0f) }
-                    val maxScale = { width: Float -> (width + 16.dp.toPx()) / width }
 
                     Box(
                         Modifier.weight(1f).fillMaxHeight()
@@ -207,7 +206,7 @@ fun GlassTestScreen(onClose: () -> Unit = {}) {
                                 effects = { vibrancy(); blur(4f.dp.toPx()); lens(16f.dp.toPx(), 32f.dp.toPx()) },
                                 layerBlock = {
                                     val p = progressAnim.value
-                                    val s = lerp(1f, maxScale(size.width), p)
+                                    val s = lerp(1f, (size.width + 16.dp.toPx()) / size.width, p)
                                     scaleX = s; scaleY = s
                                 },
                                 onDrawSurface = { drawRect(Color.White.copy(alpha = 0.5f)) }
