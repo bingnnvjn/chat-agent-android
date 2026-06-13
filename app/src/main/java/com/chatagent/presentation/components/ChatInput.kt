@@ -44,6 +44,11 @@ fun ChatInput(
     modifier: Modifier = Modifier
 ) {
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    val surfaceTint = MaterialTheme.colorScheme.surface.copy(alpha = 0.12f)
+    val activeTint = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+    val textColor = MaterialTheme.colorScheme.onSurface
+    val placeholderColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val textColorVariant = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
 
     val photoPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
@@ -74,11 +79,8 @@ fun ChatInput(
                     highlight = { Highlight(width = 0.5.dp, alpha = 0.5f) },
                     shadow = { Shadow(radius = 6.dp, color = Color.Black.copy(alpha = 0.06f)) },
                     onDrawSurface = {
-                        if (enableThinking) {
-                            drawRect(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-                        } else {
-                            drawRect(MaterialTheme.colorScheme.surface.copy(alpha = 0.12f))
-                        }
+                        if (enableThinking) drawRect(activeTint)
+                        else drawRect(surfaceTint)
                     }
                 ) else Modifier
             ).clip(CircleShape).clickable { onToggleThinking() },
@@ -100,22 +102,20 @@ fun ChatInput(
                     effects = { blur(8f.dp.toPx()) },
                     highlight = { Highlight(width = 0.5.dp, alpha = 0.5f) },
                     shadow = { Shadow(radius = 6.dp, color = Color.Black.copy(alpha = 0.06f)) },
-                    onDrawSurface = {
-                        drawRect(MaterialTheme.colorScheme.surface.copy(alpha = 0.12f))
-                    }
+                    onDrawSurface = { drawRect(surfaceTint) }
                 ) else Modifier
-            ).clip(RoundedCornerShape(999.dp)).height(34.dp)
+        ).clip(RoundedCornerShape(999.dp)).height(34.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(start = 14.dp, end = 4.dp)) {
                 BasicTextField(
                     value = value, onValueChange = onValueChange,
                     modifier = Modifier.weight(1f),
-                    textStyle = TextStyle(color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp),
+                    textStyle = TextStyle(color = textColor, fontSize = 14.sp),
                     cursorBrush = SolidColor(SendGreen),
                     decorationBox = { inner ->
                         Box(Modifier.padding(vertical = 10.dp)) {
                             if (value.isEmpty() && selectedImageUri == null) {
-                                Text("iMessage 信息", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
+                                Text("iMessage 信息", color = placeholderColor, fontSize = 14.sp)
                             }
                             inner()
                         }
@@ -127,7 +127,7 @@ fun ChatInput(
                         .animateContentSize()
                         .let { m ->
                             if (hasSend) m.clip(RoundedCornerShape(14.dp)).background(SendGreen).clickable { onSend() }
-                            else m.clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
+                            else m.clip(RoundedCornerShape(14.dp)).background(textColorVariant)
                         }.padding(horizontal = 12.dp),
                     contentAlignment = Alignment.Center
                 ) { Text("↑", color = Color.White, fontSize = 16.sp) }
@@ -152,7 +152,7 @@ private fun GlassCircle(
                 highlight = { Highlight(width = 0.5.dp, alpha = 0.5f) },
                 shadow = { Shadow(radius = 6.dp, color = Color.Black.copy(alpha = 0.06f)) },
                 onDrawSurface = {
-                    drawRect(MaterialTheme.colorScheme.surface.copy(alpha = 0.12f))
+                    drawRect(surfaceTint)
                 }
             ) else Modifier
         ).clip(CircleShape).clickable { onClick() },
