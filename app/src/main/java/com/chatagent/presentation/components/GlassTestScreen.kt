@@ -145,8 +145,8 @@ private fun ButtonsPage(backdrop: Backdrop, textColor: Color) {
             "蓝色着色" to Color(0xFF0088FF) to null,
             "橙色着色" to Color(0xFFFF8D28) to null,
             "绿色着色" to Color(0xFF10A37F) to null,
-        ).forEach { ((label, tint), surface) ->
-            LiquidBtn(backdrop, onClick = {}, tint = tint, surface = surface, content = { BasicText(label, style = TextStyle(if (tint != null) Color.White else textColor, 15.sp)) })
+        ).forEach { ((name, tint), surface) ->
+            LiquidBtn(backdrop, onClick = {}, tint = tint, surface = surface, content = { BasicText(name, style = TextStyle(if (tint != null) Color.White else textColor, 15.sp)) })
         }
         Spacer(Modifier.height(16.dp))
     }
