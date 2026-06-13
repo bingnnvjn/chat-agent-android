@@ -52,7 +52,7 @@ fun ChatInput(
     onImagePicked: (Uri) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val tintColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f)
+    val tintColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)
     val accentColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
     val textColor = MaterialTheme.colorScheme.onSurface
     val placeholderColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -71,7 +71,7 @@ fun ChatInput(
             modifier = Modifier.size(48.dp).then(
                 if (backdrop != null) Modifier.drawBackdrop(
                     backdrop = backdrop, shape = { CircleShape },
-                    effects = { blur(4f.dp.toPx()); lens(8f.dp.toPx(), 16f.dp.toPx()) },
+                    effects = { blur(4f.dp.toPx()); lens(16f.dp.toPx(), 32f.dp.toPx()) },
                     highlight = { Highlight.Default },
                     onDrawSurface = { drawRect(tintColor) }
                 ) else Modifier
@@ -88,7 +88,7 @@ fun ChatInput(
             modifier = Modifier.size(44.dp).then(
                 if (backdrop != null) Modifier.drawBackdrop(
                     backdrop = backdrop, shape = { CircleShape },
-                    effects = { blur(4f.dp.toPx()); lens(8f.dp.toPx(), 16f.dp.toPx()) },
+                    effects = { blur(4f.dp.toPx()); lens(16f.dp.toPx(), 32f.dp.toPx()) },
                     highlight = { Highlight.Default },
                     onDrawSurface = {
                         if (enableThinking) drawRect(accentColor)
@@ -106,7 +106,7 @@ fun ChatInput(
             modifier = Modifier.weight(1f).then(
                 if (backdrop != null) Modifier.drawBackdrop(
                     backdrop = backdrop, shape = { RoundedCornerShape(999.dp) },
-                    effects = { blur(4f.dp.toPx()); lens(8f.dp.toPx(), 16f.dp.toPx()) },
+                    effects = { blur(4f.dp.toPx()); lens(16f.dp.toPx(), 32f.dp.toPx()) },
                     highlight = { Highlight.Default },
                     onDrawSurface = { drawRect(tintColor) }
                 ) else Modifier
