@@ -50,9 +50,6 @@ fun LiquidButton(
         )
     }
 
-    val density = androidx.compose.ui.platform.LocalDensity.current
-    val hPx = with(density) { 48.dp.toPx() }
-
     Row(
         modifier
             .drawBackdrop(
@@ -65,15 +62,17 @@ fun LiquidButton(
                 },
                 layerBlock = if (isInteractive) {
                     {
+                        val w = size.width.toFloat(); val h = size.height.toFloat()
                         val p = interactiveHighlight.progress
-                        val s = lerp(1f, 1f + 4f / hPx, p)
+                        val s = lerp(1f, 1f + 4f.dp.toPx() / h, p)
+                        val maxOff = minOf(w, h)
                         val off = interactiveHighlight.offset
-                        translationX = hPx * tanh(0.05f * off.x / hPx)
-                        translationY = hPx * tanh(0.05f * off.y / hPx)
-                        val drag = 4f / hPx
+                        translationX = maxOff * tanh(0.05f * off.x / maxOff)
+                        translationY = maxOff * tanh(0.05f * off.y / maxOff)
+                        val maxDrag = 4f.dp.toPx() / h
                         val angle = atan2(off.y, off.x)
-                        scaleX = s + drag * abs(cos(angle) * off.x / hPx)
-                        scaleY = s + drag * abs(sin(angle) * off.y / hPx)
+                        scaleX = s + maxDrag * abs(cos(angle) * off.x / maxOf(w, h)) * (w / h).coerceAtMost(1f)
+                        scaleY = s + maxDrag * abs(sin(angle) * off.y / maxOf(w, h)) * (h / w).coerceAtMost(1f)
                     }
                 } else {
                     null

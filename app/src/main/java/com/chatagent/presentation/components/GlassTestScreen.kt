@@ -160,90 +160,14 @@ private fun ButtonsPage(backdrop: Backdrop, textColor: Color) {
 // ══════════════════════════
 @Composable
 private fun AdaptivePage(backdrop: Backdrop, textColor: Color) {
-    val isLight = !isSystemInDarkTheme()
-    val layer = rememberGraphicsLayer()
-    val luminanceAnim = remember(isLight) { Animatable(if (isLight) 1f else 0f) }
-    val scope = rememberCoroutineScope()
-    val offsetAnim = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
-    val zoomAnim = remember { Animatable(1f) }
-    val rotAnim = remember { Animatable(0f) }
-
-    LaunchedEffect(layer) {
-        val buffer = IntArray(25)
-        while (isActive) {
-            try {
-                delay(500)
-                val img = layer.toImageBitmap()
-                val thumb = img.scale(5, 5)
-                thumb.readPixels(buffer)
-                val avg = buffer.sumOf { argb ->
-                    val r = (argb shr 16 and 0xFF) / 255f
-                    val g = (argb shr 8 and 0xFF) / 255f
-                    val b = (argb and 0xFF) / 255f
-                    0.2126 * r + 0.7152 * g + 0.0722 * b
-                } / buffer.size
-                launch { luminanceAnim.animateTo(avg.toFloat(), tween(1000)) }
-            } catch (_: Exception) {}
-        }
-    }
-
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
-        Spacer(Modifier.height(8.dp))
-        Text("自适应亮度玻璃", color = textColor.copy(alpha = 0.5f), fontSize = 13.sp)
-        Text("拖拽移动 · 双指缩放/旋转", color = textColor.copy(alpha = 0.4f), fontSize = 11.sp)
-        Spacer(Modifier.height(8.dp))
-
-        Box(
-            Modifier.size(200.dp)
-                .drawBackdrop(backdrop = backdrop, shape = { RoundedCornerShape(24.dp) },
-                    effects = {
-                        val l = (luminanceAnim.value * 2f - 1f).let { sign(it) * it * it }
-                        colorControls(
-                            brightness = if (l > 0f) lerp(0.1f, 0.5f, l) else lerp(0.1f, -0.2f, -l),
-                            contrast = if (l > 0f) lerp(1f, 0f, l) else 1f,
-                            saturation = 1.5f
-                        )
-                        blur(if (l > 0f) lerp(8f.dp.toPx(), 16f.dp.toPx(), l) else lerp(8f.dp.toPx(), 2f.dp.toPx(), -l))
-                        lens(24f.dp.toPx(), size.minDimension / 2f, depthEffect = true)
-                    },
-                    highlight = { Highlight.Plain },
-                    layerBlock = {
-                        translationX = offsetAnim.value.x; translationY = offsetAnim.value.y
-                        scaleX = zoomAnim.value; scaleY = zoomAnim.value; rotationZ = rotAnim.value
-                    },
-                    onDrawBackdrop = { drawBackdrop ->
-                        drawBackdrop()
-                        layer.record { drawBackdrop() }
-                    }
-                )
-                .pointerInput(scope) {
-                    fun Offset.rotateBy(a: Float): Offset {
-                        val r = a * (PI / 180)
-                        return Offset((x * cos(r) - y * sin(r)).toFloat(), (x * sin(r) + y * cos(r)).toFloat())
-                    }
-                    detectTransformGestures { _, pan, gz, gr ->
-                        scope.launch {
-                            offsetAnim.snapTo(offsetAnim.value + pan.rotateBy(rotAnim.value) * zoomAnim.value)
-                            zoomAnim.snapTo(zoomAnim.value * gz)
-                            rotAnim.snapTo(rotAnim.value + gr)
-                        }
-                    }
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            BasicText(
-                "luminance: ${(luminanceAnim.value * 100f).fastRoundToInt() / 100.0}",
-                style = TextStyle(fontSize = 16.sp, textAlign = TextAlign.Center, color = textColor)
-            )
-        }
-
-        Spacer(Modifier.height(12.dp))
-        Text("拖拽面板到壁纸不同区域，亮度值实时变化",
-            color = textColor.copy(alpha = 0.5f), fontSize = 12.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 24.dp))
-        Spacer(Modifier.height(24.dp))
-    }
+    AdaptiveLuminanceGlassContent(
+        backdrop = backdrop,
+        modifier = Modifier.size(200.dp)
+    )
 }
 
+// ══════════════════════════
+// Tab 3: 完全体
 // ══════════════════════════
 // Tab 3: 完全体 — 自适应亮度 × 液态按钮
 // ══════════════════════════
@@ -279,8 +203,6 @@ private fun FusionPage(backdrop: Backdrop, textColor: Color) {
         Spacer(Modifier.height(8.dp))
 
         val lum = luminanceAnim.value
-        val h = androidx.compose.ui.platform.LocalDensity.current
-        val hPx = with(h) { 48.dp.toPx() }
         val fusionScope = rememberCoroutineScope()
         val fusionHl = remember(fusionScope) { InteractiveHighlight(fusionScope) }
 
@@ -303,13 +225,15 @@ private fun FusionPage(backdrop: Backdrop, textColor: Color) {
                         )
                     },
                     layerBlock = {
+                        val w = size.width.toFloat(); val h = size.height.toFloat()
                         val p = fusionHl.progress; val off = fusionHl.offset
-                        val s = lerp(1f, 1f + 4f / hPx, p)
-                        translationX = hPx * tanh(0.05f * off.x / hPx)
-                        translationY = hPx * tanh(0.05f * off.y / hPx)
-                        val drag = 4f / hPx; val angle = atan2(off.y, off.x)
-                        scaleX = s + drag * abs(cos(angle) * off.x / hPx)
-                        scaleY = s + drag * abs(sin(angle) * off.y / hPx)
+                        val s = lerp(1f, 1f + 4f.dp.toPx() / h, p)
+                        val maxOff = minOf(w, h)
+                        translationX = maxOff * tanh(0.05f * off.x / maxOff)
+                        translationY = maxOff * tanh(0.05f * off.y / maxOff)
+                        val drag = 4f.dp.toPx() / h; val angle = atan2(off.y, off.x)
+                        scaleX = s + drag * abs(cos(angle) * off.x / maxOf(w, h)) * (w / h).coerceAtMost(1f)
+                        scaleY = s + drag * abs(sin(angle) * off.y / maxOf(w, h)) * (h / w).coerceAtMost(1f)
                     },
                     onDrawSurface = {}
                 )
