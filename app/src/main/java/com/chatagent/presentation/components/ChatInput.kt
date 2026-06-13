@@ -146,7 +146,7 @@ fun ChatInput(
                     onDrawSurface = {}
                 ) else Modifier
             ).clip(RoundedCornerShape(999.dp)).height(34.dp)
-                .then(capsuleHighlight.drawModifier)
+                .then(capsuleHighlight.modifier)
                 .pointerInput(capsuleScope) {
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false)
