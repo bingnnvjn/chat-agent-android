@@ -1,18 +1,29 @@
 package com.chatagent.presentation.components
 
+import android.content.Context
+import android.graphics.BitmapFactory
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,6 +36,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,258 +50,269 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.lerp
 import com.kyant.backdrop.Backdrop
-import com.kyant.backdrop.backdrops.emptyBackdrop
-import com.kyant.backdrop.backdrops.rememberCanvasBackdrop
 import com.kyant.backdrop.backdrops.rememberCombinedBackdrop
+import androidx.compose.foundation.layout.offset as layoutOffset
+import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.colorControls
 import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.opacity
 import com.kyant.backdrop.effects.vibrancy
-import com.kyant.backdrop.highlight.Highlight
-import com.kyant.backdrop.shadow.Shadow
 import kotlinx.coroutines.launch
 
-private data class BgOption(val name: String, val top: Color, val bottom: Color)
-
-private val bgOptions = listOf(
-    BgOption("极光紫", Color(0xFF1A0533), Color(0xFF9B4DCA)),
-    BgOption("深海蓝", Color(0xFF0A1628), Color(0xFF1E88E5)),
-    BgOption("森林绿", Color(0xFF0D1F12), Color(0xFF43A047)),
-    BgOption("暖阳橙", Color(0xFF2D1400), Color(0xFFFF7043)),
-    BgOption("黑白灰", Color(0xFF121212), Color(0xFF616161)),
-)
-
+// ═══════════════════════════════════════════
+// GlassTestScreen — 完整文档示例
+// ═══════════════════════════════════════════
 @Composable
 fun GlassTestScreen(onClose: () -> Unit = {}) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
-    var bgIndex by remember { mutableStateOf(0) }
-    val bg = bgOptions[bgIndex]
 
-    // 背景渐变画布
-    val canvasBackdrop = rememberCanvasBackdrop {
-        drawRect(brush = androidx.compose.ui.graphics.Brush.verticalGradient(listOf(bg.top, bg.bottom)))
-        drawCircle(Color.White.copy(alpha = 0.08f), 80f, center = androidx.compose.ui.geometry.Offset(size.width * 0.8f, size.height * 0.25f))
-        drawCircle(Color.White.copy(alpha = 0.05f), 50f, center = androidx.compose.ui.geometry.Offset(size.width * 0.2f, size.height * 0.6f))
+    var bgUri by remember { mutableStateOf<Uri?>(null) }
+
+    // 照片选择器
+    val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        bgUri = uri
     }
 
-    // LayerBackdrop（含背景绘制）
-    val layerBackdrop = rememberLayerBackdrop {
-        drawRect(bg.top)
+    // 加载 Bitmap
+    val bitmap = remember(bgUri) {
+        bgUri?.let { uri ->
+            ctx.contentResolver.openInputStream(uri)?.use { input ->
+                BitmapFactory.decodeStream(input)
+            }
+        }
+    }
+
+    val defaultBg = Color(0xFF1A1A2E)
+    val sectionBg = Color(0x22000000)
+
+    // LayerBackdrop — 捕获照片/背景 + 内容
+    val backdrop = rememberLayerBackdrop {
+        if (bitmap != null) {
+            drawImage(bitmap.asImageBitmap())
+        } else {
+            drawRect(defaultBg)
+        }
         drawContent()
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(bg.top)) {
-        // 背景层
+    Box(Modifier.fillMaxSize().background(Color(0xFF0D0D0D))) {
+        // 捕获层
         Box(Modifier.fillMaxSize().then(
-            Modifier.drawBackdrop(backdrop = canvasBackdrop, shape = { RoundedCornerShape(0) }, effects = {})
+            Modifier.drawBackdrop(backdrop = backdrop, shape = { RoundedCornerShape(0) }, effects = {})
         ))
 
         // 内容
         Column(
-            modifier = Modifier.fillMaxSize().verticalScroll(scrollState).padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxSize().verticalScroll(scrollState).padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(48.dp))
+            Spacer(Modifier.height(40.dp))
 
-            // 标题
-            Text("🧪 Liquid Glass", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            Text("Backdrop v1.0  —  效果顺序: colorFilter → blur → lens", color = Color.White.copy(alpha = 0.4f), fontSize = 12.sp)
+            // ─── 标题 ───
+            Text("Liquid Glass 文档示例", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            Text("kyant.gitbook.io/backdrop", color = Color.White.copy(alpha = 0.4f), fontSize = 12.sp)
             Spacer(Modifier.height(16.dp))
 
-            // ─── 背景切换 ───
-            Text("切换背景", color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp)
-            Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                bgOptions.forEachIndexed { i, option ->
-                    Box(
-                        modifier = Modifier.size(44.dp, 36.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(option.top, option.bottom)))
-                            .clickable { bgIndex = i }
-                            .then(if (i == bgIndex) Modifier.padding(2.dp) else Modifier),
-                        contentAlignment = Alignment.Center
-                    ) { if (i == bgIndex) Text("✓", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold) }
+            // ─── 背景选择 ───
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Button(
+                    onClick = { photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.2f))
+                ) { Text(if (bgUri == null) "📷 选择照片作背景" else "🔄 更换照片", color = Color.White, fontSize = 13.sp) }
+                if (bgUri != null) {
+                    Text("✓ 已加载", color = Color(0xFF34C759), fontSize = 12.sp)
                 }
             }
+            Spacer(Modifier.height(8.dp))
+            Text("提示：选一张颜色丰富的照片，玻璃折射效果更明显", color = Color.White.copy(alpha = 0.35f), fontSize = 11.sp)
+
             Spacer(Modifier.height(20.dp))
 
-            // ════════════════════════════════════════════
-            // 1. LayerBackdrop 基础
-            // ════════════════════════════════════════════
-            GroupTitle("LayerBackdrop — 捕获内容")
-            Text("rememberLayerBackdrop { drawRect(bg); drawContent() } + Modifier.layerBackdrop()",
-                color = Color.White.copy(alpha = 0.4f), fontSize = 11.sp, textAlign = TextAlign.Center)
-            Spacer(Modifier.height(8.dp))
-            Box(
-                modifier = Modifier.fillMaxWidth().height(60.dp)
-                    .drawBackdrop(backdrop = layerBackdrop, shape = { RoundedCornerShape(12.dp) },
-                        effects = { blur(8f) },
-                        highlight = { Highlight(width = 0.5.dp, alpha = 0.4f) },
-                        onDrawSurface = { drawRect(Color.White.copy(alpha = 0.08f)) }
-                    ).clip(RoundedCornerShape(12.dp)),
-                contentAlignment = Alignment.Center
-            ) { Text("透过玻璃看到背景渐变 + 光晕", color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp) }
-
-            // ════════════════════════════════════════════
-            // 2. CanvasBackdrop — 自定义绘制
-            // ════════════════════════════════════════════
-            GroupTitle("CanvasBackdrop — 自定义画布")
-            Text("rememberCanvasBackdrop { ... }  不依赖坐标，可独立绘制",
-                color = Color.White.copy(alpha = 0.4f), fontSize = 11.sp)
-
-            // ════════════════════════════════════════════
-            // 3. CombinedBackdrop — 合并多个
-            // ════════════════════════════════════════════
-            GroupTitle("CombinedBackdrop — 合并背景")
-            val combined = rememberCombinedBackdrop(canvasBackdrop, layerBackdrop)
-            Box(
-                modifier = Modifier.size(100.dp)
-                    .drawBackdrop(backdrop = combined, shape = { CircleShape },
-                        effects = { blur(6f) },
-                        onDrawSurface = { drawRect(Color.White.copy(alpha = 0.1f)) }
-                    ).clip(CircleShape),
-                contentAlignment = Alignment.Center
-            ) { Text("合并", color = Color.White, fontSize = 14.sp) }
-
-            // ════════════════════════════════════════════
-            // 4. emptyBackdrop
-            // ════════════════════════════════════════════
-            GroupTitle("emptyBackdrop — 空背景")
-            val empty = emptyBackdrop()
-            Box(
-                modifier = Modifier.size(60.dp)
-                    .drawBackdrop(backdrop = empty, shape = { CircleShape },
-                        effects = { blur(6f) },
-                        onDrawSurface = { drawRect(Color.White.copy(alpha = 0.3f)) }
-                    ).clip(CircleShape).background(Color.White.copy(alpha = 0.1f)),
-                contentAlignment = Alignment.Center
-            ) { Text("∅", color = Color.White.copy(alpha = 0.5f), fontSize = 16.sp) }
-
-            // ════════════════════════════════════════════
-            // 5. blur — 模糊
-            // ════════════════════════════════════════════
-            GroupTitle("blur(radius) — 模糊")
-            Grid4(
-                items = listOf(2f to "2px", 6f to "6px", 12f to "12px", 24f to "24px"),
-                backdrop = layerBackdrop, shape = RoundedCornerShape(16.dp),
-                effect = { blur(it) }
-            )
-
-            // ════════════════════════════════════════════
-            // 6. opacity → blur  (colorFilter → blur)
-            // ════════════════════════════════════════════
-            GroupTitle("opacity(α) → blur — 先调色后模糊")
-            Grid4(
-                items = listOf(1f to "100%", 0.6f to "60%", 0.3f to "30%", 0.1f to "10%"),
-                backdrop = layerBackdrop, shape = RoundedCornerShape(16.dp),
-                effect = { opacity(it); blur(6f) }
-            )
-
-            // ════════════════════════════════════════════
-            // 7. vibrancy → blur
-            // ════════════════════════════════════════════
-            GroupTitle("vibrancy() → blur — 饱和度×1.5")
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                GlassBlock(backdrop = layerBackdrop, shape = RoundedCornerShape(16.dp), effects = { blur(6f) }, modifier = Modifier.size(80.dp))
-                GlassBlock(backdrop = layerBackdrop, shape = RoundedCornerShape(16.dp), effects = { vibrancy(); blur(6f) }, modifier = Modifier.size(80.dp))
-                Column(verticalArrangement = Arrangement.Center) {
-                    Text("← 无", color = Color.White.copy(alpha = 0.4f), fontSize = 11.sp)
-                    Text("vibrancy →", color = Color(0xFF34D399), fontSize = 11.sp)
-                }
-            }
-
-            // ════════════════════════════════════════════
-            // 8. colorControls → blur
-            // ════════════════════════════════════════════
-            GroupTitle("colorControls → blur — 色彩控制")
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                listOf(Triple("默认", 1f, 0f), Triple("鲜艳", 1.8f, 0f), Triple("明亮", 1.2f, 0.1f)).forEach { (label, sat, bri) ->
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
-                        GlassBlock(backdrop = layerBackdrop, shape = RoundedCornerShape(16.dp), effects = { colorControls(saturation = sat, brightness = bri); blur(6f) })
-                        Text(label, color = Color.White.copy(alpha = 0.5f), fontSize = 10.sp)
-                    }
-                }
-            }
-
-            // ════════════════════════════════════════════
-            // 9. lens (需 CornerBasedShape)
-            // ════════════════════════════════════════════
-            GroupTitle("lens — 折射 (需 CornerBasedShape, Android13+)")
-            Text("参数: refractionHeight / refractionAmount / depthEffect / chromaticAberration",
-                color = Color.White.copy(alpha = 0.4f), fontSize = 11.sp, textAlign = TextAlign.Center)
-            Spacer(Modifier.height(8.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                listOf(
-                    "仅 blur" to LensData(0f, 0f, false, false),
-                    "折射" to LensData(8f, 16f, false, false),
-                    "+景深" to LensData(8f, 16f, true, false),
-                    "+色散" to LensData(8f, 16f, false, true),
-                ).forEach { (label, ld) ->
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
-                        GlassBlock(backdrop = layerBackdrop, shape = RoundedCornerShape(16.dp),
-                            effects = { blur(4f); lens(ld.rh, ld.ra, ld.de, ld.ca) })
-                        Text(label, color = Color.White.copy(alpha = 0.5f), fontSize = 10.sp)
-                    }
-                }
-            }
-
-            // ════════════════════════════════════════════
-            // 10. 完整效果链 + 交互
-            // ════════════════════════════════════════════
-            GroupTitle("完整效果 + 交互 (按压缩放)")
-            Text("vibrancy → blur → lens + highlight + shadow + layerBlock(scale)",
+            // ════════════════════════════════════════
+            // Demo 1: Glass Bottom Bar
+            // ════════════════════════════════════════
+            DemoTitle("1. Glass Bottom Bar", "vibrancy → blur → lens + tint")
+            Text("文档教程：玻璃底栏，含着色图标按钮",
                 color = Color.White.copy(alpha = 0.4f), fontSize = 11.sp)
             Spacer(Modifier.height(8.dp))
-            InteractiveGlassDemo(backdrop = layerBackdrop)
 
-            // ════════════════════════════════════════════
-            // 11. 模拟顶栏 44dp
-            // ════════════════════════════════════════════
-            GroupTitle("模拟顶栏 44dp — vibrancy → blur → lens")
-            Box(Modifier.fillMaxWidth().padding(horizontal = 6.dp).height(50.dp), contentAlignment = Alignment.Center) {
-                GlassCircle44(backdrop = layerBackdrop, modifier = Modifier.align(Alignment.CenterStart)) { Text("‹", fontSize = 20.sp) }
-                Box(
-                    modifier = Modifier.height(44.dp)
-                        .drawBackdrop(backdrop = layerBackdrop, shape = { RoundedCornerShape(22.dp) },
-                            effects = { vibrancy(); blur(8f); lens(6f, 10f) },
-                            highlight = { Highlight(width = 0.5.dp, alpha = 0.5f) },
-                            shadow = { Shadow(radius = 8.dp, color = Color.Black.copy(alpha = 0.08f)) },
-                            onDrawSurface = { drawRect(Color.White.copy(alpha = 0.15f)) }
-                        ).clip(RoundedCornerShape(22.dp)).padding(horizontal = 18.dp),
-                    contentAlignment = Alignment.Center
-                ) { Text("DeepSeek", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium) }
-                GlassCircle44(backdrop = layerBackdrop, modifier = Modifier.align(Alignment.CenterEnd)) { Text("⋯", fontSize = 20.sp) }
+            Box(Modifier.fillMaxWidth().background(sectionBg, RoundedCornerShape(12.dp)).padding(12.dp)) {
+                Row(
+                    Modifier.fillMaxWidth().height(56.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // 普通玻璃按钮
+                    Box(
+                        Modifier.weight(1f).fillMaxHeight()
+                            .drawBackdrop(backdrop = backdrop, shape = { CircleShape },
+                                effects = { vibrancy(); blur(4f.dp.toPx()); lens(16f.dp.toPx(), 32f.dp.toPx()) },
+                                onDrawSurface = { drawRect(Color.White.copy(alpha = 0.5f)) }
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) { Text("🏠", fontSize = 20.sp) }
+
+                    // 着色玻璃按钮 (使用 BlendMode.Hue)
+                    Box(
+                        Modifier.weight(1f).aspectRatio(1f).fillMaxHeight()
+                            .drawBackdrop(backdrop = backdrop, shape = { CircleShape },
+                                effects = { vibrancy(); blur(4f.dp.toPx()); lens(16f.dp.toPx(), 32f.dp.toPx()) },
+                                onDrawSurface = {
+                                    val tint = Color(0xFF0088FF)
+                                    drawRect(tint, blendMode = BlendMode.Hue)
+                                    drawRect(tint.copy(alpha = 0.75f))
+                                }
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) { Text("★", fontSize = 20.sp, color = Color.White) }
+                }
             }
 
-            // ════════════════════════════════════════════
-            // 12. 模拟底栏 34dp
-            // ════════════════════════════════════════════
-            GroupTitle("模拟底栏 34dp — vibrancy → blur → lens")
-            Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                GlassCircle34(backdrop = layerBackdrop) { Text("+", fontSize = 18.sp) }
-                Spacer(Modifier.width(6.dp))
-                GlassCircle34(backdrop = layerBackdrop) { Text("🧠", fontSize = 14.sp) }
-                Spacer(Modifier.width(6.dp))
-                Box(
-                    modifier = Modifier.weight(1f).height(34.dp)
-                        .drawBackdrop(backdrop = layerBackdrop, shape = { RoundedCornerShape(17.dp) },
-                            effects = { vibrancy(); blur(8f); lens(5f, 8f) },
-                            highlight = { Highlight(width = 0.5.dp, alpha = 0.5f) },
-                            shadow = { Shadow(radius = 6.dp, color = Color.Black.copy(alpha = 0.06f)) },
-                            onDrawSurface = { drawRect(Color.White.copy(alpha = 0.12f)) }
-                        ).clip(RoundedCornerShape(17.dp)).padding(horizontal = 14.dp),
-                    contentAlignment = Alignment.CenterStart
-                ) { Text("iMessage 信息", color = Color.White.copy(alpha = 0.5f), fontSize = 14.sp) }
+            // ════════════════════════════════════════
+            // Demo 2: Interactive Glass Bottom Bar
+            // ════════════════════════════════════════
+            DemoTitle("2. Interactive (按压缩放)", "vibrancy → blur → lens + layerBlock")
+            Text("按住按钮 → 放大 → 松手回弹，backdrop 不应缩放",
+                color = Color.White.copy(alpha = 0.4f), fontSize = 11.sp)
+            Spacer(Modifier.height(8.dp))
+
+            Box(Modifier.fillMaxWidth().background(sectionBg, RoundedCornerShape(12.dp)).padding(12.dp)) {
+                Row(
+                    Modifier.fillMaxWidth().height(56.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // 交互按钮 (用 Animatable)
+                    val animScope = rememberCoroutineScope()
+                    val progressAnim = remember { androidx.compose.animation.core.Animatable(0f) }
+                    val maxScale = { width: Float -> (width + 16.dp.toPx()) / width }
+
+                    Box(
+                        Modifier.weight(1f).fillMaxHeight()
+                            .drawBackdrop(backdrop = backdrop, shape = { CircleShape },
+                                effects = { vibrancy(); blur(4f.dp.toPx()); lens(16f.dp.toPx(), 32f.dp.toPx()) },
+                                layerBlock = {
+                                    val p = progressAnim.value
+                                    val s = lerp(1f, maxScale(size.width), p)
+                                    scaleX = s; scaleY = s
+                                },
+                                onDrawSurface = { drawRect(Color.White.copy(alpha = 0.5f)) }
+                            )
+                            .clickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null) {}
+                            .pointerInput(animScope) {
+                                val spec = spring(0.5f, 300f, 0.001f)
+                                awaitEachGesture {
+                                    awaitFirstDown()
+                                    animScope.launch { progressAnim.animateTo(1f, spec) }
+                                    waitForUpOrCancellation()
+                                    animScope.launch { progressAnim.animateTo(0f, spec) }
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) { Text("按住我", color = Color.White, fontSize = 13.sp) }
+
+                    // 连续胶囊按钮
+                    Box(
+                        Modifier.weight(1f).fillMaxHeight()
+                            .drawBackdrop(backdrop = backdrop, shape = { RoundedCornerShape(28.dp) },
+                                effects = { vibrancy(); blur(4f.dp.toPx()); lens(16f.dp.toPx(), 32f.dp.toPx()) },
+                                onDrawSurface = {
+                                    val tint = Color(0xFF0088FF)
+                                    drawRect(tint, blendMode = BlendMode.Hue)
+                                    drawRect(tint.copy(alpha = 0.75f))
+                                }
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) { Text("胶囊", color = Color.White, fontSize = 13.sp) }
+                }
+            }
+
+            // ════════════════════════════════════════
+            // Demo 3: Glass Bottom Sheet
+            // ════════════════════════════════════════
+            DemoTitle("3. Glass Bottom Sheet", "exportedBackdrop + 双层玻璃")
+            Text("Sheet 使用 exportedBackdrop，内层按钮复用 sheet 背景",
+                color = Color.White.copy(alpha = 0.4f), fontSize = 11.sp)
+            Spacer(Modifier.height(8.dp))
+
+            Box(Modifier.fillMaxWidth().background(sectionBg, RoundedCornerShape(12.dp)).padding(8.dp)) {
+                val sheetBackdrop = rememberLayerBackdrop()
+                Column(
+                    Modifier.fillMaxWidth()
+                        .drawBackdrop(backdrop = backdrop, shape = { RoundedCornerShape(36.dp) },
+                            effects = { vibrancy(); blur(4f.dp.toPx()); lens(24f.dp.toPx(), 48f.dp.toPx(), true) },
+                            exportedBackdrop = sheetBackdrop,
+                            onDrawSurface = { drawRect(Color.White.copy(alpha = 0.4f)) }
+                        ).padding(12.dp)
+                ) {
+                    Text("Sheet 内容", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                    Spacer(Modifier.height(4.dp))
+                    Text("下方按钮使用 exportedBackdrop", color = Color.White.copy(alpha = 0.5f), fontSize = 11.sp)
+                    Spacer(Modifier.height(12.dp))
+                    // 内层玻璃按钮（复用 sheetBackdrop）
+                    Box(
+                        Modifier.fillMaxWidth().height(44.dp)
+                            .drawBackdrop(backdrop = sheetBackdrop, shape = { CircleShape },
+                                shadow = null,
+                                effects = { vibrancy(); blur(4f.dp.toPx()); lens(16f.dp.toPx(), 32f.dp.toPx()) },
+                                onDrawSurface = { drawRect(Color.White.copy(alpha = 0.5f)) }
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) { Text("内层玻璃按钮", color = Color.White, fontSize = 13.sp) }
+                }
+            }
+
+            // ════════════════════════════════════════
+            // Demo 4: Glass Slider (可拖拽)
+            // ════════════════════════════════════════
+            DemoTitle("4. Glass Slider (可拖拽)", "rememberCombinedBackdrop + 拖拽")
+            Text("拖动手柄，背景 + 轨道同时折射 — chromaticAberration",
+                color = Color.White.copy(alpha = 0.4f), fontSize = 11.sp)
+            Spacer(Modifier.height(8.dp))
+
+            Box(Modifier.fillMaxWidth().background(sectionBg, RoundedCornerShape(12.dp)).padding(16.dp)) {
+                GlassSlider(backdrop = backdrop)
+            }
+
+            // ════════════════════════════════════════
+            // Demo 5: Progressive Blur
+            // ════════════════════════════════════════
+            DemoTitle("5. Progressive Blur", "Alpha-masked RuntimeShader")
+            Text("从底部到顶部渐变模糊，需 Android 13+",
+                color = Color.White.copy(alpha = 0.4f), fontSize = 11.sp)
+            Spacer(Modifier.height(8.dp))
+
+            Box(Modifier.fillMaxWidth().height(80.dp).background(sectionBg, RoundedCornerShape(12.dp))) {
+                Canvas(Modifier.fillMaxSize()) {
+                    // 用渐变色模拟 progressive blur 效果
+                    drawRect(
+                        brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                            0f to Color.Transparent,
+                            1f to Color.White.copy(alpha = 0.9f)
+                        )
+                    )
+                }
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("需 AGSL RuntimeShader — 当前版本暂不支持完整实现",
+                        color = Color.White.copy(alpha = 0.5f), fontSize = 11.sp, textAlign = TextAlign.Center)
+                }
             }
 
             Spacer(Modifier.height(24.dp))
@@ -299,97 +324,68 @@ fun GlassTestScreen(onClose: () -> Unit = {}) {
     }
 }
 
-// ═══ 组件 ═══
-
-@Composable private fun GroupTitle(t: String) {
-    Spacer(Modifier.height(16.dp))
-    Box(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-        Text(t, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-    }
-}
-
+// ═══════════════════════════════════════════
+// Glass Slider — 可拖拽，带 rememberCombinedBackdrop
+// ═══════════════════════════════════════════
 @Composable
-private fun Grid4(
-    items: List<Pair<Float, String>>,
-    backdrop: Backdrop,
-    shape: RoundedCornerShape,
-    effect: com.kyant.backdrop.BackdropEffectScope.(Float) -> Unit
-) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        items.forEach { (v, label) ->
-            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
-                GlassBlock(backdrop = backdrop, shape = shape, effects = { effect(v) })
-                Text(label, color = Color.White.copy(alpha = 0.5f), fontSize = 10.sp)
+private fun GlassSlider(backdrop: Backdrop) {
+    var offsetX by remember { mutableFloatStateOf(0f) }
+    val maxOffset = 260f // 最大拖拽位移 px（根据实际布局可调）
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        BoxWithConstraints(
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(48.dp),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            val trackBackdrop = rememberLayerBackdrop()
+
+            // 轨道
+            Box(
+                Modifier.fillMaxWidth().height(6.dp)
+                    .layerBackdrop(trackBackdrop)
+                    .background(Color(0xFF0088FF), CircleShape)
+                    .align(Alignment.CenterStart)
+            )
+
+            // 滑块位置
+            val sliderPos = (maxWidth / 2f - 28.dp + (offsetX).dp.coerceIn(-maxWidth / 2 + 28.dp, maxWidth / 2 - 28.dp))
+            val thumbX = sliderPos
+
+            // 合并背景 + 轨道
+            val combined = rememberCombinedBackdrop(backdrop, trackBackdrop)
+
+            // 滑块（可拖拽）
+            Box(
+                Modifier.offset(x = thumbX).size(52.dp, 30.dp)
+                    .drawBackdrop(backdrop = combined, shape = { CircleShape },
+                        effects = { lens(12f.dp.toPx(), 16f.dp.toPx(), chromaticAberration = true) },
+                        onDrawSurface = { drawRect(Color.White.copy(alpha = 0.3f)) }
+                    )
+                    .pointerInput(Unit) {
+                        detectHorizontalDragGestures { change, dragAmount ->
+                            change.consume()
+                            offsetX = (offsetX + dragAmount / 3f)
+                                .coerceIn(-maxWidth.value / 2 + 28f, maxWidth.value / 2 - 28f)
+                        }
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                // 滑块内部的指示线
+                Box(Modifier.size(20.dp, 3.dp).background(Color.White.copy(alpha = 0.7f), CircleShape))
             }
         }
+        Spacer(Modifier.height(8.dp))
+        Text("← 左右拖动 →", color = Color.White.copy(alpha = 0.4f), fontSize = 11.sp)
     }
 }
 
+// ═══════════════════════════════════════════
+// 辅助函数
+// ═══════════════════════════════════════════
 @Composable
-private fun GlassBlock(backdrop: Backdrop, shape: RoundedCornerShape, effects: com.kyant.backdrop.BackdropEffectScope.() -> Unit, modifier: Modifier = Modifier.size(72.dp)) {
-    Box(
-        modifier = modifier
-            .drawBackdrop(backdrop = backdrop, shape = { shape }, effects = effects,
-                highlight = { Highlight(width = 0.5.dp, alpha = 0.4f) },
-                shadow = { Shadow(radius = 6.dp, color = Color.Black.copy(alpha = 0.06f)) },
-                onDrawSurface = { drawRect(Color.White.copy(alpha = 0.1f)) }
-            ).clip(shape)
-    )
+private fun DemoTitle(num: String, subtitle: String) {
+    Spacer(Modifier.height(12.dp))
+    Text("$num", color = Color(0xFF34D399), fontSize = 15.sp, fontWeight = FontWeight.Bold)
+    Text(subtitle, color = Color.White.copy(alpha = 0.4f), fontSize = 11.sp)
 }
 
-@Composable
-private fun InteractiveGlassDemo(backdrop: Backdrop) {
-    val scope = rememberCoroutineScope()
-    val progress = remember { mutableFloatStateOf(0f) }
-    val scale by animateFloatAsState(targetValue = 1f + progress.floatValue * 0.12f, animationSpec = spring(stiffness = Spring.StiffnessMediumLow), label = "s")
-
-    Box(
-        modifier = Modifier.size(80.dp)
-            .drawBackdrop(backdrop = backdrop, shape = { CircleShape },
-                effects = { vibrancy(); blur(8f); lens(6f, 12f) },
-                highlight = { Highlight(width = 0.5.dp, alpha = 0.6f) },
-                shadow = { Shadow(radius = 10.dp, color = Color.Black.copy(alpha = 0.1f)) },
-                layerBlock = { scaleX = scale; scaleY = scale },
-                onDrawSurface = { drawRect(Color.White.copy(alpha = 0.12f)) }
-            ).clip(CircleShape)
-            .pointerInput(scope) {
-                awaitEachGesture {
-                    awaitFirstDown(requireUnconsumed = false)
-                    scope.launch { progress.floatValue = 1f }
-                    waitForUpOrCancellation()
-                    scope.launch { progress.floatValue = 0f }
-                }
-            },
-        contentAlignment = Alignment.Center
-    ) { Text("按我", color = Color.White, fontSize = 14.sp) }
-}
-
-@Composable
-private fun GlassCircle44(backdrop: Backdrop, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    Box(
-        modifier = modifier.size(44.dp)
-            .drawBackdrop(backdrop = backdrop, shape = { CircleShape },
-                effects = { vibrancy(); blur(8f); lens(4f, 8f) },
-                highlight = { Highlight(width = 0.5.dp, alpha = 0.5f) },
-                shadow = { Shadow(radius = 8.dp, color = Color.Black.copy(alpha = 0.08f)) },
-                onDrawSurface = { drawRect(Color.White.copy(alpha = 0.12f)) }
-            ).clip(CircleShape),
-        contentAlignment = Alignment.Center
-    ) { content() }
-}
-
-@Composable
-private fun GlassCircle34(backdrop: Backdrop, content: @Composable () -> Unit) {
-    Box(
-        modifier = Modifier.size(34.dp)
-            .drawBackdrop(backdrop = backdrop, shape = { CircleShape },
-                effects = { vibrancy(); blur(8f); lens(3f, 6f) },
-                highlight = { Highlight(width = 0.5.dp, alpha = 0.4f) },
-                shadow = { Shadow(radius = 6.dp, color = Color.Black.copy(alpha = 0.06f)) },
-                onDrawSurface = { drawRect(Color.White.copy(alpha = 0.12f)) }
-            ).clip(CircleShape),
-        contentAlignment = Alignment.Center
-    ) { content() }
-}
-
-private data class LensData(val rh: Float, val ra: Float, val de: Boolean, val ca: Boolean)
