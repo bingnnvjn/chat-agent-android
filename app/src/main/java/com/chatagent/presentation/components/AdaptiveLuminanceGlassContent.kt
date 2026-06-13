@@ -161,7 +161,7 @@ fun AdaptiveLuminanceGlassContent(
             BasicText(
                 "luminance:\n${(luminanceAnimation.value * 100f).fastRoundToInt() / 100.0}",
                 style = TextStyle(Color.Unspecified, 16f.sp, textAlign = TextAlign.Center),
-                color = contentColor
+                color = { contentColor }
             )
         }
     }
