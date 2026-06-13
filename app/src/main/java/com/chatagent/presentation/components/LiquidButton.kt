@@ -62,7 +62,7 @@ fun LiquidButton(
                 },
                 layerBlock = if (isInteractive) {
                     {
-                        val w = width.toFloat(); val h = height.toFloat()
+                        val w = width().toFloat(); val h = height().toFloat()
 
                         val progress = interactiveHighlight.progress
                         val scale = lerp(1f, 1f + 4f.dp.toPx() / h, progress)
