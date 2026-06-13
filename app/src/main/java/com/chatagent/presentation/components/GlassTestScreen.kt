@@ -26,7 +26,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import com.kyant.shapes.Capsule
-import androidx.compose.foundation.shape.RoundedCornerShape
+import com.kyant.shapes.RoundedRectangle
+import com.kyant.shapes.RoundedRectangularShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -110,7 +111,7 @@ fun GlassTestScreen(onClose: () -> Unit = {}) {
 
             Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 tabNames.forEachIndexed { i, name ->
-                    Box(Modifier.clip(RoundedCornerShape(20.dp)).background(if (selectedTab == i) textColor.copy(alpha = 0.2f) else Color.Transparent).clickable { selectedTab = i }.padding(horizontal = 14.dp, vertical = 7.dp)) {
+                    Box(Modifier.clip(RoundedRectangle(20.dp)).background(if (selectedTab == i) textColor.copy(alpha = 0.2f) else Color.Transparent).clickable { selectedTab = i }.padding(horizontal = 14.dp, vertical = 7.dp)) {
                         Text(name, color = textColor, fontSize = 13.sp, fontWeight = if (selectedTab == i) FontWeight.Bold else FontWeight.Normal)
                     }
                 }
@@ -195,7 +196,7 @@ private fun AdaptivePage(backdrop: Backdrop, textColor: Color) {
 
         Box(
             Modifier.size(200.dp)
-                .drawBackdrop(backdrop = backdrop, shape = { RoundedCornerShape(24.dp) },
+                .drawBackdrop(backdrop = backdrop, shape = { RoundedRectangle(24.dp) },
                     effects = {
                         val l = (luminanceAnim.value * 2f - 1f).let { sign(it) * it * it }
                         colorControls(
@@ -335,7 +336,7 @@ private fun FusionPage(backdrop: Backdrop, textColor: Color) {
         Spacer(Modifier.height(4.dp))
         Box(
             Modifier.size(140.dp)
-                .drawBackdrop(backdrop = backdrop, shape = { RoundedCornerShape(16.dp) },
+                .drawBackdrop(backdrop = backdrop, shape = { RoundedRectangle(16.dp) },
                     effects = {
                         val l = (lum * 2f - 1f).let { sign(it) * it * it }
                         colorControls(brightness = if (l > 0f) 0.3f else -0.1f, contrast = if (l > 0f) 0.5f else 1f, saturation = 1.5f)

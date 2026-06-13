@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import com.kyant.shapes.RoundedRectangle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -94,12 +95,12 @@ fun FloatingTopBar(
     if (showModelMenu) {
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { showModelMenu = false },
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+            shape = RoundedRectangle(16.dp),
             title = null,
             text = {
                 androidx.compose.foundation.layout.Column {
                     currentProvider.models.forEach { model ->
-                        Box(Modifier.fillMaxWidth().clip(androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
+                        Box(Modifier.fillMaxWidth().clip(RoundedRectangle(10.dp))
                             .clickable { onModelSelect(model); showModelMenu = false }
                             .padding(vertical = 12.dp, horizontal = 8.dp)
                         ) { Text(model, fontSize = 15.sp) }

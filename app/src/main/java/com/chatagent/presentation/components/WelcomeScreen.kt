@@ -11,7 +11,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import com.kyant.shapes.RoundedRectangle
+import com.kyant.shapes.RoundedRectangularShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -64,7 +65,7 @@ fun WelcomeScreen(
             suggestions.forEach { suggestion ->
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
+                        .clip(RoundedRectangle(20.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                         .clickable { onSuggestionClick(suggestion) }
                         .padding(horizontal = 16.dp, vertical = 10.dp)

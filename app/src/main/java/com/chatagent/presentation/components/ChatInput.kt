@@ -20,7 +20,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import com.kyant.shapes.Capsule
-import androidx.compose.foundation.shape.RoundedCornerShape
+import com.kyant.shapes.RoundedRectangle
+import com.kyant.shapes.RoundedRectangularShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -181,8 +182,8 @@ fun ChatInput(
                 Box(
                     modifier = Modifier.height(28.dp)
                         .let { m ->
-                            if (hasSend) m.clip(RoundedCornerShape(14.dp)).background(SendGreen).clickable { onSend() }
-                            else m.clip(RoundedCornerShape(14.dp)).background(Color.White.copy(alpha = 0.1f))
+                            if (hasSend) m.clip(RoundedRectangle(14.dp)).background(SendGreen).clickable { onSend() }
+                            else m.clip(RoundedRectangle(14.dp)).background(Color.White.copy(alpha = 0.1f))
                         }.padding(horizontal = 12.dp),
                     contentAlignment = Alignment.Center
                 ) { Text("↑", color = Color.White, fontSize = 16.sp) }

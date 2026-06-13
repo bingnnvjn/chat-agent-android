@@ -19,7 +19,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import com.kyant.shapes.RoundedRectangle
+import com.kyant.shapes.RoundedRectangularShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -211,12 +212,12 @@ fun SettingsScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedRectangle(12.dp))
                 .background(MaterialTheme.colorScheme.surface)
                 .border(
                     width = 1.dp,
                     color = MaterialTheme.colorScheme.outlineVariant,
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedRectangle(12.dp)
                 )
                 .padding(horizontal = 16.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -263,7 +264,7 @@ fun SettingsScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedRectangle(12.dp))
                 .background(MaterialTheme.colorScheme.surface)
                 .clickable { onGlassTest() }
                 .padding(vertical = 14.dp),
@@ -301,7 +302,7 @@ private fun ThemeButton(
 ) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedRectangle(12.dp))
             .background(
                 if (isSelected) Accent
                 else MaterialTheme.colorScheme.surface
@@ -310,7 +311,7 @@ private fun ThemeButton(
                 width = 1.dp,
                 color = if (isSelected) Accent
                 else MaterialTheme.colorScheme.outlineVariant,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedRectangle(12.dp)
             )
             .clickable { onClick() }
             .padding(vertical = 12.dp),
@@ -334,7 +335,7 @@ private fun ProviderChip(
 ) {
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedRectangle(8.dp))
             .background(
                 if (isSelected) Accent.copy(alpha = 0.1f)
                 else MaterialTheme.colorScheme.surface
@@ -343,7 +344,7 @@ private fun ProviderChip(
                 width = 1.dp,
                 color = if (isSelected) Accent
                 else MaterialTheme.colorScheme.outlineVariant,
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedRectangle(8.dp)
             )
             .clickable { onClick() }
             .padding(horizontal = 12.dp, vertical = 8.dp)
@@ -365,7 +366,7 @@ private fun ModelChip(
 ) {
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedRectangle(8.dp))
             .background(
                 if (isSelected) Accent.copy(alpha = 0.1f)
                 else MaterialTheme.colorScheme.surface
@@ -374,7 +375,7 @@ private fun ModelChip(
                 width = 1.dp,
                 color = if (isSelected) Accent
                 else MaterialTheme.colorScheme.outlineVariant,
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedRectangle(8.dp)
             )
             .clickable { onClick() }
             .padding(horizontal = 12.dp, vertical = 8.dp)
