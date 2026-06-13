@@ -157,7 +157,11 @@ fun GlassTestScreen(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    listOf("鲜艳" to 1.8f to 0f, "明亮" to 1.2f to 0.1f, "冷色" to 1f to -0.05f).forEach { ((label, sat), bri) ->
+                    listOf(
+                        Triple("鲜艳", 1.8f, 0f),
+                        Triple("明亮", 1.2f, 0.1f),
+                        Triple("冷色", 1f, -0.05f)
+                    ).forEach { (label, sat, bri) ->
                         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
                             GlassBlock(backdrop = layerBackdrop, shape = RoundedCornerShape(16.dp), effects = { colorControls(saturation = sat, brightness = bri); blur(6f) })
                             Spacer(Modifier.height(4.dp))
@@ -176,16 +180,16 @@ fun GlassTestScreen(
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     listOf(
-                        "折射 8px" to 8f to 16f to false to false,
-                        "折射 16px" to 16f to 32f to false to false,
-                        "带景深" to 16f to 32f to true to false,
-                        "色散色彩" to 16f to 32f to false to true
-                    ).forEach { ((label, refrHeight), refrAmount, depthEn, chromAb) ->
+                        "折射 8px" to LensParams(8f, 16f, false, false),
+                        "折射 16px" to LensParams(16f, 32f, false, false),
+                        "带景深" to LensParams(16f, 32f, true, false),
+                        "色散色彩" to LensParams(16f, 32f, false, true)
+                    ).forEach { (label, params) ->
                         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
                             GlassBlock(
                                 backdrop = layerBackdrop,
                                 shape = RoundedCornerShape(16.dp),
-                                effects = { blur(4f); lens(refrHeight, refrAmount, depthEn, chromAb) }
+                                effects = { blur(4f); lens(params.rh, params.ra, params.de, params.ca) }
                             )
                             Spacer(Modifier.height(4.dp))
                             Text(label, color = Color.White.copy(alpha = 0.6f), fontSize = 10.sp)
@@ -394,3 +398,10 @@ private fun SectionTitle(title: String) {
     Text(title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
     Spacer(Modifier.height(8.dp))
 }
+
+private data class LensParams(
+    val rh: Float,
+    val ra: Float,
+    val de: Boolean,
+    val ca: Boolean
+)
