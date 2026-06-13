@@ -49,7 +49,7 @@ import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
-import androidx.compose.foundation.shape.RoundedCornerShape
+import com.kyant.shapes.Capsule
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
@@ -165,7 +165,7 @@ fun LiquidBottomTabs(
                 }
                 .drawBackdrop(
                     backdrop = backdrop,
-                    shape = { RoundedCornerShape(999.dp) },
+                    shape = { Capsule() },
                     effects = {
                         vibrancy()
                         blur(8f.dp.toPx())
@@ -202,7 +202,7 @@ fun LiquidBottomTabs(
                     }
                     .drawBackdrop(
                         backdrop = backdrop,
-                        shape = { RoundedCornerShape(999.dp) },
+                        shape = { Capsule() },
                         effects = {
                             val progress = dampedDragAnimation.pressProgress
                             vibrancy()
@@ -240,7 +240,7 @@ fun LiquidBottomTabs(
                 .then(dampedDragAnimation.modifier)
                 .drawBackdrop(
                     backdrop = rememberCombinedBackdrop(backdrop, tabsBackdrop),
-                    shape = { RoundedCornerShape(999.dp) },
+                    shape = { Capsule() },
                     effects = {
                         val progress = dampedDragAnimation.pressProgress
                         lens(

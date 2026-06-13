@@ -103,6 +103,9 @@ dependencies {
     // Backdrop (Liquid Glass)
     implementation(project(":backdrop"))
 
+    // Shapes (Capsule — G2连续圆角)
+    implementation("io.github.kyant0:shapes:1.2.0")
+
 
     // Debug
     debugImplementation("androidx.compose.ui:ui-tooling")

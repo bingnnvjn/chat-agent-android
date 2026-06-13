@@ -25,7 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import com.kyant.shapes.Capsule
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -285,7 +285,7 @@ private fun FusionPage(backdrop: Backdrop, textColor: Color) {
 
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 32.dp).height(48.dp)
-                .drawBackdrop(backdrop = backdrop, shape = { RoundedCornerShape(999.dp) },
+                .drawBackdrop(backdrop = backdrop, shape = { Capsule() },
                     effects = {
                         val l = (lum * 2f - 1f).let { sign(it) * it * it }
                         colorControls(
