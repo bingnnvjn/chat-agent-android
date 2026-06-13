@@ -39,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
+import com.kyant.shapes.Capsule
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
@@ -53,7 +54,6 @@ import kotlin.math.sin
 import kotlin.math.tanh
 
 private val SendGreen = Color(0xFF10A37F)
-private val PillShape = RoundedCornerShape(999.dp)
 
 /**
  * 底部液态玻璃输入栏
@@ -124,7 +124,7 @@ fun ChatInput(
         Box(
             modifier = Modifier.weight(1f).then(
                 if (backdrop != null) Modifier.drawBackdrop(
-                    backdrop = backdrop, shape = { PillShape },
+                    backdrop = backdrop, shape = { Capsule() },
                     effects = {
                         val l = lum
                         colorControls(
@@ -145,7 +145,7 @@ fun ChatInput(
                     },
                     onDrawSurface = {}
                 ) else Modifier
-            ).clip(PillShape).height(40.dp)
+            ).clip(Capsule()).height(40.dp)
                 .pointerInput(capsuleScope) {
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false)
