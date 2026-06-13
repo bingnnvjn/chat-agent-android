@@ -139,14 +139,15 @@ private fun ButtonsPage(backdrop: Backdrop, textColor: Color) {
         Spacer(Modifier.height(8.dp))
         Text("LiquidButton 五种变体", color = textColor.copy(alpha = 0.5f), fontSize = 13.sp)
         Spacer(Modifier.height(4.dp))
+        data class BtnItem(val text: String, val tint: Color? = null, val surface: Color? = null)
         listOf(
-            "透明液态按钮" to null to null,
-            "半透明表面" to null to textColor.copy(alpha = 0.15f),
-            "蓝色着色" to Color(0xFF0088FF) to null,
-            "橙色着色" to Color(0xFFFF8D28) to null,
-            "绿色着色" to Color(0xFF10A37F) to null,
-        ).forEach { ((name, tint), surface) ->
-            LiquidBtn(backdrop, onClick = {}, tint = tint, surface = surface, content = { BasicText(name, style = TextStyle(if (tint != null) Color.White else textColor, 15.sp)) })
+            BtnItem("透明液态按钮"),
+            BtnItem("半透明表面", surface = textColor.copy(alpha = 0.15f)),
+            BtnItem("蓝色着色", tint = Color(0xFF0088FF)),
+            BtnItem("橙色着色", tint = Color(0xFFFF8D28)),
+            BtnItem("绿色着色", tint = Color(0xFF10A37F)),
+        ).forEach { item ->
+            LiquidBtn(backdrop, onClick = {}, tint = item.tint, surface = item.surface, content = { BasicText(item.text, style = TextStyle(if (item.tint != null) Color.White else textColor, 15.sp)) })
         }
         Spacer(Modifier.height(16.dp))
     }
