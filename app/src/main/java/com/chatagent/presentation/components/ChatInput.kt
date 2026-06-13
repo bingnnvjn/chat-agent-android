@@ -154,7 +154,7 @@ private fun LiquidGlassCircleSmall(
     backdrop: Backdrop,
     size: androidx.compose.ui.unit.Dp,
     onClick: () -> Unit,
-    onDrawSurface: com.kyant.backdrop.BackdropEffectScope.() -> Unit = {},
+    onDrawSurface: androidx.compose.ui.graphics.drawscope.DrawScope.() -> Unit = {},
     content: @Composable () -> Unit
 ) {
     val scope = rememberCoroutineScope()
