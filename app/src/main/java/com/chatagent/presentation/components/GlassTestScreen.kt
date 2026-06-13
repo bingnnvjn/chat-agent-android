@@ -219,7 +219,7 @@ private fun LiquidButtonDemo(backdrop: Backdrop, h: InteractiveHighlight) {
                 },
                 onDrawSurface = {}
             ).clip(RoundedCornerShape(999.dp))
-            .then(h.drawModifier).then(h.gestureModifier),
+            .then(h.modifier).then(h.gestureModifier),
         contentAlignment = Alignment.Center
     ) { Text("✈", fontSize = 18.sp) }
 }
@@ -250,7 +250,7 @@ private fun InteractiveGlassCapsule(backdrop: Backdrop) {
                     scaleY = s + drag * abs(sin(angle) * off.y / heightPx)
                 },
                 onDrawSurface = { drawRect(Color.White.copy(alpha = 0.4f)) }
-            ).clip(RoundedCornerShape(999.dp)).then(h.drawModifier).then(h.gestureModifier),
+            ).clip(RoundedCornerShape(999.dp)).then(h.modifier).then(h.gestureModifier),
         contentAlignment = Alignment.Center
     ) { Text("按住→液态变形  松开→回弹", color = Color.White, fontSize = 14.sp) }
 }
