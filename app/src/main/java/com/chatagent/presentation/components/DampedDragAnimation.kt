@@ -1,5 +1,9 @@
 package com.chatagent.presentation.components
 
+import kotlin.time.ExperimentalTime
+
+@OptIn(ExperimentalTime::class)
+
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.MutatorMutex
@@ -15,6 +19,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 import com.chatagent.presentation.components.composeAwaitFrame
 
