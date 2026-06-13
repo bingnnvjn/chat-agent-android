@@ -44,7 +44,6 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -73,10 +72,8 @@ import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.Shadow
-import androidx.compose.foundation.shape.RoundedCornerShape
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlin.math.PI
 import kotlin.math.sign
 
 @Composable
@@ -209,7 +206,7 @@ private fun LiquidButtonDemo(backdrop: Backdrop, h: InteractiveHighlight) {
     val sizePx = with(density) { 44.dp.toPx() }
     Box(
         Modifier.size(44.dp)
-            .drawBackdrop(backdrop = backdrop, shape = { com.kyant.shapes.RoundedCornerShape(999.dp) },
+            .drawBackdrop(backdrop = backdrop, shape = { RoundedCornerShape(999.dp) },
                 effects = { vibrancy(); blur(2f.dp.toPx()); lens(12f.dp.toPx(), 24f.dp.toPx()) },
                 layerBlock = {
                     val p = h.progress; val s = lerp(1f, 1f + 4f / sizePx, p)
@@ -221,7 +218,7 @@ private fun LiquidButtonDemo(backdrop: Backdrop, h: InteractiveHighlight) {
                     scaleY = s + drag * abs(sin(angle) * off.y / sizePx)
                 },
                 onDrawSurface = {}
-            ).clip(com.kyant.shapes.RoundedCornerShape(999.dp))
+            ).clip(RoundedCornerShape(999.dp))
             .then(h.drawModifier).then(h.gestureModifier),
         contentAlignment = Alignment.Center
     ) { Text("✈", fontSize = 18.sp) }
