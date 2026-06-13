@@ -62,28 +62,21 @@ fun LiquidButton(
                 },
                 layerBlock = if (isInteractive) {
                     {
-                        val width = size.width
-                        val height = size.height
+                        val w = width.toFloat(); val h = height.toFloat()
 
-                        val progress = interactiveHighlight.pressProgress
-                        val scale = lerp(1f, 1f + 4f.dp.toPx() / size.height, progress)
+                        val progress = interactiveHighlight.progress
+                        val scale = lerp(1f, 1f + 4f.dp.toPx() / h, progress)
 
-                        val maxOffset = size.minDimension
+                        val maxOffset = minOf(w, h)
                         val initialDerivative = 0.05f
                         val offset = interactiveHighlight.offset
                         translationX = maxOffset * tanh(initialDerivative * offset.x / maxOffset)
                         translationY = maxOffset * tanh(initialDerivative * offset.y / maxOffset)
 
-                        val maxDragScale = 4f.dp.toPx() / size.height
+                        val maxDragScale = 4f.dp.toPx() / h
                         val offsetAngle = atan2(offset.y, offset.x)
-                        scaleX =
-                            scale +
-                                    maxDragScale * abs(cos(offsetAngle) * offset.x / size.maxDimension) *
-                                    (width / height).fastCoerceAtMost(1f)
-                        scaleY =
-                            scale +
-                                    maxDragScale * abs(sin(offsetAngle) * offset.y / size.maxDimension) *
-                                    (height / width).fastCoerceAtMost(1f)
+                        scaleX = scale + maxDragScale * abs(cos(offsetAngle) * offset.x / maxOf(w, h)) * (w / h).coerceAtMost(1f)
+                        scaleY = scale + maxDragScale * abs(sin(offsetAngle) * offset.y / maxOf(w, h)) * (h / w).coerceAtMost(1f)
                     }
                 } else {
                     null
