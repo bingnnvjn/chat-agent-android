@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -263,7 +264,7 @@ private fun AdaptiveLuminanceGlass(backdrop: Backdrop) {
     val isDark = isSystemInDarkTheme()
     val layer = rememberGraphicsLayer()
     val luminanceAnim = remember(isDark) { Animatable(if (isDark) 0f else 1f) }
-    val contentColorAnim = remember(isDark) { Animatable(initialValue = if (isDark) Color.White else Color.Black, typeConverter = Color.VectorConverter) }
+    val contentColor by animateColorAsState(targetValue = if (isDark) Color.White else Color.Black, animationSpec = tween(1000), label = "cc")
 
     LaunchedEffect(layer) {
         val buffer = IntArray(25)
@@ -279,10 +280,7 @@ private fun AdaptiveLuminanceGlass(backdrop: Backdrop) {
                     val b = (argb and 0xFF) / 255f
                     0.2126 * r + 0.7152 * g + 0.0722 * b
                 } / buffer.size
-                launch { 
-                    contentColorAnim.animateTo(if (avg > 0.5f) Color.Black else Color.White, tween(1000))
-                    luminanceAnim.animateTo(avg.toFloat(), tween(1000))
-                }
+                launch { luminanceAnim.animateTo(avg.toFloat(), tween(1000)) }
             } catch (_: Exception) {
                 // 布局未完成时跳过
             }
@@ -313,7 +311,7 @@ private fun AdaptiveLuminanceGlass(backdrop: Backdrop) {
         BasicText(
             "luminance: ${(luminanceAnim.value * 100f).fastRoundToInt() / 100.0}",
             style = TextStyle(fontSize = 16.sp, textAlign = TextAlign.Center),
-            color = { contentColorAnim.value }
+            color = { contentColor }
         )
     }
 }
