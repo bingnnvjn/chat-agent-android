@@ -116,7 +116,7 @@ fun GlassTestScreen(
                     SectionTitle("blur (模糊半径)")
                     GlassDemoRow(
                         labels = listOf("2dp", "6dp", "12dp", "24dp"),
-                        radii = listOf(2f, 6f, 12f, 24f)
+                        values = listOf(2f, 6f, 12f, 24f)
                     ) { radius ->
                         GlassDemoItem(
                             backdrop = layerBackdrop,
@@ -128,7 +128,7 @@ fun GlassTestScreen(
                     SectionTitle("blur + 高光 (Highlight)")
                     GlassDemoRow(
                         labels = listOf("Default", "Ambient", "Plain"),
-                        highlights = listOf(
+                        values = listOf(
                             Highlight.Default,
                             Highlight.Ambient,
                             Highlight.Plain
@@ -145,7 +145,7 @@ fun GlassTestScreen(
                     SectionTitle("blur + 阴影 (Shadow)")
                     GlassDemoRow(
                         labels = listOf("Default", "大阴影", "浅阴影"),
-                        shadows = listOf(
+                        values = listOf(
                             Shadow.Default,
                             Shadow(radius = 48.dp, color = Color.Black.copy(alpha = 0.3f)),
                             Shadow(radius = 12.dp, color = Color.Black.copy(alpha = 0.05f))
@@ -162,7 +162,7 @@ fun GlassTestScreen(
                     SectionTitle("opacity (透明度)")
                     GlassDemoRow(
                         labels = listOf("100%", "70%", "40%", "15%"),
-                        opacities = listOf(1f, 0.7f, 0.4f, 0.15f)
+                        values = listOf(1f, 0.7f, 0.4f, 0.15f)
                     ) { alpha ->
                         GlassDemoItem(
                             backdrop = layerBackdrop,
@@ -195,7 +195,8 @@ fun GlassTestScreen(
 
                     SectionTitle("onDrawSurface (覆盖色)")
                     GlassDemoRow(
-                        labels = listOf("无覆盖", "10%白", "30%白", "50%黑")
+                        labels = listOf("无覆盖", "10%白", "30%白", "50%黑"),
+                        values = listOf(0, 1, 2, 3)
                     ) { index ->
                         val surfaceColor = when (index) {
                             0 -> Color.Transparent
@@ -416,13 +417,10 @@ private fun SectionTitle(title: String) {
 }
 
 @Composable
-private fun GlassDemoRow(
+private inline fun <reified T> GlassDemoRow(
     labels: List<String>,
-    radii: List<Float>? = null,
-    highlights: List<Highlight>? = null,
-    shadows: List<Shadow>? = null,
-    opacities: List<Float>? = null,
-    content: @Composable (Int) -> Unit
+    values: List<T>,
+    crossinline content: @Composable (T) -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
@@ -433,7 +431,7 @@ private fun GlassDemoRow(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.weight(1f)
             ) {
-                content(index)
+                content(values[index])
                 Spacer(Modifier.height(4.dp))
                 Text(label, color = Color.White.copy(alpha = 0.6f), fontSize = 10.sp)
             }
