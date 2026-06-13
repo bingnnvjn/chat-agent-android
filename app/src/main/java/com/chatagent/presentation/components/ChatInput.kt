@@ -144,6 +144,7 @@ private fun GlassCircle(
     onClick: () -> Unit,
     content: @Composable () -> Unit
 ) {
+    val tint = MaterialTheme.colorScheme.surface.copy(alpha = 0.12f)
     Box(
         modifier = Modifier.size(size).then(
             if (backdrop != null) Modifier.drawBackdrop(
@@ -152,7 +153,7 @@ private fun GlassCircle(
                 highlight = { Highlight(width = 0.5.dp, alpha = 0.5f) },
                 shadow = { Shadow(radius = 6.dp, color = Color.Black.copy(alpha = 0.06f)) },
                 onDrawSurface = {
-                    drawRect(surfaceTint)
+                    drawRect(tint)
                 }
             ) else Modifier
         ).clip(CircleShape).clickable { onClick() },
