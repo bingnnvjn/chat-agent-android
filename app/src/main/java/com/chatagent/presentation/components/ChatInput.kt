@@ -73,6 +73,7 @@ fun ChatInput(
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     val textColor = MaterialTheme.colorScheme.onSurface
     val placeholderColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val density = androidx.compose.ui.platform.LocalDensity.current
 
     val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         uri?.let { selectedImageUri = it; onImagePicked(it) }
@@ -118,6 +119,7 @@ fun ChatInput(
         val capsuleHighlight = remember(capsuleScope) { InteractiveHighlight(capsuleScope) }
         val isDark = isSystemInDarkTheme()
         val lum = if (isDark) 0.2f else 0.7f
+        val capsulePx = with(density) { 34.dp.toPx() }
 
         Box(
             modifier = Modifier.weight(1f).then(
@@ -136,10 +138,9 @@ fun ChatInput(
                     layerBlock = {
                         val p = capsuleHighlight.progress
                         val off = capsuleHighlight.offset
-                        val h = height.toFloat()
-                        val s = lerp(1f, 1f + 2f / h, p)
-                        translationX = h * tanh(0.03f * off.x / h)
-                        translationY = h * tanh(0.03f * off.y / h)
+                        val s = lerp(1f, 1f + 2f / capsulePx, p)
+                        translationX = capsulePx * tanh(0.03f * off.x / capsulePx)
+                        translationY = capsulePx * tanh(0.03f * off.y / capsulePx)
                         scaleX = s; scaleY = s
                     },
                     onDrawSurface = {}
