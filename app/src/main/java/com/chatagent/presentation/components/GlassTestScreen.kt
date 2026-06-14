@@ -152,8 +152,8 @@ private fun ButtonsPage(backdrop: Backdrop, textColor: Color) {
         Spacer(Modifier.height(4.dp))
 
         // 直接复用 demoAPP 的 LiquidButton
-        LiquidButton({}, backdrop) { BasicText("透明按钮", style = TextStyle(textColor, 15.sp)) }
-        LiquidButton({}, backdrop, surfaceColor = textColor.copy(alpha = 0.15f)) { BasicText("半透明表面", style = TextStyle(textColor, 15.sp)) }
+        LiquidButton({}, backdrop) { BasicText("透明按钮", style = TextStyle(Color.Black, 15.sp)) }
+        LiquidButton({}, backdrop, surfaceColor = Color.White.copy(0.3f)) { BasicText("半透明表面", style = TextStyle(Color.Black, 15.sp)) }
         LiquidButton({}, backdrop, tint = Color(0xFF0088FF)) { BasicText("蓝色着色", style = TextStyle(Color.White, 15.sp)) }
         LiquidButton({}, backdrop, tint = Color(0xFFFF8D28)) { BasicText("橙色着色", style = TextStyle(Color.White, 15.sp)) }
         LiquidButton({}, backdrop, tint = Color(0xFF10A37F)) { BasicText("绿色着色", style = TextStyle(Color.White, 15.sp)) }
@@ -183,6 +183,12 @@ private fun FusionPage(backdrop: Backdrop, textColor: Color) {
     val isLight = !isSystemInDarkTheme()
     val layer = rememberGraphicsLayer()
     val luminanceAnim = remember(isLight) { Animatable(if (isLight) 1f else 0f) }
+    val contentColorAnim = remember(isLight) {
+        Animatable(
+            initialValue = if (isLight) Color.Black else Color.White,
+            typeConverter = Color.VectorConverter
+        )
+    }
 
     LaunchedEffect(layer) {
         val buffer = IntArray(25)
@@ -198,6 +204,12 @@ private fun FusionPage(backdrop: Backdrop, textColor: Color) {
                     val b = (argb and 0xFF) / 255f
                     0.2126 * r + 0.7152 * g + 0.0722 * b
                 } / buffer.size
+                launch {
+                    contentColorAnim.animateTo(
+                        if (avg > 0.5f) Color.Black else Color.White,
+                        tween(1000)
+                    )
+                }
                 launch { luminanceAnim.animateTo(avg.toFloat(), tween(1000)) }
             } catch (_: Exception) {}
         }
@@ -216,6 +228,7 @@ private fun FusionPage(backdrop: Backdrop, textColor: Color) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 32.dp).height(48.dp)
                 .drawBackdrop(backdrop = backdrop, shape = { Capsule() },
+                    highlight = { Highlight.Plain },
                     effects = {
                         val l = (lum * 2f - 1f).let { sign(it) * it * it }
                         colorControls(
@@ -252,7 +265,8 @@ private fun FusionPage(backdrop: Backdrop, textColor: Color) {
         ) {
             androidx.compose.foundation.text.BasicText(
                 "完全体  |  lum: ${(lum * 100f).fastRoundToInt() / 100.0}",
-                style = TextStyle(textColor, 14.sp)
+                style = TextStyle(Color.Unspecified, 14.sp),
+                color = { contentColorAnim.value }
             )
         }
 
