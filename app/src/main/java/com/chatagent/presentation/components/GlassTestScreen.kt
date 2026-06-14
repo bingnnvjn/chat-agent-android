@@ -184,7 +184,7 @@ private fun FusionPage(backdrop: Backdrop, textColor: Color) {
     val layer = rememberGraphicsLayer()
     val luminanceAnim = remember(isLight) { Animatable(if (isLight) 1f else 0f) }
     val contentColorAnim = remember(isLight) {
-        Animatable(
+        Animatable<Color, androidx.compose.animation.core.AnimationVector4D>(
             initialValue = if (isLight) Color.Black else Color.White,
             typeConverter = Color.VectorConverter
         )
