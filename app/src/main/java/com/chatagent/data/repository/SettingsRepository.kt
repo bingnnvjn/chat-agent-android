@@ -23,6 +23,7 @@ class SettingsRepository @Inject constructor(
         private val KEY_CUSTOM_URL = stringPreferencesKey("custom_url")
         private val KEY_THEME = stringPreferencesKey("theme")
         private val KEY_THINKING = stringPreferencesKey("thinking")
+        private val KEY_WALLPAPER = stringPreferencesKey("wallpaper")
         private fun keyApiKey(provider: String) = "api_key_$provider"
     }
 
@@ -40,6 +41,10 @@ class SettingsRepository @Inject constructor(
 
     val isDarkTheme: Flow<Boolean> = dataStore.data.map { prefs ->
         prefs[KEY_THEME] != "light"
+    }
+
+    val wallpaperUri: Flow<String> = dataStore.data.map { prefs ->
+        prefs[KEY_WALLPAPER] ?: ""
     }
 
     val enableThinking: Flow<Boolean> = dataStore.data.map { prefs ->
@@ -88,6 +93,12 @@ class SettingsRepository @Inject constructor(
     suspend fun setThinking(enabled: Boolean) {
         dataStore.edit { prefs ->
             prefs[KEY_THINKING] = if (enabled) "true" else "false"
+        }
+    }
+
+    suspend fun setWallpaperUri(uri: String) {
+        dataStore.edit { prefs ->
+            prefs[KEY_WALLPAPER] = uri
         }
     }
 }

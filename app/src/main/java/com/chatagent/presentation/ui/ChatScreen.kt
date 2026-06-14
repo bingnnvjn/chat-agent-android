@@ -32,11 +32,13 @@ import com.chatagent.presentation.viewmodel.ChatViewModel
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel,
+    backdrop: com.kyant.backdrop.backdrops.LayerBackdrop? = null,
     modifier: Modifier = Modifier
 ) {
     val currentConversation by viewModel.currentConversation.collectAsState()
     val isStreaming by viewModel.isStreaming.collectAsState()
     val streamingContent by viewModel.streamingContent.collectAsState()
+    val streamingThinking by viewModel.streamingThinking.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
 
@@ -77,10 +79,10 @@ fun ChatScreen(
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 // 顶部 spacer — 让首条消息可滑到 Top 栏下方
-                item { Spacer(Modifier.height(72.dp)) }
+                item { Spacer(Modifier.height(100.dp)) }
 
                 items(currentConversation!!.messages) { message ->
-                    MessageBubble(message = message)
+                    MessageBubble(message = message, modelName = uiState.currentProvider.displayName, backdrop = backdrop)
                 }
 
                 // 流式输出中的 AI 回复（仅在内容非空时显示）
@@ -88,15 +90,16 @@ fun ChatScreen(
                     val streamingMessage = com.chatagent.data.model.Message(
                         id = "streaming",
                         role = "assistant",
-                        content = streamingContent
+                        content = streamingContent,
+                        thinkingContent = streamingThinking.ifEmpty { null }
                     )
                     item(key = "streaming") {
-                        MessageBubble(message = streamingMessage)
+                        MessageBubble(message = streamingMessage, modelName = uiState.currentProvider.displayName, backdrop = backdrop)
                     }
                 }
 
                 // 底部 spacer — 让末条消息可滑到 Under 栏下方
-                item { Spacer(Modifier.height(64.dp)) }
+                item { Spacer(Modifier.height(96.dp)) }
             }
         }
 

@@ -44,7 +44,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import android.graphics.BitmapFactory
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -255,6 +264,42 @@ fun SettingsScreen(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 壁纸选择
+        Text(
+            text = "壁纸",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        val wallpaperUri by viewModel.wallpaperUri.collectAsState()
+        val wallpaperPicker = rememberLauncherForActivityResult(
+            ActivityResultContracts.PickVisualMedia()
+        ) { uri ->
+            uri?.let { viewModel.setWallpaperUri(it.toString()) }
+        }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(
+                onClick = { wallpaperPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                colors = ButtonDefaults.buttonColors(containerColor = Accent),
+                modifier = Modifier.weight(1f)
+            ) { Text("📷 选择壁纸", color = Color.White) }
+            if (wallpaperUri.isNotBlank()) {
+                OutlinedButton(
+                    onClick = { viewModel.setWallpaperUri("") },
+                    modifier = Modifier.weight(1f)
+                ) { Text("清除", color = MaterialTheme.colorScheme.onSurface) }
+            }
+        }
+
+        if (wallpaperUri.isNotBlank()) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text("✅ 已设置壁纸", color = Accent, fontSize = 13.sp)
         }
 
         Spacer(modifier = Modifier.height(16.dp))

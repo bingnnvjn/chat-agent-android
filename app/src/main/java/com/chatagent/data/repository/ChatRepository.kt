@@ -74,6 +74,7 @@ class ChatRepository @Inject constructor(
         image: String? = null,
         enableThinking: Boolean = false,
         onToken: (String) -> Unit,
+        onThinkingToken: (String) -> Unit = {},
         onComplete: (String) -> Unit,
         onError: (String) -> Unit
     ) {
@@ -112,11 +113,32 @@ class ChatRepository @Inject constructor(
             }
 
             // 构建请求消息
-            val apiMessages = listOf(
-                ApiMessage(role = "system", content = "你是一个 AI 助手，用中文回答问题。")
-            ) + conversation.messages.map { msg ->
-                ApiMessage(role = msg.role, content = msg.content)
-            } + ApiMessage(role = "user", content = content)
+            val apiMessages = mutableListOf(
+                ApiMessage.text("system", "你是一个 AI 助手，用中文回答问题。")
+            )
+
+            // 历史消息（纯文本）
+            conversation.messages.forEach { msg ->
+                apiMessages.add(ApiMessage.text(msg.role, msg.content))
+            }
+
+            // 当前用户消息 — 判断是否含图片
+            val userApiMsg = if (image != null) {
+                // 从相册选图 → base64 data URL
+                ApiMessage.multimodal("user", content, image)
+            } else {
+                // 检测输入文本中是否包含图片 URL
+                val imageUrl = extractImageUrl(content)
+                if (imageUrl != null) {
+                    val text = content.replace(imageUrl, "").trim()
+                    ApiMessage.multimodal("user", text.ifEmpty { "描述这张图片" }, imageUrl)
+                } else {
+                    ApiMessage.text("user", content)
+                }
+            }
+            apiMessages.add(userApiMsg)
+
+            if (BuildConfig.DEBUG) Log.d("ChatRepository", "Image: $image")
 
             val request = ChatRequest(
                 model = model,
@@ -156,7 +178,7 @@ class ChatRepository @Inject constructor(
                             val d = r.choices?.firstOrNull()?.delta
                             if (d?.reasoning_content != null) {
                                 thinkingBuilder.append(d.reasoning_content)
-                                withContext(Dispatchers.Main) { onToken(d.reasoning_content) }
+                                withContext(Dispatchers.Main) { onThinkingToken(d.reasoning_content) }
                             }
                             if (d?.content != null) {
                                 contentBuilder.append(d.content); hadDelta = true
@@ -172,8 +194,9 @@ class ChatRepository @Inject constructor(
                         val r = json.decodeFromString<com.chatagent.data.model.ChatResponse>(allText)
                         val m = r.choices?.firstOrNull()?.message
                         if (m?.content != null) {
-                            contentBuilder.append(m.content)
-                            withContext(Dispatchers.Main) { onToken(m.content) }
+                            val text = (m.content as? kotlinx.serialization.json.JsonPrimitive)?.content ?: m.content.toString()
+                            contentBuilder.append(text)
+                            withContext(Dispatchers.Main) { onToken(text) }
                         }
                     } catch (_: Exception) {
                         if (BuildConfig.DEBUG) Log.e("ChatRepository", "Non-stream fallback failed")
@@ -233,5 +256,11 @@ class ChatRepository @Inject constructor(
             if (it.id == conversation.id) conversation else it
         }
         scope.launch { saveConversations() }
+    }
+
+    /** 从文本中提取图片 URL */
+    private fun extractImageUrl(text: String): String? {
+        val pattern = Regex("""https?://[^\s]+\.(?:jpg|jpeg|png|gif|webp|bmp)(?:\?[^\s]*)?""", RegexOption.IGNORE_CASE)
+        return pattern.find(text)?.value
     }
 }

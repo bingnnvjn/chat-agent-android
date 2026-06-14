@@ -37,11 +37,17 @@ class ChatViewModel @Inject constructor(
     private val _streamingContent = MutableStateFlow("")
     val streamingContent: StateFlow<String> = _streamingContent.asStateFlow()
 
+    private val _streamingThinking = MutableStateFlow("")
+    val streamingThinking: StateFlow<String> = _streamingThinking.asStateFlow()
+
     // 缓存 StateFlow，避免每次 getter 创建新实例
     private val _isDarkTheme = MutableStateFlow(true)
     val isDarkTheme: StateFlow<Boolean> = _isDarkTheme.asStateFlow()
 
     private val _apiKeyCache = mutableMapOf<String, StateFlow<String>>()
+
+    private val _wallpaperUri = MutableStateFlow("")
+    val wallpaperUri: StateFlow<String> = _wallpaperUri.asStateFlow()
 
     private var darkThemeJob: Job? = null
 
@@ -65,6 +71,9 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             settingsRepository.enableThinking.collect { _enableThinking.value = it }
         }
+        // 加载壁纸
+        viewModelScope.launch {
+            settingsRepository.wallpaperUri.collect { _wallpaperUri.value = it }
     }
 
     override fun onCleared() {
@@ -126,6 +135,7 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             _isStreaming.value = true
             _streamingContent.value = ""
+            _streamingThinking.value = ""
             chatRepository.sendMessage(
                 conversationId = conv.id,
                 content = content,
@@ -134,15 +144,20 @@ class ChatViewModel @Inject constructor(
                 onToken = { token ->
                     _streamingContent.value = _streamingContent.value + token
                 },
+                onThinkingToken = { token ->
+                    _streamingThinking.value = _streamingThinking.value + token
+                },
                 onComplete = {
                     val updated = chatRepository.getConversation(conv.id)
                     if (updated != null) _currentConversation.value = updated
                     _streamingContent.value = ""
+                    _streamingThinking.value = ""
                     _isStreaming.value = false
                 },
                 onError = { error ->
                     _uiState.value = _uiState.value.copy(errorMessage = error)
                     _streamingContent.value = ""
+                    _streamingThinking.value = ""
                     _isStreaming.value = false
                 }
             )
@@ -174,6 +189,10 @@ class ChatViewModel @Inject constructor(
 
     fun setDarkTheme(isDark: Boolean) {
         viewModelScope.launch { settingsRepository.setDarkTheme(isDark) }
+    }
+
+    fun setWallpaperUri(uri: String) {
+        viewModelScope.launch { settingsRepository.setWallpaperUri(uri) }
     }
 }
 

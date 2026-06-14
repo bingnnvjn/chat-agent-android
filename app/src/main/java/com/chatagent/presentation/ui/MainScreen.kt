@@ -49,6 +49,7 @@ fun MainScreen(
     var showSidebar by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
     var showGlassTest by remember { mutableStateOf(false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
     val backdropColor = MaterialTheme.colorScheme.background
     val backdrop = rememberLayerBackdrop {
         drawRect(backdropColor)
@@ -56,11 +57,32 @@ fun MainScreen(
     }
     var inputText by remember { mutableStateOf("") }
     var pendingImageUri by remember { mutableStateOf<android.net.Uri?>(null) }
+    val wallpaperUri by viewModel.wallpaperUri.collectAsState()
 
     Box(
         modifier = Modifier
             .fillMaxSize()
     ) {
+        // 壁纸层（在所有内容之下）
+        if (wallpaperUri.isNotBlank()) {
+            val wpBitmap = remember(wallpaperUri) {
+                try {
+                    val uri = android.net.Uri.parse(wallpaperUri)
+                    val input = context.contentResolver.openInputStream(uri)
+                    android.graphics.BitmapFactory.decodeStream(input)
+                        ?.asImageBitmap()
+                } catch (_: Exception) { null }
+            }
+            wpBitmap?.let { bm ->
+                androidx.compose.foundation.Image(
+                    bitmap = bm,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                )
+            }
+        }
+
         // 聊天内容 + 捕获层（消息被捕获，供玻璃折射）
         Box(
             modifier = Modifier
@@ -69,6 +91,7 @@ fun MainScreen(
         ) {
             ChatScreen(
                 viewModel = viewModel,
+                backdrop = backdrop,
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -81,7 +104,7 @@ fun MainScreen(
             onMenuClick = { showSidebar = true },
             onNewChatClick = { viewModel.createConversation() },
             onModelSelect = { model -> viewModel.setModel(model) },
-            modifier = Modifier.padding(top = 24.dp)
+            modifier = Modifier.padding(top = 48.dp)
         )
 
         // 悬浮底栏
@@ -93,7 +116,10 @@ fun MainScreen(
             onToggleThinking = { viewModel.toggleThinking() },
             onSend = {
                 if (inputText.isNotBlank() || pendingImageUri != null) {
-                    viewModel.sendMessage(inputText, pendingImageUri?.toString())
+                    val imageBase64 = pendingImageUri?.let { uri ->
+                        com.chatagent.data.util.uriToBase64(context, uri)
+                    }
+                    viewModel.sendMessage(inputText, imageBase64)
                     inputText = ""
                     pendingImageUri = null
                 }
@@ -101,7 +127,7 @@ fun MainScreen(
             onImagePicked = { uri -> pendingImageUri = uri },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 36.dp)
+                .padding(bottom = 48.dp)
         )
 
         // 侧边栏

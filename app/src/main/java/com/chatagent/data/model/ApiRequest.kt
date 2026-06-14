@@ -1,7 +1,11 @@
 package com.chatagent.data.model
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.putJsonObject
 
 @Serializable
 data class ChatRequest(
@@ -20,15 +24,40 @@ data class ChatTemplateKwargs(
     val enable_thinking: Boolean = false
 )
 
+/**
+ * API 消息 — content 支持纯文本字符串 或 多模态内容数组
+ * 构建多模态消息请用 ApiMessage.multimodal()
+ */
 @Serializable
 data class ApiMessage(
     val role: String,
-    val content: String
+    val content: JsonElement  // JsonPrimitive(字符串) 或 JsonArray(多模态)
 ) {
     companion object {
-        fun text(role: String, content: String) = ApiMessage(role, content)
-        fun textWithImage(role: String, text: String, imageUrl: String): ApiMessage =
-            ApiMessage(role, text) // image_url handled separately
+        /** 纯文本消息 */
+        fun text(role: String, content: String) =
+            ApiMessage(role, JsonPrimitive(content))
+
+        /** 多模态消息：文本 + 图片 */
+        fun multimodal(role: String, text: String, imageUrl: String): ApiMessage {
+            val parts = buildJsonArray {
+                add(
+                    kotlinx.serialization.json.buildJsonObject {
+                        put("type", JsonPrimitive("text"))
+                        put("text", JsonPrimitive(text))
+                    }
+                )
+                add(
+                    kotlinx.serialization.json.buildJsonObject {
+                        put("type", JsonPrimitive("image_url"))
+                        putJsonObject("image_url") {
+                            put("url", JsonPrimitive(imageUrl))
+                        }
+                    }
+                )
+            }
+            return ApiMessage(role, parts)
+        }
     }
 }
 
