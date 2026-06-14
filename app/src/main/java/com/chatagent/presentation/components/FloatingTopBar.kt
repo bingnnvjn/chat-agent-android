@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -33,8 +34,8 @@ import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.runtimeShaderEffect
 import com.kyant.backdrop.effects.vibrancy
+import com.kyant.backdrop.highlight.Highlight
 import com.kyant.shapes.Capsule
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -42,10 +43,6 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.tanh
 
-/**
- * 顶部液态玻璃导航栏
- * 按钮效果直接移植自 LiquidButton 示例组件
- */
 @Composable
 fun FloatingTopBar(
     backdrop: Backdrop? = null,
@@ -63,21 +60,23 @@ fun FloatingTopBar(
         modifier = modifier.fillMaxWidth().height(60.dp).padding(horizontal = 12.dp),
         contentAlignment = Alignment.Center
     ) {
-        // 左：液态玻璃圆形按钮
+        // 左：透明液态圆形按钮
         if (backdrop != null) {
             TopLiquidCircleButton(backdrop, capsuleSize, Modifier.align(Alignment.CenterStart), onMenuClick) {
-                Text("‹", fontSize = 20.sp, color = Color.White)
+                Text("\u2039", fontSize = 20.sp, color = Color.White)
             }
         } else {
             Box(Modifier.size(capsuleSize).align(Alignment.CenterStart).clip(CircleShape)
                 .clickable { onMenuClick() }, contentAlignment = Alignment.Center
-            ) { Text("‹", color = MaterialTheme.colorScheme.onSurface, fontSize = 20.sp) }
+            ) { Text("\u2039", color = MaterialTheme.colorScheme.onSurface, fontSize = 20.sp) }
         }
 
-        // 中：会话标题胶囊 — 最大 5 字 + "..."
-        val displayTitle = title.let { if (it.length > 5) it.take(5) + "…" else it }
+        // 中：绿色着色胶囊 (LiquidButton 绿色着色效果)
+        val displayTitle = title.let { if (it.length > 5) it.take(5) + "\u2026" else it }
+        val capsuleScope = rememberCoroutineScope()
+        val capsuleHl = remember(capsuleScope) { InteractiveHighlight(capsuleScope) }
         val density = androidx.compose.ui.platform.LocalDensity.current
-        val capsuleSizePx = with(density) { capsuleSize.toPx() }
+        val cSizePx = with(density) { capsuleSize.toPx() }
 
         Box(
             modifier = Modifier
@@ -85,29 +84,31 @@ fun FloatingTopBar(
                 .widthIn(min = capsuleSize, max = capsuleSize * 4)
                 .height(capsuleSize)
                 .let { m ->
-                    if (backdrop != null) {
-                        // 添加顶部渐变模糊
-                        val alphaMaskShader = """
-uniform shader content;
-uniform float2 size;
-half4 main(float2 coord) {
-    float blurAlpha = smoothstep(0.0, size.y * 0.5, size.y - coord.y);
-    return content.eval(coord) * blurAlpha;
-}"""
-                        m.drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { Capsule() },
-                            effects = {
-                                vibrancy()
-                                blur(4f.dp.toPx())
-                                runtimeShaderEffect("TopFade", alphaMaskShader, "content") {}
-                            },
-                            onDrawSurface = {}
-                        )
-                    } else m
+                    if (backdrop != null) m.drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { Capsule() },
+                        effects = { vibrancy(); blur(2f.dp.toPx()) },
+                        layerBlock = {
+                            val p = capsuleHl.progress
+                            val s = lerp(1f, 1f + 4f / cSizePx, p)
+                            val off = capsuleHl.offset
+                            translationX = cSizePx * tanh(0.05f * off.x / cSizePx)
+                            translationY = cSizePx * tanh(0.05f * off.y / cSizePx)
+                            val drag = 4f / cSizePx; val angle = atan2(off.y, off.x)
+                            scaleX = s + drag * abs(cos(angle) * off.x / cSizePx)
+                            scaleY = s + drag * abs(sin(angle) * off.y / cSizePx)
+                        },
+                        highlight = { Highlight.Plain },
+                        onDrawSurface = {
+                            drawRect(Color(0xFF10A37F), blendMode = BlendMode.Hue)
+                            drawRect(Color(0xFF10A37F).copy(alpha = 0.75f))
+                        }
+                    ) else m
                 }
                 .clip(Capsule())
-                .clickable(onClick = { showModelMenu = true }),
+                .clickable(onClick = { showModelMenu = true })
+                .then(if (backdrop != null) capsuleHl.modifier else Modifier)
+                .then(if (backdrop != null) capsuleHl.gestureModifier else Modifier),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -122,15 +123,15 @@ half4 main(float2 coord) {
             )
         }
 
-        // 右：液态玻璃圆形按钮
+        // 右：透明液态圆形按钮
         if (backdrop != null) {
             TopLiquidCircleButton(backdrop, capsuleSize, Modifier.align(Alignment.CenterEnd), onNewChatClick) {
-                Text("⋯", fontSize = 20.sp, color = Color.White)
+                Text("\u22EF", fontSize = 20.sp, color = Color.White)
             }
         } else {
             Box(Modifier.size(capsuleSize).align(Alignment.CenterEnd).clip(CircleShape)
                 .clickable { onNewChatClick() }, contentAlignment = Alignment.Center
-            ) { Text("⋯", color = MaterialTheme.colorScheme.onSurface, fontSize = 20.sp) }
+            ) { Text("\u22EF", color = MaterialTheme.colorScheme.onSurface, fontSize = 20.sp) }
         }
     }
 
@@ -154,7 +155,6 @@ half4 main(float2 coord) {
     }
 }
 
-/** 顶部圆形液态按钮 — 从 LiquidButton 示例直接移植 */
 @Composable
 private fun TopLiquidCircleButton(
     backdrop: Backdrop,
@@ -180,8 +180,7 @@ private fun TopLiquidCircleButton(
                     val off = highlight.offset
                     translationX = sizePx * tanh(0.05f * off.x / sizePx)
                     translationY = sizePx * tanh(0.05f * off.y / sizePx)
-                    val drag = 4f / sizePx
-                    val angle = atan2(off.y, off.x)
+                    val drag = 4f / sizePx; val angle = atan2(off.y, off.x)
                     scaleX = s + drag * abs(cos(angle) * off.x / sizePx)
                     scaleY = s + drag * abs(sin(angle) * off.y / sizePx)
                 },

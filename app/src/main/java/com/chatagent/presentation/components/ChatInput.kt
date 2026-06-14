@@ -43,6 +43,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
 import com.kyant.shapes.Capsule
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.rememberGraphicsLayer
+import com.chatagent.presentation.components.scale
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
@@ -50,6 +55,9 @@ import com.kyant.backdrop.effects.colorControls
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.runtimeShaderEffect
 import com.kyant.backdrop.effects.vibrancy
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlin.math.sign
 import kotlin.math.tanh
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -110,12 +118,33 @@ fun ChatInput(
 
             Spacer(Modifier.width(10.dp))
 
-            // 输入胶囊（液态玻璃 + 交互变形 + 渐变模糊 + 箭头）
+            // 输入胶囊（完全体液态玻璃：自适应亮度 + 交互变形 + 渐变模糊 + 箭头）
             val capsuleScope = rememberCoroutineScope()
             val capsuleHighlight = remember(capsuleScope) { InteractiveHighlight(capsuleScope) }
-            val isDark = isSystemInDarkTheme()
-            val lum = if (isDark) 0.2f else 0.7f
             val capsulePx = with(density) { capsuleHeight.toPx() }
+
+            // 自适应亮度采样
+            val lumLayer = rememberGraphicsLayer()
+            val luminanceAnim = remember { Animatable(0.5f) }
+            LaunchedEffect(backdrop) {
+                val buffer = IntArray(25)
+                while (isActive) {
+                    try {
+                        val img = lumLayer.toImageBitmap()
+                        val thumb = img.scale(5, 5)
+                        thumb.readPixels(buffer)
+                        val avg = buffer.sumOf { argb ->
+                            val r = (argb shr 16 and 0xFF) / 255f
+                            val g = (argb shr 8 and 0xFF) / 255f
+                            val b = (argb and 0xFF) / 255f
+                            0.2126 * r + 0.7152 * g + 0.0722 * b
+                        } / buffer.size
+                        launch { luminanceAnim.animateTo(avg.toFloat(), tween(1000)) }
+                    } catch (_: Exception) {}
+                }
+            }
+
+            val lum = luminanceAnim.value
 
             // 底部渐变模糊 shader
             val bottomFadeShader = """
@@ -132,13 +161,14 @@ half4 main(float2 coord) {
                         if (backdrop != null) m.drawBackdrop(
                             backdrop = backdrop, shape = { Capsule() },
                             effects = {
-                                val l = lum
+                                val l = (lum * 2f - 1f).let { sign(it) * it * it }
                                 colorControls(
-                                    brightness = if (l > 0.5f) 0.05f else 0.15f,
-                                    contrast = if (l > 0.5f) 1f else 0.9f
+                                    brightness = if (l > 0f) lerp(0.1f, 0.5f, l) else lerp(0.1f, -0.2f, -l),
+                                    contrast = if (l > 0f) lerp(1f, 0f, l) else 1f,
+                                    saturation = 1.5f
                                 )
                                 vibrancy()
-                                blur(if (l > 0.5f) 4f.dp.toPx() else 6f.dp.toPx())
+                                blur(if (l > 0f) lerp(4f.dp.toPx(), 8f.dp.toPx(), l) else lerp(4f.dp.toPx(), 2f.dp.toPx(), -l))
                                 lens(12f.dp.toPx(), 22f.dp.toPx())
                                 runtimeShaderEffect("BottomFade", bottomFadeShader, "content") {}
                             },
@@ -150,7 +180,7 @@ half4 main(float2 coord) {
                                 translationY = capsulePx * tanh(0.03f * off.y / capsulePx)
                                 scaleX = s; scaleY = s
                             },
-                            onDrawSurface = {}
+                            onDrawBackdrop = { d -> d(); lumLayer.record { d() } }
                         ) else m
                     }
                     .clip(Capsule())
