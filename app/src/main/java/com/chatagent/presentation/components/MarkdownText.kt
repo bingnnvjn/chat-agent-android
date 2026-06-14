@@ -40,8 +40,7 @@ fun MarkdownText(
     markdown: String,
     modifier: Modifier = Modifier,
     color: Color = MaterialTheme.colorScheme.onSurface,
-    style: TextStyle = MaterialTheme.typography.bodyLarge,
-    onTextLayout: (androidx.compose.ui.text.TextLayoutResult) -> Unit = {}
+    style: TextStyle = MaterialTheme.typography.bodyLarge
 ) {
     val codeBg = Color(0xFF1E1E2E)
     val codeTextColor = Color(0xFFCDD6F4)
@@ -243,8 +242,7 @@ private fun InlineMarkdown(
     Text(
         text = annotated,
         style = style,
-        color = color,
-        onTextLayout = onTextLayout
+        color = color
     )
 }
 

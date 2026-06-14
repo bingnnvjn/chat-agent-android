@@ -44,6 +44,7 @@ fun MessageBubble(
     val textOnTinted = Color.White
     val avatarBg = if (isUser) tintColor else Color(0xFF0088FF)
     var lineCount by remember { mutableIntStateOf(1) }
+    val contentText = message.content
 
     AnimatedVisibility(
         visible = true,
@@ -76,57 +77,68 @@ fun MessageBubble(
 
             Spacer(Modifier.height(6.dp))
 
-            // 思考过程（AI 专属，默认折叠）
+            // 思考过程
             if (!isUser && message.thinkingContent != null) {
                 ThinkingBadge(thinking = message.thinkingContent, isDark = isDark)
                 Spacer(Modifier.height(6.dp))
             }
 
-            // 液态玻璃气泡
-            val bubbleShape = if (lineCount <= 1) Capsule() else RoundedRectangle(20.dp)
-            val contentText = message.content
-
+            // 行数检测（通过不可见的 BasicText，支持所有文本类型）
+            val density = androidx.compose.ui.platform.LocalDensity.current
             Box(
                 modifier = Modifier
                     .let { m ->
                         if (isUser) m.fillMaxWidth().wrapContentWidth(Alignment.End)
                         else m.fillMaxWidth()
                     }
-                    .let { m ->
-                        if (backdrop != null) m.drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { bubbleShape },
-                            effects = { vibrancy(); blur(2f.dp.toPx()); lens(12f.dp.toPx(), 24f.dp.toPx()) },
-                            onDrawSurface = {
-                                if (tintColor.isSpecified) {
-                                    drawRect(tintColor, blendMode = BlendMode.Hue)
-                                    drawRect(tintColor.copy(alpha = 0.75f))
+            ) {
+                // 隐藏的行数检测文本
+                androidx.compose.foundation.text.BasicText(
+                    text = contentText,
+                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, lineHeight = 22.sp),
+                    onTextLayout = { result -> lineCount = result.lineCount },
+                    modifier = Modifier.alpha(0f).fillMaxWidth()
+                )
+
+                // 液态玻璃气泡
+                val bubbleShape = if (lineCount <= 1) Capsule() else RoundedRectangle(20.dp)
+
+                Box(
+                    modifier = Modifier
+                        .let { m ->
+                            if (backdrop != null) m.drawBackdrop(
+                                backdrop = backdrop,
+                                shape = { bubbleShape },
+                                effects = { vibrancy(); blur(2f.dp.toPx()); lens(12f.dp.toPx(), 24f.dp.toPx()) },
+                                onDrawSurface = {
+                                    if (tintColor.isSpecified) {
+                                        drawRect(tintColor, blendMode = BlendMode.Hue)
+                                        drawRect(tintColor.copy(alpha = 0.75f))
+                                    }
                                 }
-                            }
-                        ) else m.background(
-                            if (isUser) tintColor else if (isDark) Color(0xFF1C1C1E) else Color(0xFFE8E8E8),
-                            shape = if (lineCount <= 1) CircleShape else RoundedCornerShape(20.dp)
+                            ) else m.background(
+                                if (isUser) tintColor else if (isDark) Color(0xFF1C1C1E) else Color(0xFFE8E8E8),
+                                shape = if (lineCount <= 1) CircleShape else RoundedCornerShape(20.dp)
+                            )
+                        }
+                        .clip(bubbleShape)
+                        .padding(horizontal = 16.dp, vertical = 10.dp)
+                ) {
+                    if (isUser) {
+                        Text(
+                            contentText,
+                            color = textOnTinted,
+                            fontSize = 16.sp,
+                            lineHeight = 22.sp,
+                            overflow = TextOverflow.Clip
+                        )
+                    } else {
+                        MarkdownText(
+                            markdown = contentText,
+                            color = textOnTinted,
+                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, lineHeight = 22.sp)
                         )
                     }
-                    .clip(bubbleShape)
-                    .padding(horizontal = 16.dp, vertical = 10.dp)
-            ) {
-                if (isUser) {
-                    Text(
-                        contentText,
-                        color = textOnTinted,
-                        fontSize = 16.sp,
-                        lineHeight = 22.sp,
-                        onTextLayout = { result -> lineCount = result.lineCount },
-                        overflow = TextOverflow.Clip
-                    )
-                } else {
-                    MarkdownText(
-                        markdown = contentText,
-                        color = textOnTinted,
-                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, lineHeight = 22.sp),
-                        onTextLayout = { result -> lineCount = result.lineCount }
-                    )
                 }
             }
 
