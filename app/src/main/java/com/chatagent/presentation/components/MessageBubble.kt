@@ -12,7 +12,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
@@ -46,6 +45,7 @@ fun MessageBubble(
     val avatarBg = if (isUser) tintColor else Color(0xFF0088FF)
     var lineCount by remember { mutableIntStateOf(1) }
     val contentText = message.content
+    val bubbleShape = if (isUser && lineCount <= 1) Capsule() else RoundedRectangle(20.dp)
 
     AnimatedVisibility(
         visible = true,
@@ -53,38 +53,36 @@ fun MessageBubble(
         modifier = modifier
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 2.dp)) {
-            // 头像 + 名字行
+            // Avatar + name
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (!isUser) {
-                    Box(
-                        modifier = Modifier.size(26.dp).clip(CircleShape).background(avatarBg),
+                    Box(modifier = Modifier.size(26.dp).clip(CircleShape).background(avatarBg),
                         contentAlignment = Alignment.Center
                     ) { Text("AI", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 10.sp) }
                     Spacer(Modifier.width(8.dp))
                     Text(modelName, color = Color(0xFF8E8E93), fontSize = 13.sp, fontWeight = FontWeight.Medium)
                 } else {
-                    Text("我", color = Color(0xFF8E8E93), fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                    Text("I", color = Color(0xFF8E8E93), fontSize = 13.sp, fontWeight = FontWeight.Medium)
                     Spacer(Modifier.width(8.dp))
-                    Box(
-                        modifier = Modifier.size(26.dp).clip(CircleShape).background(avatarBg),
+                    Box(modifier = Modifier.size(26.dp).clip(CircleShape).background(avatarBg),
                         contentAlignment = Alignment.Center
-                    ) { Text("我", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 10.sp) }
+                    ) { Text("I", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 10.sp) }
                 }
             }
 
             Spacer(Modifier.height(6.dp))
 
-            // 思考过程
+            // Thinking badge
             if (!isUser && message.thinkingContent != null) {
                 ThinkingBadge(thinking = message.thinkingContent, isDark = isDark)
                 Spacer(Modifier.height(6.dp))
             }
 
-            // 行数检测（通过不可见的 BasicText，支持所有文本类型）
+            // Message bubble
             Box(
                 modifier = Modifier
                     .let { m ->
@@ -92,17 +90,6 @@ fun MessageBubble(
                         else m.fillMaxWidth()
                     }
             ) {
-                // 隐藏的行数检测文本
-                androidx.compose.foundation.text.BasicText(
-                    text = contentText,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, lineHeight = 22.sp),
-                    onTextLayout = { result -> lineCount = result.lineCount },
-                    modifier = Modifier.alpha(0f).fillMaxWidth()
-                )
-
-                // 液态玻璃气泡
-                val bubbleShape = if (lineCount <= 1) Capsule() else RoundedRectangle(20.dp)
-
                 Box(
                     modifier = Modifier
                         .let { m ->
@@ -118,7 +105,7 @@ fun MessageBubble(
                                 }
                             ) else m.background(
                                 if (isUser) tintColor else if (isDark) Color(0xFF1C1C1E) else Color(0xFFE8E8E8),
-                                shape = if (lineCount <= 1) CircleShape else RoundedCornerShape(20.dp)
+                                shape = if (isUser && lineCount <= 1) CircleShape else RoundedCornerShape(20.dp)
                             )
                         }
                         .clip(bubbleShape)
@@ -130,6 +117,7 @@ fun MessageBubble(
                             color = textOnTinted,
                             fontSize = 16.sp,
                             lineHeight = 22.sp,
+                            onTextLayout = { result -> lineCount = result.lineCount },
                             overflow = TextOverflow.Clip
                         )
                     } else {
@@ -142,18 +130,18 @@ fun MessageBubble(
                 }
             }
 
-            // 复制按钮
+            // Copy button
             if (!isUser && contentText.isNotBlank()) {
                 Spacer(Modifier.height(4.dp))
                 val ctx = androidx.compose.ui.platform.LocalContext.current
                 var copied by remember { mutableStateOf(false) }
                 Text(
-                    text = if (copied) "已复制 \u2713" else "复制",
+                    text = if (copied) "Copied" else "Copy",
                     color = Color(0xFF8E8E93),
                     fontSize = 13.sp,
                     modifier = Modifier.padding(start = 4.dp).clickable {
                         val clip = ctx.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                        clip.setPrimaryClip(android.content.ClipData.newPlainText("AI回复", contentText))
+                        clip.setPrimaryClip(android.content.ClipData.newPlainText("AI", contentText))
                         copied = true
                     }
                 )
@@ -184,20 +172,14 @@ private fun ThinkingBadge(thinking: String, isDark: Boolean) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("\uD83D\uDCA1", fontSize = 13.sp)
             Spacer(Modifier.width(6.dp))
-            Text("思考过程", color = textColor, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+            Text("Thinking", color = textColor, fontSize = 13.sp, fontWeight = FontWeight.Medium)
             Spacer(Modifier.weight(1f))
             Text(if (expanded) "\u25B2" else "\u25BC", color = textColor, fontSize = 10.sp)
         }
         AnimatedVisibility(visible = expanded, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
             Column {
                 Spacer(Modifier.height(8.dp))
-                Text(
-                    thinking.ifEmpty { "思考中..." },
-                    color = textColor,
-                    fontSize = 13.sp,
-                    lineHeight = 18.sp,
-                    fontStyle = FontStyle.Italic
-                )
+                Text(thinking.ifEmpty { "Thinking..." }, color = textColor, fontSize = 13.sp, lineHeight = 18.sp, fontStyle = FontStyle.Italic)
             }
         }
     }
