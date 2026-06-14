@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
@@ -84,7 +85,6 @@ fun MessageBubble(
             }
 
             // 行数检测（通过不可见的 BasicText，支持所有文本类型）
-            val density = androidx.compose.ui.platform.LocalDensity.current
             Box(
                 modifier = Modifier
                     .let { m ->
