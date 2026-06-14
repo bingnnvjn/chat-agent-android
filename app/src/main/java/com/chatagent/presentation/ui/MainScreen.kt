@@ -62,11 +62,6 @@ fun MainScreen(
         drawRect(backdropColor)
         drawContent()
     }
-    // 壁纸专用 backdrop — 仅含壁纸，无聊天内容，供气泡使用，避免死循环
-    val wallpaperBackdrop = rememberLayerBackdrop {
-        drawRect(backdropColor)
-        drawContent()
-    }
     var inputText by remember { mutableStateOf("") }
     var pendingImageUri by remember { mutableStateOf<android.net.Uri?>(null) }
     val wallpaperUri by viewModel.wallpaperUri.collectAsState()
@@ -75,31 +70,9 @@ fun MainScreen(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        // 壁纸层（在所有内容之下）
-        if (wallpaperUri.isNotBlank()) {
-            val wpBitmap = remember(wallpaperUri) {
-                try {
-                    val uri = android.net.Uri.parse(wallpaperUri)
-                    val input = context.contentResolver.openInputStream(uri)
-                    android.graphics.BitmapFactory.decodeStream(input)
-                        ?.asImageBitmap()
-                } catch (_: Exception) { null }
-            }
-            wpBitmap?.let { bm ->
-                androidx.compose.foundation.Image(
-                    bitmap = bm,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                )
-            }
-        }
-
-        // 聊天内容 + 捕获层（消息被捕获，供玻璃折射）
-        // M-dM-8M-1M-gM-^AM-^RM-hM-^PM-^(M-eM-^CM-^AM- M-eM-^OM-^SM-"M-eM-^PM-^LM-eM-^SM-,M-fM-^@M-0M-fM-^HM-^]M-eM-^SM-^B wallpaperBackdrop M-eM-^BM-^VM-eM-^SM-^
-        val showWallpaper = wallpaperUri.isNotBlank()
+        // 壁纸层（捕获到 wallpaperBackdrop，供气泡使用）
         Box(Modifier.fillMaxSize().layerBackdrop(wallpaperBackdrop)) {
-            if (showWallpaper) {
+            if (wallpaperUri.isNotBlank()) {
                 val wpBitmap = remember(wallpaperUri) {
                     try {
                         val uri = android.net.Uri.parse(wallpaperUri)
@@ -119,7 +92,7 @@ fun MainScreen(
             }
         }
 
-        // M-EM-^PM-^MM-hM-^AM-^RM-hM-^HM-^MM-hM-^PM-^FM-gM-^PM-^\M-EM-^PM-^M M-eM-^SM-^-M-hM-^SM-^HM-hM-^PM-^AM-gM-HM-CM-fM-^CM-^RM-eM-^AM-^CM-gM-^PM-^
+        // 聊天内容 + 捕获层
         Box(
             modifier = Modifier
                 .fillMaxSize()
