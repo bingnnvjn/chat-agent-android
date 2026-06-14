@@ -56,7 +56,6 @@ fun ChatScreen(
     LaunchedEffect(streamingContent) {
         if (isStreaming && streamingContent.isNotEmpty()) {
             val targetIndex = currentConversation?.messages?.size ?: 0
-            // 用 scrollToItem 不带动画实现实时跟随
             listState.scrollToItem(targetIndex)
         }
     }
