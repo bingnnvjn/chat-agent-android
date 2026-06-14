@@ -52,7 +52,18 @@ fun MainScreen(
     var showGlassTest by remember { mutableStateOf(false) }
     val context = androidx.compose.ui.platform.LocalContext.current
     val backdropColor = MaterialTheme.colorScheme.background
+    // 主 backdrop — 含壁纸+聊天内容，供 Top/Bottom 栏使用
     val backdrop = rememberLayerBackdrop {
+        drawRect(backdropColor)
+        drawContent()
+    }
+    // M-dM-8M-; wallpaperBackdrop M-bM-^@M-^T M-eM-=M-^IM-hM-:M-^IM-hM-^AM-^RM-fM-^HM-^M M-EM-^PM-^MM-eM-^AM-^U
+    val wallpaperBackdrop = rememberLayerBackdrop {
+        drawRect(backdropColor)
+        drawContent()
+    }
+    // 壁纸专用 backdrop — 仅含壁纸，无聊天内容，供气泡使用，避免死循环
+    val wallpaperBackdrop = rememberLayerBackdrop {
         drawRect(backdropColor)
         drawContent()
     }
@@ -85,6 +96,30 @@ fun MainScreen(
         }
 
         // 聊天内容 + 捕获层（消息被捕获，供玻璃折射）
+        // M-dM-8M-1M-gM-^AM-^RM-hM-^PM-^(M-eM-^CM-^AM- M-eM-^OM-^SM-"M-eM-^PM-^LM-eM-^SM-,M-fM-^@M-0M-fM-^HM-^]M-eM-^SM-^B wallpaperBackdrop M-eM-^BM-^VM-eM-^SM-^
+        val showWallpaper = wallpaperUri.isNotBlank()
+        Box(Modifier.fillMaxSize().layerBackdrop(wallpaperBackdrop)) {
+            if (showWallpaper) {
+                val wpBitmap = remember(wallpaperUri) {
+                    try {
+                        val uri = android.net.Uri.parse(wallpaperUri)
+                        val input = context.contentResolver.openInputStream(uri)
+                        android.graphics.BitmapFactory.decodeStream(input)
+                            ?.asImageBitmap()
+                    } catch (_: Exception) { null }
+                }
+                wpBitmap?.let { bm ->
+                    androidx.compose.foundation.Image(
+                        bitmap = bm,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    )
+                }
+            }
+        }
+
+        // M-EM-^PM-^MM-hM-^AM-^RM-hM-^HM-^MM-hM-^PM-^FM-gM-^PM-^\M-EM-^PM-^M M-eM-^SM-^-M-hM-^SM-^HM-hM-^PM-^AM-gM-HM-CM-fM-^CM-^RM-eM-^AM-^CM-gM-^PM-^
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -92,7 +127,7 @@ fun MainScreen(
         ) {
             ChatScreen(
                 viewModel = viewModel,
-                backdrop = backdrop,
+                backdrop = wallpaperBackdrop,
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -128,7 +163,7 @@ fun MainScreen(
             onImagePicked = { uri -> pendingImageUri = uri },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 48.dp)
+                .padding(bottom = 56.dp)
         )
 
         // 侧边栏

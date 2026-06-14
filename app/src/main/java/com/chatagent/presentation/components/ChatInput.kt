@@ -80,8 +80,8 @@ fun ChatInput(
     val density = androidx.compose.ui.platform.LocalDensity.current
 
     // 1.2x 尺寸常量
-    val btnSize = 48.dp
-    val capsuleHeight = 48.dp
+    val btnSize = 44.dp
+    val capsuleHeight = 44.dp
 
     // 思考模式弹出
     var showThinkingMenu by remember { mutableStateOf(false) }
@@ -91,7 +91,7 @@ fun ChatInput(
     }
 
     Box(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp)
+        modifier = modifier.fillMaxWidth().padding(horizontal = 10.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -206,8 +206,8 @@ half4 main(float2 coord) {
                     Box(
                         modifier = Modifier.height(32.dp)
                             .let { m ->
-                                if (hasSend) m.clip(RoundedCornerShape(16.dp)).background(SendGreen).clickable { onSend() }
-                                else m.clip(RoundedCornerShape(16.dp)).background(Color.White.copy(alpha = 0.1f))
+                                if (hasSend) m.clip(RoundedCornerShape(14.dp)).background(SendGreen).clickable { onSend() }
+                                else m.clip(RoundedCornerShape(14.dp)).background(Color.White.copy(alpha = 0.1f))
                             }.padding(horizontal = 14.dp),
                         contentAlignment = Alignment.Center
                     ) { Text("↑", color = Color.White, fontSize = 19.sp) }
