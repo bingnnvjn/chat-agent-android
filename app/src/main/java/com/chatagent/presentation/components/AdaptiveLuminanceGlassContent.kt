@@ -97,7 +97,6 @@ fun AdaptiveLuminanceGlassContent(
                 .drawBackdrop(
                     backdrop = backdrop,
                     shape = { RoundedRectangle(24f.dp) },
-                    highlight = { Highlight.Plain },
                     effects = {
                         val l = (luminanceAnimation.value * 2f - 1f).let { sign(it) * it * it }
                         colorControls(
