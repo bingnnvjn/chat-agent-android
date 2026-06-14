@@ -25,6 +25,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import com.kyant.shapes.Capsule
 import androidx.compose.foundation.text.BasicText
@@ -74,7 +80,7 @@ import kotlin.math.sign
 import kotlin.math.sin
 import kotlin.math.tanh
 
-private val tabNames = listOf("液态按钮", "自适应亮度", "渐进模糊", "完全体")
+private val tabNames = listOf("液态按钮", "自适应亮度", "渐进模糊", "完全体", "滚动条")
 
 @Composable
 fun GlassTestScreen(onClose: () -> Unit = {}) {
@@ -123,6 +129,7 @@ fun GlassTestScreen(onClose: () -> Unit = {}) {
                     1 -> AdaptivePage(backdrop, textColor)
                     2 -> BlurPage(backdrop, textColor)
                     3 -> FusionPage(backdrop, textColor)
+                    4 -> ScrollbarPage()
                 }
             }
 
@@ -315,5 +322,67 @@ half4 main(float2 coord) {
         }
         Text("从上到下渐变模糊，底部叠加 tint", color = textColor.copy(alpha = 0.4f), fontSize = 11.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 24.dp))
         Spacer(Modifier.height(24.dp))
+    }
+}
+
+// ══════════════════════════
+// Tab 4: Scrollbar — Compose 1.11 ScrollIndicator API
+// ══════════════════════════
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@Composable
+private fun ScrollbarPage() {
+    val listState = rememberLazyListState()
+    val items = remember { (1..100).map { "Item #$it" } }
+    val factory = remember {
+        object : androidx.compose.foundation.ScrollIndicatorFactory {
+            @Composable
+            override fun DrawScope.drawIndicator(state: androidx.compose.foundation.ScrollIndicatorState) {
+                val scrollable = (state.contentSize - state.viewportSize).coerceAtLeast(1)
+                val thumbH = (state.viewportSize.toFloat() / state.contentSize * state.viewportSize)
+                    .coerceAtLeast(24f)
+                val thumbOff = (state.scrollOffset.toFloat() / scrollable) *
+                    (state.viewportSize - thumbH)
+
+                drawRoundRect(
+                    color = Color.Gray.copy(alpha = 0.15f),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(4f)
+                )
+                drawRoundRect(
+                    color = Color.Gray.copy(alpha = 0.5f),
+                    topLeft = androidx.compose.ui.geometry.Offset(0f, thumbOff),
+                    size = androidx.compose.ui.geometry.Size(size.width, thumbH),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(4f)
+                )
+            }
+        }
+    }
+
+    Box(
+        Modifier.fillMaxSize()
+            .then(
+                listState.scrollIndicatorState?.let { state ->
+                    Modifier.scrollIndicator(factory = factory, state = state)
+                } ?: Modifier
+            )
+    ) {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            item {
+                Text("⬇️ 向下滚动查看 Scrollbar", fontSize = 14.sp, color = Color.Gray)
+                Spacer(Modifier.height(4.dp))
+            }
+            items(items) { item ->
+                Box(
+                    Modifier.fillMaxWidth()
+                        .background(Color.Gray.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
+                        .padding(12.dp)
+                ) {
+                    Text(item, fontSize = 14.sp)
+                }
+            }
+        }
     }
 }
