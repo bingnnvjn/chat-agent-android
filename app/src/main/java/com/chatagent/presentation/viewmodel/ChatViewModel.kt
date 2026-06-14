@@ -74,6 +74,7 @@ class ChatViewModel @Inject constructor(
         // 加载壁纸
         viewModelScope.launch {
             settingsRepository.wallpaperUri.collect { _wallpaperUri.value = it }
+        }
     }
 
     override fun onCleared() {
