@@ -140,7 +140,7 @@ half4 main(float2 coord) {
                                 vibrancy()
                                 blur(if (l > 0.5f) 4f.dp.toPx() else 6f.dp.toPx())
                                 lens(12f.dp.toPx(), 22f.dp.toPx())
-                                runtimeShaderEffect("BottomFade", bottomFadeShader, "content")
+                                runtimeShaderEffect("BottomFade", bottomFadeShader, "content") {}
                             },
                             layerBlock = {
                                 val p = capsuleHighlight.progress

@@ -100,7 +100,7 @@ half4 main(float2 coord) {
                             effects = {
                                 vibrancy()
                                 blur(4f.dp.toPx())
-                                runtimeShaderEffect("TopFade", alphaMaskShader, "content")
+                                runtimeShaderEffect("TopFade", alphaMaskShader, "content") {}
                             },
                             onDrawSurface = {}
                         )
