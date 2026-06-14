@@ -324,7 +324,3 @@ half4 main(float2 coord) {
         Spacer(Modifier.height(24.dp))
     }
 }
-
-// ══════════════════════════
-        }
-    }
