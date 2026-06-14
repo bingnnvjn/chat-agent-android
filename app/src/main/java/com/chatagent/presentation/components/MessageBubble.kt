@@ -21,7 +21,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.util.lerp
 import com.chatagent.data.model.Message
 import com.chatagent.presentation.ui.theme.*
 import com.kyant.backdrop.Backdrop
@@ -31,17 +30,7 @@ import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import com.kyant.shapes.Capsule
 import com.kyant.shapes.RoundedRectangle
-import kotlin.math.abs
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.tanh
 
-/**
- * 液态玻璃消息气泡
- * 用户：绿色着色 + Capsule(1行) / RoundedRectangle(多行)
- * AI：蓝色着色 + 同上
- */
 @Composable
 fun MessageBubble(
     message: Message,
@@ -95,57 +84,31 @@ fun MessageBubble(
 
             // 液态玻璃气泡
             val bubbleShape = if (lineCount <= 1) Capsule() else RoundedRectangle(20.dp)
-            val scope = rememberCoroutineScope()
-            val highlight = remember(scope) { InteractiveHighlight(scope) }
-            val density = androidx.compose.ui.platform.LocalDensity.current
-
             val contentText = message.content
 
             Box(
                 modifier = Modifier
                     .let { m ->
-                        if (backdrop != null) {
-                            m.drawBackdrop(
-                                backdrop = backdrop,
-                                shape = { bubbleShape },
-                                effects = {
-                                    vibrancy()
-                                    blur(2f.dp.toPx())
-                                    lens(12f.dp.toPx(), 24f.dp.toPx())
-                                },
-                                layerBlock = {
-                                    val p = highlight.progress
-                                    val s = lerp(1f, 1f + 4f / size.height.toFloat(), p)
-                                    val off = highlight.offset
-                                    val mOff = minOf(size.width.toFloat(), size.height.toFloat())
-                                    translationX = mOff * tanh(0.05f * off.x / mOff)
-                                    translationY = mOff * tanh(0.05f * off.y / mOff)
-                                    val drag = 4f / size.height.toFloat()
-                                    val angle = atan2(off.y, off.x)
-                                    scaleX = s + drag * abs(cos(angle) * off.x / maxOf(size.width.toFloat(), size.height.toFloat()))
-                                    scaleY = s + drag * abs(sin(angle) * off.y / maxOf(size.width.toFloat(), size.height.toFloat()))
-                                },
-                                onDrawSurface = {
-                                    if (tintColor.isSpecified) {
-                                        drawRect(tintColor, blendMode = BlendMode.Hue)
-                                        drawRect(tintColor.copy(alpha = 0.75f))
-                                    }
-                                }
-                            )
-                        } else m.background(
-                            if (isUser) tintColor else if (isDark) Color(0xFF1C1C1E) else Color(0xFFE8E8E8),
-                            shape = if (lineCount <= 1) androidx.compose.foundation.shape.CircleShape
-                                    else RoundedCornerShape(20.dp)
-                        )
-                    }
-                    .let { m ->
                         if (isUser) m.fillMaxWidth().wrapContentWidth(Alignment.End)
                         else m.fillMaxWidth()
                     }
+                    .let { m ->
+                        if (backdrop != null) m.drawBackdrop(
+                            backdrop = backdrop,
+                            shape = { bubbleShape },
+                            effects = { vibrancy(); blur(2f.dp.toPx()); lens(12f.dp.toPx(), 24f.dp.toPx()) },
+                            onDrawSurface = {
+                                if (tintColor.isSpecified) {
+                                    drawRect(tintColor, blendMode = BlendMode.Hue)
+                                    drawRect(tintColor.copy(alpha = 0.75f))
+                                }
+                            }
+                        ) else m.background(
+                            if (isUser) tintColor else if (isDark) Color(0xFF1C1C1E) else Color(0xFFE8E8E8),
+                            shape = if (lineCount <= 1) CircleShape else RoundedCornerShape(20.dp)
+                        )
+                    }
                     .clip(bubbleShape)
-                    .then(if (backdrop != null && isUser) Modifier else Modifier)
-                    .then(if (backdrop != null) highlight.modifier else Modifier)
-                    .then(if (backdrop != null) highlight.gestureModifier else Modifier)
                     .padding(horizontal = 16.dp, vertical = 10.dp)
             ) {
                 if (isUser) {
@@ -161,18 +124,19 @@ fun MessageBubble(
                     MarkdownText(
                         markdown = contentText,
                         color = textOnTinted,
-                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, lineHeight = 22.sp)
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, lineHeight = 22.sp),
+                        onTextLayout = { result -> lineCount = result.lineCount }
                     )
                 }
             }
 
-            // 复制按钮（AI 回复底部）
+            // 复制按钮
             if (!isUser && contentText.isNotBlank()) {
                 Spacer(Modifier.height(4.dp))
                 val ctx = androidx.compose.ui.platform.LocalContext.current
                 var copied by remember { mutableStateOf(false) }
                 Text(
-                    text = if (copied) "已复制 ✓" else "复制",
+                    text = if (copied) "已复制 \u2713" else "复制",
                     color = Color(0xFF8E8E93),
                     fontSize = 13.sp,
                     modifier = Modifier.padding(start = 4.dp).clickable {
@@ -192,7 +156,6 @@ fun MessageBubble(
     }
 }
 
-/** 思考过程预览框 — 默认折叠 */
 @Composable
 private fun ThinkingBadge(thinking: String, isDark: Boolean) {
     var expanded by remember { mutableStateOf(false) }
@@ -207,11 +170,11 @@ private fun ThinkingBadge(thinking: String, isDark: Boolean) {
             .padding(12.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("💡", fontSize = 13.sp)
+            Text("\uD83D\uDCA1", fontSize = 13.sp)
             Spacer(Modifier.width(6.dp))
             Text("思考过程", color = textColor, fontSize = 13.sp, fontWeight = FontWeight.Medium)
             Spacer(Modifier.weight(1f))
-            Text(if (expanded) "▲" else "▼", color = textColor, fontSize = 10.sp)
+            Text(if (expanded) "\u25B2" else "\u25BC", color = textColor, fontSize = 10.sp)
         }
         AnimatedVisibility(visible = expanded, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
             Column {
