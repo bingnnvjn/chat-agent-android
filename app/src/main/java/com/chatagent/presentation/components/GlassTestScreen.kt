@@ -25,12 +25,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import com.kyant.shapes.Capsule
 import androidx.compose.foundation.text.BasicText
@@ -129,7 +123,6 @@ fun GlassTestScreen(onClose: () -> Unit = {}) {
                     1 -> AdaptivePage(backdrop, textColor)
                     2 -> BlurPage(backdrop, textColor)
                     3 -> FusionPage(backdrop, textColor)
-                    4 -> ScrollbarPage()
                 }
             }
 
@@ -184,11 +177,9 @@ private fun FusionPage(backdrop: Backdrop, textColor: Color) {
     val layer = rememberGraphicsLayer()
     val luminanceAnim = remember(isLight) { Animatable(if (isLight) 1f else 0f) }
     val contentColorAnim = remember(isLight) {
-        Animatable<Color, androidx.compose.animation.core.AnimationVector4D>(
-            initialValue = if (isLight) Color.Black else Color.White,
-            typeConverter = Color.VectorConverter
-        )
+        mutableStateOf(if (isLight) Color.Black else Color.White)
     }
+    var contentColor by contentColorAnim
 
     LaunchedEffect(layer) {
         val buffer = IntArray(25)
@@ -204,13 +195,8 @@ private fun FusionPage(backdrop: Backdrop, textColor: Color) {
                     val b = (argb and 0xFF) / 255f
                     0.2126 * r + 0.7152 * g + 0.0722 * b
                 } / buffer.size
-                launch {
-                    contentColorAnim.animateTo(
-                        if (avg > 0.5f) Color.Black else Color.White,
-                        tween(1000)
-                    )
-                }
                 launch { luminanceAnim.animateTo(avg.toFloat(), tween(1000)) }
+                contentColor = if (avg > 0.5f) Color.Black else Color.White
             } catch (_: Exception) {}
         }
     }
@@ -266,7 +252,7 @@ private fun FusionPage(backdrop: Backdrop, textColor: Color) {
             androidx.compose.foundation.text.BasicText(
                 "完全体  |  lum: ${(lum * 100f).fastRoundToInt() / 100.0}",
                 style = TextStyle(Color.Unspecified, 14.sp),
-                color = { contentColorAnim.value }
+                color = { contentColor }
             )
         }
 
@@ -340,63 +326,5 @@ half4 main(float2 coord) {
 }
 
 // ══════════════════════════
-// Tab 4: Scrollbar — Compose 1.11 ScrollIndicator API
-// ══════════════════════════
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
-@Composable
-private fun ScrollbarPage() {
-    val listState = rememberLazyListState()
-    val items = remember { (1..100).map { "Item #$it" } }
-    val factory = remember {
-        object : androidx.compose.foundation.ScrollIndicatorFactory {
-            @Composable
-            override fun DrawScope.drawIndicator(state: androidx.compose.foundation.ScrollIndicatorState) {
-                val scrollable = (state.contentSize - state.viewportSize).coerceAtLeast(1)
-                val thumbH = (state.viewportSize.toFloat() / state.contentSize * state.viewportSize)
-                    .coerceAtLeast(24f)
-                val thumbOff = (state.scrollOffset.toFloat() / scrollable) *
-                    (state.viewportSize - thumbH)
-
-                drawRoundRect(
-                    color = Color.Gray.copy(alpha = 0.15f),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(4f)
-                )
-                drawRoundRect(
-                    color = Color.Gray.copy(alpha = 0.5f),
-                    topLeft = androidx.compose.ui.geometry.Offset(0f, thumbOff),
-                    size = androidx.compose.ui.geometry.Size(size.width, thumbH),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(4f)
-                )
-            }
         }
     }
-
-    Box(
-        Modifier.fillMaxSize()
-            .then(
-                listState.scrollIndicatorState?.let { state ->
-                    Modifier.scrollIndicator(factory = factory, state = state)
-                } ?: Modifier
-            )
-    ) {
-        LazyColumn(
-            state = listState,
-            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            item {
-                Text("⬇️ 向下滚动查看 Scrollbar", fontSize = 14.sp, color = Color.Gray)
-                Spacer(Modifier.height(4.dp))
-            }
-            items(items) { item ->
-                Box(
-                    Modifier.fillMaxWidth()
-                        .background(Color.Gray.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
-                        .padding(12.dp)
-                ) {
-                    Text(item, fontSize = 14.sp)
-                }
-            }
-        }
-    }
-}
