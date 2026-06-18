@@ -80,6 +80,7 @@ fun SettingsScreen(
     // 加载已保存的 API Key 和主题
     val savedApiKey by viewModel.apiKeyForProvider(selectedProvider).collectAsState(initial = "")
     val savedDarkTheme by viewModel.isDarkTheme.collectAsState(initial = true)
+    val effectsEnabled by viewModel.enableEffects.collectAsState(initial = true)
 
     LaunchedEffect(savedApiKey) {
         if (savedApiKey.isNotEmpty()) apiKey = savedApiKey
@@ -301,6 +302,41 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(4.dp))
             Text("✅ 已设置壁纸", color = Accent, fontSize = 13.sp)
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // 液态玻璃效果开关
+        Text(
+            text = "液态玻璃效果",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (effectsEnabled) "液态玻璃 (blur/lens)" else "简洁模式 (G2形状)",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            androidx.compose.material3.Switch(
+                checked = effectsEnabled,
+                onCheckedChange = { viewModel.toggleEffects() },
+                colors = androidx.compose.material3.SwitchDefaults.colors(
+                    checkedThumbColor = Accent,
+                    checkedTrackColor = Accent.copy(alpha = 0.5f)
+                )
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "关闭可减少AGSL着色器开销，提升性能。形状/配色保持不变。",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 

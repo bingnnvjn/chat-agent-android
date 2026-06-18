@@ -46,6 +46,7 @@ fun MessageBubble(
     var lineCount by remember { mutableIntStateOf(1) }
     val contentText = message.content
     val bubbleShape = if (isUser && lineCount <= 1) Capsule() else RoundedRectangle(20.dp)
+    val effectsEnabled = com.chatagent.presentation.ui.theme.LocalLiquidEffectsEnabled.current
 
     AnimatedVisibility(
         visible = true,
@@ -93,7 +94,7 @@ fun MessageBubble(
                 Box(
                     modifier = Modifier
                         .let { m ->
-                            if (backdrop != null) m.drawBackdrop(
+                            if (backdrop != null && effectsEnabled) m.drawBackdrop(
                                 backdrop = backdrop,
                                 shape = { bubbleShape },
                                 effects = { vibrancy(); blur(2f.dp.toPx()); lens(12f.dp.toPx(), 24f.dp.toPx()) },

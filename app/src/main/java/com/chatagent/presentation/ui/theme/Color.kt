@@ -1,6 +1,13 @@
 package com.chatagent.presentation.ui.theme
 
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+
+/**
+ * CompositionLocal: 是否启用液态玻璃效果（blur/lens/vibrancy/AGSL）。
+ * 关闭后保留 G2 连续形状 + 基础配色，去掉模糊/折射/AGSL 着色器。
+ */
+val LocalLiquidEffectsEnabled = staticCompositionLocalOf { true }
 
 // 品牌色
 val Accent = Color(0xFF10A37F)

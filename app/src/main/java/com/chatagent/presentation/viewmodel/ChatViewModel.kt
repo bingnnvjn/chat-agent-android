@@ -49,6 +49,9 @@ class ChatViewModel @Inject constructor(
     private val _wallpaperUri = MutableStateFlow("")
     val wallpaperUri: StateFlow<String> = _wallpaperUri.asStateFlow()
 
+    private val _enableEffects = MutableStateFlow(true)
+    val enableEffects: StateFlow<Boolean> = _enableEffects.asStateFlow()
+
     private var darkThemeJob: Job? = null
 
     init {
@@ -74,6 +77,10 @@ class ChatViewModel @Inject constructor(
         // 加载壁纸
         viewModelScope.launch {
             settingsRepository.wallpaperUri.collect { _wallpaperUri.value = it }
+        }
+        // 加载液态玻璃效果开关
+        viewModelScope.launch {
+            settingsRepository.enableEffects.collect { _enableEffects.value = it }
         }
     }
 
@@ -194,6 +201,12 @@ class ChatViewModel @Inject constructor(
 
     fun setWallpaperUri(uri: String) {
         viewModelScope.launch { settingsRepository.setWallpaperUri(uri) }
+    }
+
+    fun toggleEffects() {
+        val newVal = !_enableEffects.value
+        _enableEffects.value = newVal
+        viewModelScope.launch { settingsRepository.setEffects(newVal) }
     }
 }
 

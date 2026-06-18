@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
 import com.chatagent.data.model.ApiProvider
+import com.chatagent.presentation.ui.theme.LocalLiquidEffectsEnabled
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
@@ -53,15 +54,17 @@ fun FloatingTopBar(
     onModelSelect: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val effectsEnabled = LocalLiquidEffectsEnabled.current
     var showModelMenu by remember { mutableStateOf(false) }
     val capsuleSize = 44.dp
+    val surfaceColor = MaterialTheme.colorScheme.surface
 
     Box(
         modifier = modifier.fillMaxWidth().height(60.dp).padding(horizontal = 12.dp),
         contentAlignment = Alignment.Center
     ) {
-        // 左：透明液态圆形按钮
-        if (backdrop != null) {
+        // 左：菜单按钮
+        if (backdrop != null && effectsEnabled) {
             TopLiquidCircleButton(backdrop, capsuleSize, Modifier.align(Alignment.CenterStart), onMenuClick) {
                 Text("\u2039", fontSize = 20.sp, color = Color.White)
             }
@@ -71,20 +74,21 @@ fun FloatingTopBar(
             ) { Text("\u2039", color = MaterialTheme.colorScheme.onSurface, fontSize = 20.sp) }
         }
 
-        // 中：绿色着色胶囊 (LiquidButton 绿色着色效果)
+        // 中：标题胶囊（绿色着色）
         val displayTitle = title.let { if (it.length > 5) it.take(5) + "\u2026" else it }
-        val capsuleScope = rememberCoroutineScope()
-        val capsuleHl = remember(capsuleScope) { InteractiveHighlight(capsuleScope) }
-        val density = androidx.compose.ui.platform.LocalDensity.current
-        val cSizePx = with(density) { capsuleSize.toPx() }
 
-        Box(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .widthIn(min = capsuleSize, max = capsuleSize * 4)
-                .height(capsuleSize)
-                .let { m ->
-                    if (backdrop != null) m.drawBackdrop(
+        if (backdrop != null && effectsEnabled) {
+            val capsuleScope = rememberCoroutineScope()
+            val capsuleHl = remember(capsuleScope) { InteractiveHighlight(capsuleScope) }
+            val density = androidx.compose.ui.platform.LocalDensity.current
+            val cSizePx = with(density) { capsuleSize.toPx() }
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .widthIn(min = capsuleSize, max = capsuleSize * 4)
+                    .height(capsuleSize)
+                    .drawBackdrop(
                         backdrop = backdrop,
                         shape = { Capsule() },
                         effects = { vibrancy(); blur(2f.dp.toPx()) },
@@ -103,28 +107,35 @@ fun FloatingTopBar(
                             drawRect(Color(0xFF10A37F), blendMode = BlendMode.Hue)
                             drawRect(Color(0xFF10A37F).copy(alpha = 0.75f))
                         }
-                    ) else m
-                }
-                .clip(Capsule())
-                .clickable(onClick = { showModelMenu = true })
-                .then(if (backdrop != null) capsuleHl.modifier else Modifier)
-                .then(if (backdrop != null) capsuleHl.gestureModifier else Modifier),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                displayTitle.ifEmpty { currentProvider.defaultModel },
-                color = Color.White,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
+                    )
+                    .clip(Capsule())
+                    .clickable(onClick = { showModelMenu = true })
+                    .then(capsuleHl.modifier)
+                    .then(capsuleHl.gestureModifier),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(displayTitle.ifEmpty { currentProvider.defaultModel }, color = Color.White, fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 16.dp))
+            }
+        } else {
+            // 简洁版本
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .widthIn(min = capsuleSize, max = capsuleSize * 4)
+                    .height(capsuleSize)
+                    .clip(Capsule())
+                    .let { m -> m.background(Color(0xFF10A37F).copy(alpha = 0.75f)) }
+                    .clickable(onClick = { showModelMenu = true }),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(displayTitle.ifEmpty { currentProvider.defaultModel }, color = Color.White, fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 16.dp))
+            }
         }
 
-        // 右：透明液态圆形按钮
-        if (backdrop != null) {
+        // 右：新对话按钮
+        if (backdrop != null && effectsEnabled) {
             TopLiquidCircleButton(backdrop, capsuleSize, Modifier.align(Alignment.CenterEnd), onNewChatClick) {
                 Text("\u22EF", fontSize = 20.sp, color = Color.White)
             }
@@ -135,6 +146,7 @@ fun FloatingTopBar(
         }
     }
 
+    // 模型选择弹窗
     if (showModelMenu) {
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { showModelMenu = false },

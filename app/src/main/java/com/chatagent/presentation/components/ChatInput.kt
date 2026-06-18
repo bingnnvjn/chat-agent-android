@@ -11,7 +11,6 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -48,6 +47,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import com.chatagent.presentation.components.scale
+import com.chatagent.presentation.ui.theme.LocalLiquidEffectsEnabled
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
@@ -68,8 +68,9 @@ import kotlin.math.tanh
 private val SendGreen = Color(0xFF10A37F)
 
 /**
- * 底部液态玻璃输入栏 — 1.2x 放大版
- * 左侧 + 按钮 + 输入胶囊（含向上箭头 + 思考模式弹出）
+ * 底部输入栏 — 支持液态玻璃效果开关。
+ * 效果开启时：drawBackdrop + blur/lens/vibrancy/AGSL
+ * 效果关闭时：纯色 background + G2 形状
  */
 @Composable
 fun ChatInput(
@@ -82,16 +83,16 @@ fun ChatInput(
     onImagePicked: (Uri) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val effectsEnabled = LocalLiquidEffectsEnabled.current
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     val textColor = MaterialTheme.colorScheme.onSurface
     val placeholderColor = MaterialTheme.colorScheme.onSurfaceVariant
     val density = androidx.compose.ui.platform.LocalDensity.current
+    val surfaceColor = MaterialTheme.colorScheme.surface
 
-    // 1.2x 尺寸常量
     val btnSize = 44.dp
     val capsuleHeight = 44.dp
 
-    // 思考模式弹出
     var showThinkingMenu by remember { mutableStateOf(false) }
 
     val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -105,49 +106,47 @@ fun ChatInput(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // + 液态玻璃按钮 (1.2x)
-            if (backdrop != null) {
+            // + 按钮
+            if (backdrop != null && effectsEnabled) {
                 BottomCircleButton(backdrop, btnSize, onClick = {
                     photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                 }) { Text("+", fontSize = 24.sp, fontWeight = FontWeight.Light, color = Color.White) }
             } else {
-                Box(Modifier.size(btnSize).clip(CircleShape).background(MaterialTheme.colorScheme.surface),
+                Box(Modifier.size(btnSize).clip(CircleShape).background(surfaceColor),
                     contentAlignment = Alignment.Center
                 ) { Text("+", color = placeholderColor, fontSize = 24.sp) }
             }
 
             Spacer(Modifier.width(10.dp))
 
-            // 输入胶囊（完全体液态玻璃：自适应亮度 + 交互变形 + 渐变模糊 + 箭头）
-            val capsuleScope = rememberCoroutineScope()
-            val capsuleHighlight = remember(capsuleScope) { InteractiveHighlight(capsuleScope) }
-            val capsulePx = with(density) { capsuleHeight.toPx() }
-
-            // 自适应亮度采样
-            val lumLayer = rememberGraphicsLayer()
-            val luminanceAnim = remember { Animatable(0.5f) }
-            LaunchedEffect(backdrop) {
-                val buffer = IntArray(25)
-                while (isActive) {
-                    try {
-                        val img = lumLayer.toImageBitmap()
-                        val thumb = img.scale(5, 5)
-                        thumb.readPixels(buffer)
-                        val avg = buffer.sumOf { argb ->
-                            val r = (argb shr 16 and 0xFF) / 255f
-                            val g = (argb shr 8 and 0xFF) / 255f
-                            val b = (argb and 0xFF) / 255f
-                            0.2126 * r + 0.7152 * g + 0.0722 * b
-                        } / buffer.size
-                        launch { luminanceAnim.animateTo(avg.toFloat(), tween(1000)) }
-                    } catch (_: Exception) {}
+            // 输入胶囊
+            if (backdrop != null && effectsEnabled) {
+                // === 液态玻璃版本 ===
+                val capsuleScope = rememberCoroutineScope()
+                val capsuleHighlight = remember(capsuleScope) { InteractiveHighlight(capsuleScope) }
+                val capsulePx = with(density) { capsuleHeight.toPx() }
+                val lumLayer = rememberGraphicsLayer()
+                val luminanceAnim = remember { Animatable(0.5f) }
+                LaunchedEffect(backdrop) {
+                    val buffer = IntArray(25)
+                    while (isActive) {
+                        try {
+                            val img = lumLayer.toImageBitmap()
+                            val thumb = img.scale(5, 5)
+                            thumb.readPixels(buffer)
+                            val avg = buffer.sumOf { argb ->
+                                val r = (argb shr 16 and 0xFF) / 255f
+                                val g = (argb shr 8 and 0xFF) / 255f
+                                val b = (argb and 0xFF) / 255f
+                                0.2126 * r + 0.7152 * g + 0.0722 * b
+                            } / buffer.size
+                            launch { luminanceAnim.animateTo(avg.toFloat(), tween(1000)) }
+                        } catch (_: Exception) {}
+                    }
                 }
-            }
+                val lum = luminanceAnim.value
 
-            val lum = luminanceAnim.value
-
-            // 底部渐变模糊 shader
-            val bottomFadeShader = """
+                val bottomFadeShader = """
 uniform shader content;
 uniform float2 size;
 half4 main(float2 coord) {
@@ -155,10 +154,9 @@ half4 main(float2 coord) {
     return content.eval(coord) * blurAlpha;
 }"""
 
-            Box(
-                modifier = Modifier.weight(1f).height(capsuleHeight)
-                    .let { m ->
-                        if (backdrop != null) m.drawBackdrop(
+                Box(
+                    modifier = Modifier.weight(1f).height(capsuleHeight)
+                        .drawBackdrop(
                             backdrop = backdrop, shape = { Capsule() },
                             effects = {
                                 val l = (lum * 2f - 1f).let { sign(it) * it * it }
@@ -181,86 +179,49 @@ half4 main(float2 coord) {
                                 scaleX = s; scaleY = s
                             },
                             onDrawBackdrop = { d -> d(); lumLayer.record { d() } }
-                        ) else m
-                    }
-                    .clip(Capsule())
-                    .pointerInput(capsuleScope) {
-                        awaitEachGesture {
-                            val down = awaitFirstDown(requireUnconsumed = false)
-                            capsuleHighlight.onPress(down.position)
-                            do {
-                                val event = awaitPointerEvent()
-                                val change = event.changes.firstOrNull { it.id == down.id }
-                                if (change != null) capsuleHighlight.onMove(change.position)
-                            } while (event.changes.any { it.pressed })
-                            capsuleHighlight.onRelease()
-                        }
-                    }
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    // ← 向上箭头头（点击弹出思考模式）
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) { showThinkingMenu = true },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        // 只有箭头头（三角形），无竖线
-                        Text("▲", fontSize = 14.sp, color = textColor)
-                    }
-
-                    // 输入框
-                    BasicTextField(
-                        value = value, onValueChange = onValueChange,
-                        modifier = Modifier.weight(1f),
-                        textStyle = TextStyle(color = textColor, fontSize = 17.sp),
-                        cursorBrush = SolidColor(SendGreen),
-                        decorationBox = { inner ->
-                            Box(Modifier.padding(vertical = 12.dp)) {
-                                if (value.isEmpty() && selectedImageUri == null) {
-                                    Text("iMessage 信息", color = placeholderColor, fontSize = 17.sp)
-                                }
-                                inner()
+                        )
+                        .clip(Capsule())
+                        .pointerInput(capsuleScope) {
+                            awaitEachGesture {
+                                val down = awaitFirstDown(requireUnconsumed = false)
+                                capsuleHighlight.onPress(down.position)
+                                do {
+                                    val event = awaitPointerEvent()
+                                    val change = event.changes.firstOrNull { it.id == down.id }
+                                    if (change != null) capsuleHighlight.onMove(change.position)
+                                } while (event.changes.any { it.pressed })
+                                capsuleHighlight.onRelease()
                             }
                         }
-                    )
-
-                    // 发送按钮
-                    val hasSend = value.isNotBlank() || selectedImageUri != null
-                    Box(
-                        modifier = Modifier.height(32.dp)
-                            .let { m ->
-                                if (hasSend) m.clip(RoundedCornerShape(14.dp)).background(SendGreen).clickable { onSend() }
-                                else m.clip(RoundedCornerShape(14.dp)).background(Color.White.copy(alpha = 0.1f))
-                            }.padding(horizontal = 14.dp),
-                        contentAlignment = Alignment.Center
-                    ) { Text("↑", color = Color.White, fontSize = 19.sp) }
-                }
+                ) { CapsuleContent(value, onValueChange, textColor, placeholderColor, selectedImageUri, onSend) }
+            } else {
+                // === 简洁版本（无液态玻璃效果） ===
+                Box(
+                    modifier = Modifier.weight(1f).height(capsuleHeight)
+                        .clip(Capsule())
+                        .background(surfaceColor)
+                ) { CapsuleContent(value, onValueChange, textColor, placeholderColor, selectedImageUri, onSend) }
             }
         }
 
-        // 思考模式弹出浮层
+        // 思考模式弹出
         if (showThinkingMenu) {
+            val popupBg = if (effectsEnabled && backdrop != null) {
+                Modifier.drawBackdrop(
+                    backdrop = backdrop,
+                    shape = { RoundedCornerShape(14.dp) },
+                    effects = { vibrancy(); blur(6f.dp.toPx()); lens(8f.dp.toPx(), 14f.dp.toPx()) },
+                    onDrawSurface = { drawRect(Color(0xFF1C1C1E).copy(alpha = 0.85f)) }
+                )
+            } else Modifier.background(Color(0xFF1C1C1E))
+
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .offset(x = 4.dp, y = (-capsuleHeight - 8.dp))
                     .width(160.dp)
                     .clip(RoundedCornerShape(14.dp))
-                    .let { m ->
-                        if (backdrop != null) m.drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { RoundedCornerShape(14.dp) },
-                            effects = { vibrancy(); blur(6f.dp.toPx()); lens(8f.dp.toPx(), 14f.dp.toPx()) },
-                            onDrawSurface = { drawRect(Color(0xFF1C1C1E).copy(alpha = 0.85f)) }
-                        ) else m.background(Color(0xFF1C1C1E))
-                    }
+                    .then(popupBg)
                     .padding(4.dp)
             ) {
                 Box(
@@ -272,14 +233,13 @@ half4 main(float2 coord) {
                     contentAlignment = Alignment.CenterStart
                 ) {
                     Text(
-                        if (enableThinking) "🧠 思考模式 ✓" else "🧠 思考模式",
+                        if (enableThinking) "\uD83E\uDDE0 思考模式 \u2713" else "\uD83E\uDDE0 思考模式",
                         color = Color.White,
                         fontSize = 14.sp
                     )
                 }
             }
 
-            // 点击外部关闭
             Box(
                 modifier = Modifier
                     .matchParentSize()
@@ -292,7 +252,56 @@ half4 main(float2 coord) {
     }
 }
 
-/** 底部液态玻璃圆形按钮 — 1.2x */
+/** 胶囊内部内容（输入框 + 发送按钮） */
+@Composable
+private fun CapsuleContent(
+    value: String,
+    onValueChange: (String) -> Unit,
+    textColor: Color,
+    placeholderColor: Color,
+    selectedImageUri: Uri?,
+    onSend: () -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        // 向上箭头
+        Box(
+            modifier = Modifier.size(36.dp),
+            contentAlignment = Alignment.Center
+        ) { Text("\u25B2", fontSize = 14.sp, color = textColor) }
+
+        // 输入框
+        BasicTextField(
+            value = value, onValueChange = onValueChange,
+            modifier = Modifier.weight(1f),
+            textStyle = TextStyle(color = textColor, fontSize = 17.sp),
+            cursorBrush = SolidColor(SendGreen),
+            decorationBox = { inner ->
+                Box(Modifier.padding(vertical = 12.dp)) {
+                    if (value.isEmpty() && selectedImageUri == null) {
+                        Text("iMessage 信息", color = placeholderColor, fontSize = 17.sp)
+                    }
+                    inner()
+                }
+            }
+        )
+
+        // 发送按钮
+        val hasSend = value.isNotBlank() || selectedImageUri != null
+        Box(
+            modifier = Modifier.height(32.dp)
+                .let { m ->
+                    if (hasSend) m.clip(RoundedCornerShape(14.dp)).background(SendGreen).clickable { onSend() }
+                    else m.clip(RoundedCornerShape(14.dp)).background(Color.White.copy(alpha = 0.1f))
+                }.padding(horizontal = 14.dp),
+            contentAlignment = Alignment.Center
+        ) { Text("\u2191", color = Color.White, fontSize = 19.sp) }
+    }
+}
+
+/** 底部液态玻璃圆形按钮 */
 @Composable
 private fun BottomCircleButton(
     backdrop: Backdrop,

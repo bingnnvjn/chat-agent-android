@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
@@ -30,6 +31,7 @@ import com.chatagent.presentation.components.ChatInput
 import com.chatagent.presentation.components.FloatingTopBar
 import com.chatagent.presentation.components.Sidebar
 import com.chatagent.presentation.ui.theme.ChatAgentTheme
+import com.chatagent.presentation.ui.theme.LocalLiquidEffectsEnabled
 import com.chatagent.presentation.viewmodel.ChatUiState
 import com.chatagent.presentation.viewmodel.ChatViewModel
 import com.chatagent.presentation.components.GlassTestScreen
@@ -52,7 +54,10 @@ fun MainScreen(
     var showGlassTest by remember { mutableStateOf(false) }
     val context = androidx.compose.ui.platform.LocalContext.current
     val backdropColor = MaterialTheme.colorScheme.background
-    // 主 backdrop — 含壁纸+聊天内容，供 Top/Bottom 栏使用
+    val effectsEnabled by viewModel.enableEffects.collectAsState()
+
+    CompositionLocalProvider(LocalLiquidEffectsEnabled provides effectsEnabled) {
+        // 主 backdrop — 含壁纸+聊天内容，供 Top/Bottom 栏使用
     val backdrop = rememberLayerBackdrop {
         drawRect(backdropColor)
         drawContent()
@@ -184,7 +189,7 @@ fun MainScreen(
         if (showGlassTest) {
             GlassTestScreen(onClose = { showGlassTest = false })
         }
-    }
-    }
-    }
-}
+    } // CompositionLocalProvider
+    } // Surface
+    } // ChatAgentTheme
+} // MainScreen
