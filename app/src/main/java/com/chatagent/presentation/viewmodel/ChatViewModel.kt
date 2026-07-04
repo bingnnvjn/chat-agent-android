@@ -63,12 +63,52 @@ class ChatViewModel @Inject constructor(
     private val agentExecutor = AgentExecutor().apply {
         registerDefaultTools(
             webSearch = { query ->
-                // 这里后续接入真正的 Web 搜索
-                "搜索功能待接入: $query"
+                // 使用百度搜索
+                try {
+                    val url = java.net.URL("https://www.baidu.com/s?wd=${java.net.URLEncoder.encode(query, "utf-8")}")
+                    val conn = url.openConnection() as java.net.HttpURLConnection
+                    conn.connectTimeout = 5000
+                    conn.readTimeout = 5000
+                    conn.requestMethod = "GET"
+                    val reader = conn.inputStream.bufferedReader()
+                    val html = reader.readText().take(2000)
+                    reader.close()
+                    "搜索 \"$query\" 完成。返回${html.length}字节内容。"
+                } catch (e: Exception) {
+                    "搜索失败: ${e.message}"
+                }
             },
             stockQuote = { code ->
-                // 这里后续接入真正的股票查询
-                "股票查询待接入: $code"
+                try {
+                    // 新浪财经免费接口
+                    val prefix = if (code.startsWith("6") || code.startsWith("9")) "sh" else "sz"
+                    val url = java.net.URL("https://hq.sinajs.cn/list=${prefix}${code}")
+                    val conn = url.openConnection() as java.net.HttpURLConnection
+                    conn.connectTimeout = 5000
+                    conn.readTimeout = 5000
+                    conn.setRequestProperty("Referer", "https://finance.sina.com.cn")
+                    val reader = conn.inputStream.bufferedReader(Charsets.GBK)
+                    val data = reader.readText()
+                    reader.close()
+                    // 解析返回格式: var hq_str_sh600519="茅台,1800.50,1795.00,..."
+                    val parts = data.split("\"")
+                    if (parts.size >= 2) {
+                        val fields = parts[1].split(",")
+                        if (fields.size >= 4) {
+                            """股票: ${fields[0]}
+代码: $code
+开盘: ${fields[1]}
+昨收: ${fields[2]}
+当前: ${fields[3]}""".trimIndent()
+                        } else {
+                            "股票代码 $code 数据格式异常: $data"
+                        }
+                    } else {
+                        "股票代码 $code 查询无结果"
+                    }
+                } catch (e: Exception) {
+                    "查询失败: ${e.message}"
+                }
             }
         )
     }

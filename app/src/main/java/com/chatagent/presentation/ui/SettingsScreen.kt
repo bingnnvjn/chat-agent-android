@@ -79,6 +79,7 @@ fun SettingsScreen(
     val savedApiKey by viewModel.apiKeyForProvider(selectedProvider).collectAsState(initial = "")
     val savedDarkTheme by viewModel.isDarkTheme.collectAsState(initial = true)
     val effectsEnabled by viewModel.enableEffects.collectAsState(initial = false)
+    val agentModeEnabled by viewModel.agentMode.collectAsState(initial = false)
 
     LaunchedEffect(savedApiKey) {
         if (savedApiKey.isNotEmpty()) apiKey = savedApiKey
@@ -331,7 +332,42 @@ fun SettingsScreen(
         }
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "关闭可减少AGSL着色器开销，提升性能。形状/配色保持不变。",
+            text = "AGSL着色器性能问题暂不可用，仅保留G2连续曲线。",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Agent 模式开关
+        Text(
+            text = "Agent 模式",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (agentModeEnabled) "Agent模式 (工具调用)" else "普通聊天模式",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            androidx.compose.material3.Switch(
+                checked = agentModeEnabled,
+                onCheckedChange = { viewModel.toggleAgentMode() },
+                colors = androidx.compose.material3.SwitchDefaults.colors(
+                    checkedThumbColor = Accent,
+                    checkedTrackColor = Accent.copy(alpha = 0.5f)
+                )
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "开启后AI可调用工具查询股票、搜索互联网、数学计算等。",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
