@@ -189,6 +189,7 @@ fun MainScreen(
         if (showGlassTest) {
             GlassTestScreen(onClose = { showGlassTest = false })
         }
+    } // Box
     } // CompositionLocalProvider
     } // Surface
     } // ChatAgentTheme
