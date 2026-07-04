@@ -53,16 +53,17 @@ half4 main(float2 coord) {
     val modifier: Modifier = Modifier.drawWithContent {
         val p = progress
         if (p > 0f) {
-            if (shader != null) {
+            val localShader = shader
+            if (localShader != null) {
                 drawRect(Color.White.copy(0.08f * p), blendMode = BlendMode.Plus)
-                shader.apply {
+                localShader.apply {
                     val pos = position(size, positionAnim.value)
                     setFloatUniform("size", size.width, size.height)
                     setColorUniform("color", Color.White.copy(0.15f * p))
                     setFloatUniform("radius", size.minDimension * 1.5f)
                     setFloatUniform("position", pos.x.fastCoerceIn(0f, size.width), pos.y.fastCoerceIn(0f, size.height))
                 }
-                drawRect(ShaderBrush(shader.asComposeShader()), blendMode = BlendMode.Plus)
+                drawRect(ShaderBrush(localShader.asComposeShader()), blendMode = BlendMode.Plus)
             } else {
                 drawRect(Color.White.copy(0.25f * p), blendMode = BlendMode.Plus)
             }
