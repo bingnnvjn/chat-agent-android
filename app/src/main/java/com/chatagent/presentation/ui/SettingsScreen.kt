@@ -68,7 +68,6 @@ import com.chatagent.presentation.viewmodel.ChatViewModel
 fun SettingsScreen(
     viewModel: ChatViewModel,
     onClose: () -> Unit,
-    onGlassTest: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -341,20 +340,6 @@ fun SettingsScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         // 玻璃效果测试入口（调试用）
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.surface)
-                .clickable { onGlassTest() }
-                .padding(vertical = 14.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("🧪 Liquid Glass 效果测试",
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 14.sp)
-        }
-
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(

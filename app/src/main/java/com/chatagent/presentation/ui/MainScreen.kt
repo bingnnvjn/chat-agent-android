@@ -34,7 +34,6 @@ import com.chatagent.presentation.ui.theme.ChatAgentTheme
 import com.chatagent.presentation.ui.theme.LocalLiquidEffectsEnabled
 import com.chatagent.presentation.viewmodel.ChatUiState
 import com.chatagent.presentation.viewmodel.ChatViewModel
-import com.chatagent.presentation.components.GlassTestScreen
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 
@@ -51,7 +50,6 @@ fun MainScreen(
     val currentConversation by viewModel.currentConversation.collectAsState(null)
     var showSidebar by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
-    var showGlassTest by remember { mutableStateOf(false) }
     val context = androidx.compose.ui.platform.LocalContext.current
     val backdropColor = MaterialTheme.colorScheme.background
     val effectsEnabled by viewModel.enableEffects.collectAsState()
@@ -182,12 +180,7 @@ fun MainScreen(
             enter = slideInHorizontally { it },
             exit = slideOutHorizontally { it }
         ) {
-            SettingsScreen(viewModel = viewModel, onClose = { showSettings = false }, onGlassTest = { showGlassTest = true; showSettings = false })
-        }
-
-        // 玻璃效果测试
-        if (showGlassTest) {
-            GlassTestScreen(onClose = { showGlassTest = false })
+            SettingsScreen(viewModel = viewModel, onClose = { showSettings = false })
         }
     } // Box
     } // CompositionLocalProvider
