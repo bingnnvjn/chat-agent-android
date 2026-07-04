@@ -403,15 +403,17 @@ class ChatRepository @Inject constructor(
                             withContext(Dispatchers.Main) { onToken(text) }
                         }
                         // 非流式响应的 tool_calls
-                        val mTc = r.choices?.firstOrNull()?.message?.tool_calls
-                        if (mTc != null) {
+                        val mTc = r.choices?.firstOrNull()?.tool_calls
+                        if (mTc != null && mTc.isNotEmpty()) {
                             isToolCall = true
                             for (tc in mTc) {
                                 val idx = toolCalls.size
                                 toolIds[idx] = tc.id
-                                toolNames[idx] = tc.function.name
-                                val buf = toolCalls.getOrPut(idx) { StringBuilder() }
-                                buf.append(tc.function.arguments)
+                                toolNames[idx] = tc.function?.name ?: continue
+                                tc.function?.let { fn ->
+                                    val buf = toolCalls.getOrPut(idx) { StringBuilder() }
+                                    buf.append(fn.arguments)
+                                }
                             }
                         }
                     } catch (_: Exception) {}

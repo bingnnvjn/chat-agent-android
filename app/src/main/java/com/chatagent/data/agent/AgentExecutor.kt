@@ -146,14 +146,16 @@ class AgentExecutor {
 
     private fun buildJsonSchema(params: Map<String, Any>): JsonObject {
         return buildJsonObject {
-            put("type", (params["type"] as? String) ?: "object")
+            put("type", JsonPrimitive((params["type"] as? String) ?: "object"))
             (params["properties"] as? Map<*, *>)?.let { props ->
                 putJsonObject("properties") {
                     props.forEach { (key, value) ->
                         if (key is String && value is Map<*, *>) {
                             putJsonObject(key) {
-                                put("type", (value["type"] as? String) ?: "string")
-                                (value["description"] as? String)?.let { put("description", it) }
+                                put("type", JsonPrimitive((value["type"] as? String) ?: "string"))
+                                (value["description"] as? String)?.let { desc ->
+                                    put("description", JsonPrimitive(desc))
+                                }
                             }
                         }
                     }

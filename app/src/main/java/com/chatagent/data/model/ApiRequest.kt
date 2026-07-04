@@ -115,7 +115,8 @@ data class Choice(
     val index: Int = 0,
     val message: ApiMessage? = null,
     val delta: Delta? = null,
-    val finish_reason: String? = null
+    val finish_reason: String? = null,
+    val tool_calls: List<ToolCall>? = null
 )
 
 @Serializable
