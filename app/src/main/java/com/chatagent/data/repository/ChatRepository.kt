@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -669,7 +670,7 @@ class ChatRepository @Inject constructor(
                     // 转为 API tool_call 格式
                     val tc = kotlinx.serialization.json.buildJsonObject {
                         put("role", JsonPrimitive("assistant"))
-                        putJsonObject("content") {}
+                        put("content", kotlinx.serialization.json.JsonNull)
                         put("tool_calls", kotlinx.serialization.json.buildJsonArray {
                             add(kotlinx.serialization.json.buildJsonObject {
                                 put("id", JsonPrimitive(msg.toolCallId ?: ""))
@@ -712,7 +713,7 @@ class ChatRepository @Inject constructor(
                 com.chatagent.data.model.MessageType.TOOL_CALL -> {
                     val tc = kotlinx.serialization.json.buildJsonObject {
                         put("role", JsonPrimitive("assistant"))
-                        put("content", JsonPrimitive(""))
+                        put("content", kotlinx.serialization.json.JsonNull)
                         put("tool_calls", kotlinx.serialization.json.buildJsonArray {
                             add(kotlinx.serialization.json.buildJsonObject {
                                 put("id", JsonPrimitive(msg.toolCallId ?: ""))

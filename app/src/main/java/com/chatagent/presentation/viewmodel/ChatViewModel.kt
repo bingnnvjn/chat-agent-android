@@ -272,85 +272,18 @@ class ChatViewModel @Inject constructor(
         thinking: Boolean
     ) {
         viewModelScope.launch {
-            _isStreaming.value = true
-            _streamingContent.value = ""
-            _streamingThinking.value = ""
-
-            // 获取工具列表
-            val tools = agentExecutor.toApiTools()
-
-            chatRepository.agentSendMessage(
-                conversationId = convId,
-                content = content,
-                tools = tools,
-                image = image,
-                enableThinking = thinking,
-                onToken = { token ->
-                    _streamingContent.value = _streamingContent.value + token
-                },
-                onThinkingToken = { token ->
-                    _streamingThinking.value = _streamingThinking.value + token
-                },
-                onToolCallStart = { toolName, args ->
-                    _currentToolCall.value = toolName to args
-                },
-                onComplete = { _ ->
-                    // 检查是否有工具调用需要执行
-                    executePendingToolCalls(convId, thinking)
-                },
-                onError = { error ->
-                    _uiState.value = _uiState.value.copy(errorMessage = error)
-                    _streamingContent.value = ""
-                    _streamingThinking.value = ""
-                    _isStreaming.value = false
-                }
-            )
-        }
-    }
-
-    /**
-     * 执行挂起的工具调用，并继续 Agent Loop
-     */
-    private fun executePendingToolCalls(convId: String, thinking: Boolean) {
-        viewModelScope.launch {
-            val conv = chatRepository.getConversation(convId) ?: return@launch
-            // 找到最新的 tool_call 消息
-            val toolCalls = conv.messages.filter { it.type == MessageType.TOOL_CALL }
-            if (toolCalls.isEmpty()) {
-                // 没有工具调用，证明 LLM 已回复文本
-                val updated = chatRepository.getConversation(convId)
-                if (updated != null) _currentConversation.value = updated
+            try {
+                _isStreaming.value = true
                 _streamingContent.value = ""
                 _streamingThinking.value = ""
-                _isStreaming.value = false
-                _currentToolCall.value = null
-                return@launch
-            }
 
-            // 执行每个工具调用
-            for (tc in toolCalls) {
-                val name = tc.toolName ?: continue
-                val argsJson = tc.toolArgs ?: "{}"
-                val args = try {
-                    kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
-                        .decodeFromString<Map<String, kotlinx.serialization.json.JsonElement>>(argsJson)
-                        .mapValues { it.value.toString().trim('"') }
-                } catch (_: Exception) {
-                    emptyMap()
-                }
+                val tools = agentExecutor.toApiTools()
 
-                _currentToolCall.value = name to argsJson
-
-                // 执行工具
-                val result = agentExecutor.execute(name, args)
-
-                // 把工具结果发回 LLM，继续循环
-                chatRepository.agentContinueWithToolResult(
+                chatRepository.agentSendMessage(
                     conversationId = convId,
-                    toolCallId = tc.toolCallId ?: tc.id,
-                    toolName = name,
-                    toolResult = result,
-                    tools = agentExecutor.toApiTools(),
+                    content = content,
+                    tools = tools,
+                    image = image,
                     enableThinking = thinking,
                     onToken = { token ->
                         _streamingContent.value = _streamingContent.value + token
@@ -358,32 +291,104 @@ class ChatViewModel @Inject constructor(
                     onThinkingToken = { token ->
                         _streamingThinking.value = _streamingThinking.value + token
                     },
-                    onToolCallStart = { tName, tArgs ->
-                        _currentToolCall.value = tName to tArgs
+                    onToolCallStart = { toolName, args ->
+                        _currentToolCall.value = toolName to args
                     },
-                    onComplete = {
-                        // 递归检查是否有新的工具调用
-                        executePendingToolCalls(convId, thinking)
+                    onComplete = { _ ->
+                        executePendingToolCalls(convId, thinking, mutableSetOf())
                     },
                     onError = { error ->
-                        _uiState.value = _uiState.value.copy(errorMessage = error)
-                        _streamingContent.value = ""
-                        _streamingThinking.value = ""
-                        _isStreaming.value = false
-                        _currentToolCall.value = null
+                        _uiState.value = _uiState.value.copy(errorMessage = "Agent错误: $error")
+                        resetStreaming()
                     }
                 )
-                return@launch  // 一次只处理一个工具调用，递归处理剩下的
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(errorMessage = "Agent异常: ${e.message}")
+                resetStreaming()
             }
-
-            // 没有工具需要执行，完成
-            val updated = chatRepository.getConversation(convId)
-            if (updated != null) _currentConversation.value = updated
-            _streamingContent.value = ""
-            _streamingThinking.value = ""
-            _isStreaming.value = false
-            _currentToolCall.value = null
         }
+    }
+
+    /**
+     * 执行挂起的工具调用，并继续 Agent Loop
+     */
+    private fun executePendingToolCalls(convId: String, thinking: Boolean, processedIds: MutableSet<String>) {
+        viewModelScope.launch {
+            try {
+                val conv = chatRepository.getConversation(convId) ?: return@launch
+                // 只找未处理的 tool_call 消息
+                val toolCalls = conv.messages.filter {
+                    it.type == MessageType.TOOL_CALL && it.id !in processedIds
+                }
+                if (toolCalls.isEmpty()) {
+                    // 没有工具调用，LLM 已回复文本
+                    val updated = chatRepository.getConversation(convId)
+                    if (updated != null) _currentConversation.value = updated
+                    resetStreaming()
+                    return@launch
+                }
+
+                // 执行每个工具调用
+                for (tc in toolCalls) {
+                    val name = tc.toolName ?: continue
+                    processedIds.add(tc.id)
+                    val argsJson = tc.toolArgs ?: "{}"
+                    val args = try {
+                        kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+                            .decodeFromString<Map<String, kotlinx.serialization.json.JsonElement>>(argsJson)
+                            .mapValues { it.value.toString().trim('"') }
+                    } catch (_: Exception) {
+                        emptyMap()
+                    }
+
+                    _currentToolCall.value = name to argsJson
+
+                    // 执行工具
+                    val result = agentExecutor.execute(name, args)
+
+                    // 把工具结果发回 LLM
+                    chatRepository.agentContinueWithToolResult(
+                        conversationId = convId,
+                        toolCallId = tc.toolCallId ?: tc.id,
+                        toolName = name,
+                        toolResult = result,
+                        tools = agentExecutor.toApiTools(),
+                        enableThinking = thinking,
+                        onToken = { token ->
+                            _streamingContent.value = _streamingContent.value + token
+                        },
+                        onThinkingToken = { token ->
+                            _streamingThinking.value = _streamingThinking.value + token
+                        },
+                        onToolCallStart = { tName, tArgs ->
+                            _currentToolCall.value = tName to tArgs
+                        },
+                        onComplete = {
+                            executePendingToolCalls(convId, thinking, processedIds)
+                        },
+                        onError = { error ->
+                            _uiState.value = _uiState.value.copy(errorMessage = "工具执行错误: $error")
+                            resetStreaming()
+                        }
+                    )
+                    return@launch  // 一次只处理一个，递归处理剩下的
+                }
+
+                val updated = chatRepository.getConversation(convId)
+                if (updated != null) _currentConversation.value = updated
+                resetStreaming()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(errorMessage = "Agent循环异常: ${e.message}")
+                resetStreaming()
+            }
+        }
+    }
+
+    private fun resetStreaming() {
+        _streamingContent.value = ""
+        _streamingThinking.value = ""
+        _isStreaming.value = false
+        _currentToolCall.value = null
     }
 
     fun clearError() { _uiState.value = _uiState.value.copy(errorMessage = null) }
