@@ -89,9 +89,10 @@ data class ToolChoiceFunction(
 
 @Serializable
 data class ToolCall(
-    val id: String,
+    val id: String? = null,
+    val index: Int? = null,
     val type: String = "function",
-    val function: ToolCallFunction
+    val function: ToolCallFunction? = null
 )
 
 @Serializable
