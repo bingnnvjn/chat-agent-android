@@ -54,7 +54,7 @@ fun FloatingTopBar(
     onModelSelect: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val effectsEnabled = LocalLiquidEffectsEnabled.current
+    val effectsEnabled = false // disabled due to performance
     var showModelMenu by remember { mutableStateOf(false) }
     val capsuleSize = 44.dp
     val surfaceColor = MaterialTheme.colorScheme.surface

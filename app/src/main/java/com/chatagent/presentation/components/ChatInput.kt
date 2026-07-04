@@ -82,7 +82,7 @@ fun ChatInput(
     onImagePicked: (Uri) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val effectsEnabled = LocalLiquidEffectsEnabled.current
+    val effectsEnabled = false // disabled
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     val textColor = MaterialTheme.colorScheme.onSurface
     val placeholderColor = MaterialTheme.colorScheme.onSurfaceVariant

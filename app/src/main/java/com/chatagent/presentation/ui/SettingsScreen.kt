@@ -316,7 +316,7 @@ fun SettingsScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = if (effectsEnabled) "液态玻璃 (blur/lens)" else "简洁模式 (G2形状)",
+                text = if (effectsEnabled) "液态玻璃" else "简洁模式 (G2形状)",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
