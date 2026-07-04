@@ -53,7 +53,7 @@ class SettingsRepository @Inject constructor(
     }
 
     val enableEffects: Flow<Boolean> = dataStore.data.map { prefs ->
-        prefs[KEY_EFFECTS] != "false"
+        prefs[KEY_EFFECTS] == "true"
     }
 
     fun getApiKey(provider: ApiProvider): Flow<String> {

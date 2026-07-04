@@ -34,8 +34,9 @@ class InteractiveHighlight(
     val offset: Offset get() = positionAnim.value - startPos
 
     // AGSL Shader: smoothstep 径向渐变 — 真正的晕染效果！
-    private val shader = if (isRuntimeShaderSupported()) {
-        RuntimeShader("""
+    private val shader by lazy {
+        if (isRuntimeShaderSupported()) {
+            RuntimeShader("""
 uniform float2 size;
 layout(color) uniform half4 color;
 uniform float radius;
@@ -46,7 +47,8 @@ half4 main(float2 coord) {
     float intensity = smoothstep(radius, radius * 0.5, dist);
     return color * intensity;
 }""")
-    } else null
+        } else null
+    }
 
     val modifier: Modifier = Modifier.drawWithContent {
         val p = progress

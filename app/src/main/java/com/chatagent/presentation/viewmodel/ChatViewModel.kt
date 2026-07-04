@@ -49,7 +49,7 @@ class ChatViewModel @Inject constructor(
     private val _wallpaperUri = MutableStateFlow("")
     val wallpaperUri: StateFlow<String> = _wallpaperUri.asStateFlow()
 
-    private val _enableEffects = MutableStateFlow(true)
+    private val _enableEffects = MutableStateFlow(false)
     val enableEffects: StateFlow<Boolean> = _enableEffects.asStateFlow()
 
     private var darkThemeJob: Job? = null
