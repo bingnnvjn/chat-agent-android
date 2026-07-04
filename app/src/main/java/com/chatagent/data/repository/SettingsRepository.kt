@@ -24,7 +24,7 @@ class SettingsRepository @Inject constructor(
         private val KEY_THEME = stringPreferencesKey("theme")
         private val KEY_THINKING = stringPreferencesKey("thinking")
         private val KEY_WALLPAPER = stringPreferencesKey("wallpaper")
-        private val KEY_EFFECTS = stringPreferencesKey("effects")
+        private val KEY_EFFECTS = stringPreferencesKey("effects_v2")
         private fun keyApiKey(provider: String) = "api_key_$provider"
     }
 

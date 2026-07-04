@@ -35,7 +35,6 @@ import com.chatagent.presentation.ui.theme.LocalLiquidEffectsEnabled
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.shapes.Capsule
@@ -186,7 +185,7 @@ private fun TopLiquidCircleButton(
             .drawBackdrop(
                 backdrop = backdrop,
                 shape = { CircleShape },
-                effects = { vibrancy(); blur(2f.dp.toPx()); lens(12f.dp.toPx(), 24f.dp.toPx()) },
+                effects = { vibrancy(); blur(2f.dp.toPx()) },
                 layerBlock = {
                     val p = highlight.progress
                     val s = lerp(1f, 1f + 4f / sizePx, p)

@@ -52,7 +52,6 @@ import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.colorControls
-import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.runtimeShaderEffect
 import com.kyant.backdrop.effects.vibrancy
 import kotlinx.coroutines.isActive
@@ -167,7 +166,7 @@ half4 main(float2 coord) {
                                 )
                                 vibrancy()
                                 blur(if (l > 0f) lerp(4f.dp.toPx(), 8f.dp.toPx(), l) else lerp(4f.dp.toPx(), 2f.dp.toPx(), -l))
-                                lens(12f.dp.toPx(), 22f.dp.toPx())
+                                , 22f.dp.toPx())
                                 runtimeShaderEffect("BottomFade", bottomFadeShader, "content") {}
                             },
                             layerBlock = {
@@ -210,7 +209,7 @@ half4 main(float2 coord) {
                 Modifier.drawBackdrop(
                     backdrop = backdrop,
                     shape = { RoundedCornerShape(14.dp) },
-                    effects = { vibrancy(); blur(6f.dp.toPx()); lens(8f.dp.toPx(), 14f.dp.toPx()) },
+                    effects = { vibrancy(); blur(6f.dp.toPx()); , 14f.dp.toPx()) },
                     onDrawSurface = { drawRect(Color(0xFF1C1C1E).copy(alpha = 0.85f)) }
                 )
             } else Modifier.background(Color(0xFF1C1C1E))
@@ -319,7 +318,7 @@ private fun BottomCircleButton(
             .drawBackdrop(
                 backdrop = backdrop,
                 shape = { CircleShape },
-                effects = { vibrancy(); blur(2f.dp.toPx()); lens(10f.dp.toPx(), 18f.dp.toPx()) },
+                effects = { vibrancy(); blur(2f.dp.toPx()); , 18f.dp.toPx()) },
                 layerBlock = {
                     val p = highlight.progress
                     val s = lerp(1f, 1f + 3f / sizePx, p)

@@ -33,7 +33,6 @@ import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.colorControls
-import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.shapes.RoundedRectangle
 import kotlinx.coroutines.isActive
@@ -112,7 +111,6 @@ fun AdaptiveLuminanceGlassContent(
                             if (l > 0f) lerp(8f.dp.toPx(), 16f.dp.toPx(), l)
                             else lerp(8f.dp.toPx(), 2f.dp.toPx(), -l)
                         )
-                        lens(24f.dp.toPx(), size.minDimension / 2f, depthEffect = true)
                     },
                     highlight = { Highlight.Plain },
                     layerBlock = {
