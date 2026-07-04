@@ -1,21 +1,16 @@
-package com.chatagent.presentation.components
-import androidx.compose.foundation.shape.RoundedCornerShape
-
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -23,11 +18,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.chatagent.data.model.Message
 import com.chatagent.presentation.ui.theme.*
-import com.kyant.backdrop.Backdrop
-import com.kyant.backdrop.drawBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.vibrancy
 import com.kyant.shapes.Capsule
 import com.kyant.shapes.RoundedRectangle
 
@@ -35,7 +25,6 @@ import com.kyant.shapes.RoundedRectangle
 fun MessageBubble(
     message: Message,
     modelName: String = "AI",
-    backdrop: Backdrop? = null,
     modifier: Modifier = Modifier
 ) {
     val isUser = message.role == "user"
@@ -46,7 +35,6 @@ fun MessageBubble(
     var lineCount by remember { mutableIntStateOf(1) }
     val contentText = message.content
     val bubbleShape = if (isUser && lineCount <= 1) Capsule() else RoundedRectangle(20.dp)
-    val effectsEnabled = com.chatagent.presentation.ui.theme.LocalLiquidEffectsEnabled.current
 
     AnimatedVisibility(
         visible = true,
@@ -61,7 +49,7 @@ fun MessageBubble(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (!isUser) {
-                    Box(modifier = Modifier.size(26.dp).clip(CircleShape).background(avatarBg),
+                    Box(modifier = Modifier.size(26.dp).clip(Capsule()).background(avatarBg),
                         contentAlignment = Alignment.Center
                     ) { Text("AI", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 10.sp) }
                     Spacer(Modifier.width(8.dp))
@@ -69,7 +57,7 @@ fun MessageBubble(
                 } else {
                     Text("I", color = Color(0xFF8E8E93), fontSize = 13.sp, fontWeight = FontWeight.Medium)
                     Spacer(Modifier.width(8.dp))
-                    Box(modifier = Modifier.size(26.dp).clip(CircleShape).background(avatarBg),
+                    Box(modifier = Modifier.size(26.dp).clip(Capsule()).background(avatarBg),
                         contentAlignment = Alignment.Center
                     ) { Text("I", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 10.sp) }
                 }
@@ -83,7 +71,7 @@ fun MessageBubble(
                 Spacer(Modifier.height(6.dp))
             }
 
-            // Message bubble
+            // Message bubble — 纯色背景 + G2连续曲线
             Box(
                 modifier = Modifier
                     .let { m ->
@@ -93,23 +81,12 @@ fun MessageBubble(
             ) {
                 Box(
                     modifier = Modifier
-                        .let { m ->
-                            if (backdrop != null && effectsEnabled) m.drawBackdrop(
-                                backdrop = backdrop,
-                                shape = { bubbleShape },
-                                effects = { vibrancy(); blur(2f.dp.toPx()); lens(12f.dp.toPx(), 24f.dp.toPx()) },
-                                onDrawSurface = {
-                                    if (tintColor.isSpecified) {
-                                        drawRect(tintColor, blendMode = BlendMode.Hue)
-                                        drawRect(tintColor.copy(alpha = 0.75f))
-                                    }
-                                }
-                            ) else m.background(
-                                if (isUser) tintColor else if (isDark) Color(0xFF1C1C1E) else Color(0xFFE8E8E8),
-                                shape = if (isUser && lineCount <= 1) CircleShape else RoundedCornerShape(20.dp)
-                            )
-                        }
-                        .clip(bubbleShape)
+                        .background(
+                            if (isUser) tintColor
+                            else if (isDark) Color(0xFF1C1C1E)
+                            else Color(0xFFE8E8E8),
+                            shape = bubbleShape
+                        )
                         .padding(horizontal = 16.dp, vertical = 10.dp)
                 ) {
                     if (isUser) {

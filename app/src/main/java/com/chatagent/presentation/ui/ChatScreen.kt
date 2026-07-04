@@ -32,7 +32,6 @@ import com.chatagent.presentation.viewmodel.ChatViewModel
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel,
-    backdrop: com.kyant.backdrop.backdrops.LayerBackdrop? = null,
     modifier: Modifier = Modifier
 ) {
     val currentConversation by viewModel.currentConversation.collectAsState()
@@ -81,7 +80,7 @@ fun ChatScreen(
                 item { Spacer(Modifier.height(100.dp)) }
 
                 items(currentConversation!!.messages) { message ->
-                    MessageBubble(message = message, modelName = uiState.currentProvider.displayName, backdrop = backdrop)
+                    MessageBubble(message = message, modelName = uiState.currentProvider.displayName)
                 }
 
                 // 流式输出中的 AI 回复（仅在内容非空时显示）
@@ -93,7 +92,7 @@ fun ChatScreen(
                         thinkingContent = streamingThinking.ifEmpty { null }
                     )
                     item(key = "streaming") {
-                        MessageBubble(message = streamingMessage, modelName = uiState.currentProvider.displayName, backdrop = backdrop)
+                        MessageBubble(message = streamingMessage, modelName = uiState.currentProvider.displayName)
                     }
                 }
 

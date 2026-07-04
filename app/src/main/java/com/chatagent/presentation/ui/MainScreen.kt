@@ -103,7 +103,6 @@ fun MainScreen(
         ) {
             ChatScreen(
                 viewModel = viewModel,
-                backdrop = wallpaperBackdrop,
                 modifier = Modifier.fillMaxSize()
             )
         }
