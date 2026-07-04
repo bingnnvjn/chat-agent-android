@@ -87,7 +87,7 @@ class ChatViewModel @Inject constructor(
                     conn.connectTimeout = 5000
                     conn.readTimeout = 5000
                     conn.setRequestProperty("Referer", "https://finance.sina.com.cn")
-                    val reader = conn.inputStream.bufferedReader(Charsets.GBK)
+                    val reader = conn.inputStream.bufferedReader(java.nio.charset.Charset.forName("GBK"))
                     val data = reader.readText()
                     reader.close()
                     // 解析返回格式: var hq_str_sh600519="茅台,1800.50,1795.00,..."
