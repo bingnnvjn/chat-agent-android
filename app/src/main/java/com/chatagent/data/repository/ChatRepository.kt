@@ -408,7 +408,7 @@ class ChatRepository @Inject constructor(
                             isToolCall = true
                             for (tc in mTc) {
                                 val idx = toolCalls.size
-                                toolIds[idx] = tc.id
+                                toolIds[idx] = tc.id ?: "call_${System.currentTimeMillis()}_$idx"
                                 toolNames[idx] = tc.function?.name ?: continue
                                 tc.function?.let { fn ->
                                     val buf = toolCalls.getOrPut(idx) { StringBuilder() }
