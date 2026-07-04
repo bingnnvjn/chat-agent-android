@@ -261,7 +261,6 @@ fun SettingsScreen(
                     contentDescription = if (showApiKey) "隐藏" else "显示",
                     tint = if (showApiKey) MaterialTheme.colorScheme.onSurfaceVariant
                            else MaterialTheme.colorScheme.primary
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
