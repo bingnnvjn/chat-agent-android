@@ -24,8 +24,8 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -258,8 +258,8 @@ fun SettingsScreen(
 
             IconButton(onClick = { showApiKey = !showApiKey }) {
                 Icon(
-                    imageVector = if (showApiKey) Icons.Default.VisibilityOff
-                    else Icons.Default.Visibility,
+                    imageVector = if (showApiKey) Icons.Default.Lock
+                    else Icons.Default.LockOpen,
                     contentDescription = if (showApiKey) "隐藏" else "显示",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
