@@ -44,9 +44,9 @@ enum class ApiProvider(
     ),
     MIMO(
         displayName = "MiMo (小米)",
-        baseUrl = "https://api.mimo.ai/v1/chat/completions",
-        models = listOf("MiMo-V2.5-Pro", "MiMo-V2.5", "MiMo-V2.5-TTS"),
-        defaultModel = "MiMo-V2.5-Pro",
+        baseUrl = "https://api.xiaomimimo.com/v1/chat/completions",
+        models = listOf("mimo-v2.5-pro", "mimo-v2.5", "mimo-v2.5-tts"),
+        defaultModel = "mimo-v2.5-pro",
         website = "https://platform.xiaomimimo.com"
     ),
     OPENAI(
